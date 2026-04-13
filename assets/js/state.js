@@ -45,14 +45,16 @@ let isAdmin = false;
 
 // Constants/data
 const COLORS = [
-  '#5865f2',
-  '#23a559',
-  '#ed4245',
-  '#faa61a',
-  '#3ba55c',
-  '#9c84fc',
-  '#eb459e',
-  '#f47b67',
+  '#9333ea',
+  '#7c3aed',
+  '#6366f1',
+  '#a855f7',
+  '#c084fc',
+  '#22d3ee',
+  '#34d399',
+  '#fb7185',
+  '#fbbf24',
+  '#f472b6',
 ];
 
 const CHANNEL_DESCS = {

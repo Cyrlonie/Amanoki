@@ -297,7 +297,7 @@ function scrollToMessage(messageId) {
   const el = document.querySelector(`.message-group[data-id="${messageId}"]`);
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el.style.outline = '2px solid rgba(88,101,242,0.6)';
+  el.style.outline = '2px solid rgba(192, 132, 252, 0.55)';
   el.style.outlineOffset = '4px';
   setTimeout(() => {
     el.style.outline = '';

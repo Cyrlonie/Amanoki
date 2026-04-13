@@ -1,4 +1,4 @@
-/* === SERVER LIST === */
+﻿/* === SERVER LIST === */
 .server-list {
   width: 72px;
   background: var(--bg-tertiary);
@@ -14,36 +14,46 @@
 .server-icon {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-radius 0.15s ease, background 0.15s ease;
+  transition: border-radius 0.18s ease, background 0.18s ease, transform 0.18s ease;
   font-weight: 700;
   font-size: 18px;
   position: relative;
   user-select: none;
 }
-.server-icon:hover { border-radius: 16px; }
+.server-icon:hover {
+  border-radius: 18px;
+  transform: scale(1.04);
+}
 .server-icon.home {
-  background: var(--accent);
+  background: linear-gradient(145deg, var(--accent) 0%, var(--accent-active) 100%);
   color: #fff;
   font-size: 22px;
 }
-.server-icon.home:hover { background: var(--accent-hover); border-radius: 16px; }
-.server-icon.active { border-radius: 16px; }
+.server-icon.home:hover {
+  background: linear-gradient(145deg, var(--accent-hover) 0%, var(--accent) 100%);
+  border-radius: 18px;
+}
+.server-icon.active { border-radius: 18px; }
 .server-icon.active::before {
   content: '';
   position: absolute;
   left: -16px;
-  width: 4px;
-  height: 40px;
-  background: #fff;
+  width: 3px;
+  height: 36px;
+  background: var(--accent);
   border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 12px var(--accent);
 }
 
-.server-s1 { background: #5865f2; color: #fff; }
+.server-s1 {
+  background: #6d28d9;
+  color: #fff;
+}
 .server-s2 { background: #23a559; color: #fff; }
 .server-s3 { background: #f0b132; color: #fff; }
 
@@ -106,7 +116,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
   color: var(--text-secondary);
   transition: background 0.1s, color 0.1s;
@@ -129,7 +139,7 @@
 .sidebar-footer {
   margin-top: auto;
   padding: 8px;
-  background: #232428;
+  background: var(--bg-footer);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -157,7 +167,7 @@
   height: 10px;
   background: var(--green);
   border-radius: 50%;
-  border: 2px solid #232428;
+  border: 2px solid var(--bg-footer);
 }
 .user-info { flex: 1; min-width: 0; }
 .user-info .uname { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -270,7 +280,7 @@
 .status.online { background: var(--green); }
 .status.idle { background: var(--yellow); }
 .status.dnd { background: var(--red); }
-.status.offline { background: #80848e; }
+.status.offline { background: var(--text-muted); }
 .status.typing { background: var(--accent); }
 .member-info .mname { font-size: 14px; font-weight: 600; }
 .member-info .mstatus { font-size: 12px; color: var(--text-muted); }
@@ -336,7 +346,7 @@
 .auth-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #1e1f22 0%, #2b2d31 100%);
+  background: radial-gradient(120% 80% at 50% 0%, #2a1a42 0%, var(--bg-tertiary) 45%, #050308 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -351,11 +361,14 @@
 }
 .auth-card {
   background: var(--bg-secondary);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 40px;
   width: 420px;
   max-width: 90vw;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(168, 85, 247, 0.06);
 }
 .auth-header {
   text-align: center;
@@ -393,8 +406,8 @@
 }
 .auth-input:focus {
   border-color: var(--accent);
-  background: #1e1f22;
-  box-shadow: 0 0 0 2px rgba(88,101,242,0.15);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 .auth-input::placeholder {
   color: var(--text-muted);
@@ -648,11 +661,6 @@
   gap: 10px;
   font-size: 14px;
 }
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
 /* === PROFILE PANEL === */
 .profile-panel-overlay {
   position: fixed;
@@ -681,9 +689,11 @@
   max-width: 400px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 20px 56px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(168, 85, 247, 0.08);
 }
 
 .profile-panel-header {
@@ -1063,501 +1073,3 @@
     max-width: none;
   }
 }
-  /* === SERVER LIST === */
-  .server-list {
-    width: 72px;
-    background: var(--bg-tertiary);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 0;
-    gap: 8px;
-    overflow-y: auto;
-    flex-shrink: 0;
-  }
-
-  .server-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: border-radius 0.15s ease, background 0.15s ease;
-    font-weight: 700;
-    font-size: 18px;
-    position: relative;
-    user-select: none;
-  }
-  .server-icon:hover { border-radius: 16px; }
-  .server-icon.home {
-    background: var(--accent);
-    color: #fff;
-    font-size: 22px;
-  }
-  .server-icon.home:hover { background: var(--accent-hover); border-radius: 16px; }
-  .server-icon.active { border-radius: 16px; }
-  .server-icon.active::before {
-    content: '';
-    position: absolute;
-    left: -16px;
-    width: 4px;
-    height: 40px;
-    background: #fff;
-    border-radius: 0 4px 4px 0;
-  }
-
-  .server-s1 { background: #5865f2; color: #fff; }
-  .server-s2 { background: #23a559; color: #fff; }
-  .server-s3 { background: #f0b132; color: #fff; }
-
-  .server-divider {
-    width: 32px;
-    height: 2px;
-    background: var(--bg-secondary);
-    border-radius: 1px;
-    flex-shrink: 0;
-  }
-
-  /* === CHANNEL SIDEBAR === */
-  .sidebar {
-    width: 240px;
-    background: var(--bg-secondary);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-  }
-
-  .sidebar-header {
-    height: 48px;
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .sidebar-header:hover { background: var(--bg-hover); }
-  .sidebar-header .chevron { color: var(--text-secondary); font-size: 12px; }
-
-  .channel-section { padding: 16px 8px 4px; }
-  .channel-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: var(--text-secondary);
-    padding: 0 8px;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-  }
-  .channel-section-title:hover { color: var(--text-primary); }
-  .channel-section-title .add-btn {
-    font-size: 18px;
-    line-height: 1;
-    font-weight: 400;
-    color: var(--text-muted);
-  }
-
-  .channel-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: background 0.1s, color 0.1s;
-    user-select: none;
-  }
-  .channel-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-  .channel-item.active { background: var(--bg-active); color: var(--text-primary); }
-  .channel-item .ch-icon { font-size: 16px; flex-shrink: 0; }
-  .channel-item .ch-name { font-size: 14px; font-weight: 500; }
-  .channel-item .unread-badge {
-    margin-left: auto;
-    background: var(--red);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 99px;
-  }
-
-  .sidebar-footer {
-    margin-top: auto;
-    padding: 8px;
-    background: #232428;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-top: 1px solid var(--border);
-  }
-  .user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 13px;
-    color: #fff;
-    flex-shrink: 0;
-    position: relative;
-    cursor: pointer;
-  }
-  .user-avatar .status-dot {
-    position: absolute;
-    bottom: -1px;
-    right: -1px;
-    width: 10px;
-    height: 10px;
-    background: var(--green);
-    border-radius: 50%;
-    border: 2px solid #232428;
-  }
-  .user-info { flex: 1; min-width: 0; }
-  .user-info .uname { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .user-info .ustatus { font-size: 11px; color: var(--text-muted); }
-  .footer-icons { display: flex; gap: 4px; }
-  .footer-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text-secondary);
-    font-size: 16px;
-    transition: background 0.1s, color 0.1s;
-  }
-  .footer-icon:hover { background: var(--bg-hover); color: var(--text-primary); }
-
-  /* === MAIN CHAT === */
-  .chat-area {
-    flex: 1;
-    background: var(--bg-primary);
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .chat-header {
-    height: 48px;
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    background: var(--bg-primary);
-    z-index: 10;
-  }
-  .chat-header .ch-hash { color: var(--text-muted); font-size: 22px; font-weight: 300; }
-  .chat-header .ch-title { font-weight: 700; font-size: 15px; }
-  .chat-header .ch-desc { color: var(--text-muted); font-size: 13px; border-left: 1px solid var(--bg-channel); padding-left: 12px; margin-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .header-actions { margin-left: auto; display: flex; gap: 4px; }
-  .header-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text-secondary);
-    font-size: 18px;
-    transition: background 0.1s, color 0.1s;
-  }
-  .header-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-
-  /* === MEMBER LIST === */
-  .member-list {
-    width: 240px;
-    background: var(--bg-secondary);
-    padding: 16px 8px;
-    overflow-y: auto;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .member-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: var(--text-muted);
-    padding: 8px 8px 4px;
-    margin-top: 8px;
-  }
-  .member-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.1s;
-  }
-  .member-item:hover { background: var(--bg-hover); }
-  .member-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 12px;
-    color: #fff;
-    flex-shrink: 0;
-    position: relative;
-  }
-  .member-avatar .status {
-    position: absolute;
-    bottom: -1px;
-    right: -1px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid var(--bg-secondary);
-  }
-  .status.online { background: var(--green); }
-  .status.idle { background: var(--yellow); }
-  .status.dnd { background: var(--red); }
-  .status.offline { background: #80848e; }
-  .status.typing { background: var(--accent); }
-  .member-info .mname { font-size: 14px; font-weight: 600; }
-  .member-info .mstatus { font-size: 12px; color: var(--text-muted); }
-
-  .mobile-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    z-index: 1200;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-  }
-
-  .mobile-backdrop.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .mobile-only {
-    display: none;
-  }
-
-  @media (max-width: 1024px) {
-    .member-list {
-      width: 210px;
-    }
-
-    .chat-header .ch-desc {
-      max-width: 40vw;
-    }
-  }
-
-  @media (max-width: 768px) {
-    body {
-      font-size: 13px;
-    }
-
-    .server-list {
-      display: none;
-    }
-
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: min(85vw, 320px);
-      z-index: 1300;
-      transform: translateX(-100%);
-      transition: transform 0.2s ease;
-    }
-
-    .sidebar.mobile-open {
-      transform: translateX(0);
-    }
-
-    .chat-header {
-      padding: 0 8px;
-      gap: 6px;
-    }
-
-    .chat-header .ch-hash {
-      font-size: 18px;
-    }
-
-    .chat-header .ch-title {
-      max-width: 22vw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .chat-header .ch-desc {
-      display: none;
-    }
-
-    .mobile-only {
-      display: flex;
-    }
-
-    .header-actions {
-      gap: 2px;
-    }
-
-    .header-btn {
-      width: 34px;
-      height: 34px;
-      font-size: 16px;
-    }
-
-    .header-actions .header-btn:nth-child(1),
-    .header-actions .header-btn:nth-child(3) {
-      display: none;
-    }
-
-    .messages-area {
-      padding: 8px 0;
-    }
-
-    .channel-welcome {
-      padding: 12px 12px 6px;
-    }
-
-    .welcome-icon {
-      width: 54px;
-      height: 54px;
-      font-size: 30px;
-      margin-bottom: 12px;
-    }
-
-    .welcome-title {
-      font-size: 22px;
-    }
-
-    .welcome-desc {
-      font-size: 13px;
-    }
-
-    .message-group {
-      padding: 2px 10px;
-    }
-
-    .msg-avatar {
-      left: 10px;
-    }
-
-    .message-group .content-area,
-    .msg-text.compact {
-      padding-left: 50px;
-    }
-
-    .msg-image {
-      max-width: calc(100vw - 76px);
-      max-height: 220px;
-    }
-
-    .msg-hover-actions {
-      display: none !important;
-    }
-
-    .typing-indicator {
-      padding: 3px 10px;
-    }
-
-    .chat-input-area {
-      padding: 0 8px 10px;
-    }
-    .reply-banner {
-      margin: 6px 0 6px;
-      padding: 7px 8px;
-    }
-
-    .input-side-btn {
-      width: 38px;
-      min-height: 40px;
-      font-size: 18px;
-    }
-
-    #message-input {
-      font-size: 16px;
-      padding: 9px 0;
-      max-height: 30vh;
-    }
-
-    .input-icon,
-    .send-btn {
-      width: 34px;
-      height: 34px;
-      font-size: 16px;
-    }
-
-    .input-right-btns .input-icon:first-child {
-      display: none;
-    }
-
-    .member-list {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: min(82vw, 280px);
-      z-index: 1300;
-      transform: translateX(100%);
-      transition: transform 0.2s ease;
-      padding-top: 12px;
-    }
-
-    .member-list.mobile-open {
-      transform: translateX(0);
-    }
-
-    #adminPanel {
-      width: 100vw;
-      padding: 12px;
-    }
-
-    .setup-card,
-    .auth-card {
-      width: calc(100vw - 24px);
-      max-width: none;
-      padding: 20px 16px;
-      border-radius: 10px;
-    }
-
-    .auth-header {
-      margin-bottom: 22px;
-    }
-
-    .auth-logo {
-      font-size: 40px;
-      margin-bottom: 10px;
-    }
-
-    .auth-title {
-      font-size: 20px;
-    }
-
-    .notification {
-      right: 10px;
-      left: 10px;
-      bottom: 10px;
-      max-width: none;
-    }
-  }

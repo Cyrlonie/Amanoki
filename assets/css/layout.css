@@ -974,18 +974,13 @@
     left: 10px;
   }
 
-  .message-group .content-area,
-  .msg-text.compact {
+  .message-group .content-area {
     padding-left: 50px;
   }
 
   .msg-image {
     max-width: calc(100vw - 76px);
     max-height: 220px;
-  }
-
-  .msg-hover-actions {
-    display: none !important;
   }
 
   .typing-indicator {

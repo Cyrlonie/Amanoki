@@ -241,10 +241,12 @@ function ensureMessageReactionStore(messageId) {
 }
 
 function renderReactionBar(messageId) {
-  const container = document.querySelector(
-    `.message-group[data-id="${messageId}"] .msg-reactions`
-  );
-  if (!container) return;
+  const group = document.querySelector(`.message-group[data-id="${messageId}"]`);
+  if (!group) return;
+  const chipsEl = group.querySelector('.msg-reaction-chips');
+  const quickEl = group.querySelector('.msg-quick-actions');
+  if (!chipsEl || !quickEl) return;
+
   const messageReactions = ensureMessageReactionStore(messageId);
   const currentUserId = authUser?.id || 'demo-user';
 
@@ -259,9 +261,14 @@ function renderReactionBar(messageId) {
     .join('');
 
   const safeMessageId = escapeJsString(messageId);
-  container.innerHTML = `${chips}
-      <button class="reaction" type="button" title="Добавить реакцию" onclick="openReactionPicker('${safeMessageId}', this, event)">➕</button>
-      <button class="reaction" type="button" title="Ответить" onclick="startReply('${safeMessageId}')">↩</button>`;
+  chipsEl.innerHTML = chips;
+
+  const adminBtn = isAdmin
+    ? `<div class="hover-btn" title="Удалить" onclick="deleteMessage('${messageId}')" style="color:var(--red);">🗑️</div>`
+    : '';
+  quickEl.innerHTML = `${adminBtn}
+      <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" onclick="openReactionPicker('${safeMessageId}', this, event)">➕</button>
+      <button class="reaction msg-quick-btn" type="button" title="Ответить" onclick="startReply('${safeMessageId}')">↩</button>`;
 }
 
 function renderAllReactionBars() {
@@ -455,37 +462,35 @@ function renderMessage(record) {
     group.innerHTML = `
         <div class="msg-avatar" style="background:${color}">${author[0].toUpperCase()}</div>
         <div class="content-area">
-          <div class="message-header">
-            <span class="msg-author" style="color:${color}">${escHtml(author)}</span>
-            <span class="msg-timestamp">${formatTime(time)}</span>
+          <div class="msg-stack">
+            <div class="message-header">
+              <span class="msg-author" style="color:${color}">${escHtml(author)}</span>
+              <span class="msg-timestamp">${formatTime(time)}</span>
+            </div>
+            ${replyBlock}
+            <div class="msg-text">${cleanHtml}</div>
+            ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
+            <div class="msg-reaction-chips"></div>
           </div>
-          ${replyBlock}
-          <div class="msg-text">${cleanHtml}</div>
-          ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
-          <div class="msg-reactions"></div> 
+          <div class="msg-aside">
+            <div class="msg-quick-actions"></div>
+          </div>
         </div>`;
   } else {
     group.innerHTML = `
         <div class="msg-avatar compact" style="background:${color}; opacity:0">${author[0].toUpperCase()}</div>
         <div class="content-area">
-          ${replyBlock}
-          <div class="msg-text compact">${cleanHtml}</div>
-          ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
-          <div class="msg-reactions"></div>
+          <div class="msg-stack">
+            ${replyBlock}
+            <div class="msg-text compact">${cleanHtml}</div>
+            ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
+            <div class="msg-reaction-chips"></div>
+          </div>
+          <div class="msg-aside">
+            <div class="msg-quick-actions"></div>
+          </div>
         </div>`;
   }
-
-  // Добавляем кнопки действий при наведении (реакции и удаление для админа)
-  const hoverActions = document.createElement('div');
-  hoverActions.className = 'msg-hover-actions';
-  hoverActions.innerHTML = `
-      ${
-        isAdmin
-          ? `<div class="hover-btn" title="Удалить" onclick="deleteMessage('${record.id}')" style="color:var(--red);">🗑️</div>`
-          : ''
-      }
-    `;
-  group.appendChild(hoverActions);
 
   area.appendChild(group);
   ensureMessageReactionStore(record.id);

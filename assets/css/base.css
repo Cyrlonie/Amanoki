@@ -1,0 +1,88 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #313338;
+  --bg-secondary: #2b2d31;
+  --bg-tertiary: #1e1f22;
+  --bg-channel: #404249;
+  --bg-hover: #35373c;
+  --bg-active: #404249;
+  --bg-input: #383a40;
+  --text-primary: #dbdee1;
+  --text-secondary: #b5bac1;
+  --text-muted: #80848e;
+  --text-link: #00a8fc;
+  --accent: #5865f2;
+  --accent-hover: #4752c4;
+  --accent-active: #3c45a5;
+  --green: #23a559;
+  --red: #f23f43;
+  --yellow: #f0b132;
+  --border: #1e1f22;
+  --mention-bg: rgba(88,101,242,0.15);
+  --scrollbar: #1e1f22;
+  --scrollbar-thumb: #404249;
+}
+
+body {
+  font-family: 'gg sans', 'Noto Sans', Whitney, 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  height: 100dvh;
+  display: flex;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--scrollbar); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-primary: #313338;
+    --bg-secondary: #2b2d31;
+    --bg-tertiary: #1e1f22;
+    --bg-channel: #404249;
+    --bg-hover: #35373c;
+    --bg-active: #404249;
+    --bg-input: #383a40;
+    --text-primary: #dbdee1;
+    --text-secondary: #b5bac1;
+    --text-muted: #80848e;
+    --text-link: #00a8fc;
+    --accent: #5865f2;
+    --accent-hover: #4752c4;
+    --accent-active: #3c45a5;
+    --green: #23a559;
+    --red: #f23f43;
+    --yellow: #f0b132;
+    --border: #1e1f22;
+    --mention-bg: rgba(88,101,242,0.15);
+    --scrollbar: #1e1f22;
+    --scrollbar-thumb: #404249;
+  }
+
+  body {
+    font-family: 'gg sans', 'Noto Sans', Whitney, 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    height: 100dvh;
+    display: flex;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }

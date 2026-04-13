@@ -1,0 +1,648 @@
+﻿// Messages: Supabase realtime, rendering, reactions, replies, send, upload, channel switch.
+// Classic script. Uses globals from state/config/auth/presence and main.js (notify, escHtml, escapeJsString, formatTime, scrollToBottom, autoResize, playNotificationSound, getUserColor, deleteMessage, isAdmin).
+
+
+// ===================== SUPABASE REALTIME =====================
+async function subscribeToMessages() {
+  if (!supabase && !isDemoMode) return;
+  if (isDemoMode) return;
+
+  try {
+    if (messageSubscription) {
+      await supabase.removeChannel(messageSubscription);
+      messageSubscription = null;
+    }
+    if (presenceChannel) {
+      await supabase.removeChannel(presenceChannel);
+      presenceChannel = null;
+    }
+    if (reactionSubscription) {
+      await supabase.removeChannel(reactionSubscription);
+      reactionSubscription = null;
+    }
+
+    // Load previous messages
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('channel', currentChannel)
+      .order('created_at', { ascending: true })
+      .limit(50);
+
+    if (error) {
+      notify('Ошибка загрузки сообщений: ' + error.message, 'error');
+      return;
+    }
+
+    if (data) {
+      data.forEach((r) =>
+        renderMessage({
+          id: r.id,
+          author: r.author,
+          text: r.content,
+          created: r.created_at,
+          user_id: r.user_id,
+          image_url: r.image_url,
+          reply_to: r.reply_to,
+        })
+      );
+      await loadReactionsForMessages(data.map((r) => r.id));
+    }
+
+    await loadMembersDirectory();
+
+    // Subscribe to realtime updates
+    messageSubscription = supabase
+      .channel('messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        if (payload.new.channel === currentChannel) {
+          const isOwnMessage = payload.new.user_id === authUser.id;
+
+          renderMessage({
+            id: payload.new.id,
+            author: payload.new.author,
+            text: payload.new.content,
+            created: payload.new.created_at,
+            user_id: payload.new.user_id,
+            image_url: payload.new.image_url,
+            reply_to: payload.new.reply_to,
+          });
+          scrollToBottom();
+
+          // Звуковое уведомление если окно не в фокусе и это не мое сообщение
+          if (!windowHasFocus && !isOwnMessage) {
+            playNotificationSound();
+          }
+        }
+      })
+      .subscribe();
+
+    reactionSubscription = supabase
+      .channel(`reactions:${currentChannel}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, async () => {
+        const ids = [...document.querySelectorAll('.message-group[data-id]')].map((el) => el.dataset.id);
+        if (!ids.length) return;
+        await loadReactionsForMessages(ids);
+      })
+      .subscribe();
+
+    presenceChannel = supabase.channel(`presence:${currentChannel}`, {
+      config: {
+        presence: {
+          key: authUser.id,
+        },
+      },
+    });
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => applyPresenceFromChannel())
+      .on('presence', { event: 'join' }, () => applyPresenceFromChannel())
+      .on('presence', { event: 'leave' }, () => applyPresenceFromChannel())
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED' && presenceChannel) {
+          try {
+            // Показываем себя онлайн сразу, не дожидаясь sync
+            if (currentUser) {
+              members[currentUser] = 'online';
+              updateMemberList();
+              updateOnlineCount();
+            }
+            await presenceChannel.track({
+              user_id: authUser.id,
+              username: currentUser,
+              channel: currentChannel,
+              typing: false,
+            });
+            applyPresenceFromChannel();
+            // На некоторых сетапах sync приходит чуть позже
+            setTimeout(applyPresenceFromChannel, 500);
+          } catch (e) {
+            console.error('Presence track error:', e);
+          }
+        }
+      });
+  } catch (e) {
+    notify('Ошибка подписки: ' + e.message, 'error');
+  }
+}
+
+function clearReactionStore() {
+  Object.keys(reactionStore).forEach((key) => delete reactionStore[key]);
+}
+
+function ensureMessageReactionStore(messageId) {
+  if (!reactionStore[messageId]) {
+    reactionStore[messageId] = {};
+  }
+  return reactionStore[messageId];
+}
+
+function renderReactionBar(messageId) {
+  const container = document.querySelector(
+    `.message-group[data-id="${messageId}"] .msg-reactions`
+  );
+  if (!container) return;
+  const messageReactions = ensureMessageReactionStore(messageId);
+  const currentUserId = authUser?.id || 'demo-user';
+
+  const chips = Object.entries(messageReactions)
+    .filter(([_, users]) => users && users.length > 0)
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([emoji, users]) => {
+      const active = users.includes(currentUserId) ? ' active' : '';
+      const safeEmoji = escapeJsString(emoji);
+      return `<div class="reaction${active}" onclick="toggleReaction('${messageId}','${safeEmoji}')">${emoji} <span class="count">${users.length}</span></div>`;
+    })
+    .join('');
+
+  const safeMessageId = escapeJsString(messageId);
+  container.innerHTML = `${chips}
+      <button class="reaction" type="button" title="Добавить реакцию" onclick="openReactionPicker('${safeMessageId}', this, event)">➕</button>
+      <button class="reaction" type="button" title="Ответить" onclick="startReply('${safeMessageId}')">↩</button>`;
+}
+
+function renderAllReactionBars() {
+  document
+    .querySelectorAll('.message-group[data-id]')
+    .forEach((group) => renderReactionBar(group.dataset.id));
+}
+
+function closeReactionPicker() {
+  const picker = document.getElementById('reactionPicker');
+  if (!picker) return;
+  picker.classList.remove('show');
+  picker.innerHTML = '';
+  picker.setAttribute('aria-hidden', 'true');
+  reactionPickerMessageId = null;
+}
+
+function positionReactionPicker(anchorEl) {
+  const picker = document.getElementById('reactionPicker');
+  if (!picker || !anchorEl) return;
+  const rect = anchorEl.getBoundingClientRect();
+  const pickerWidth = picker.offsetWidth || 260;
+  const pickerHeight = picker.offsetHeight || 44;
+  const gap = 8;
+
+  let left = rect.left + rect.width / 2 - pickerWidth / 2;
+  let top = rect.top - pickerHeight - gap;
+
+  if (left < 8) left = 8;
+  if (left + pickerWidth > window.innerWidth - 8)
+    left = window.innerWidth - pickerWidth - 8;
+  if (top < 8) top = rect.bottom + gap;
+  if (top + pickerHeight > window.innerHeight - 8)
+    top = window.innerHeight - pickerHeight - 8;
+
+  picker.style.left = `${left}px`;
+  picker.style.top = `${top}px`;
+}
+
+async function loadReactionsForMessages(messageIds) {
+  if (!messageIds || messageIds.length === 0) return;
+  clearReactionStore();
+
+  if (isDemoMode) {
+    messageIds.forEach((id) => ensureMessageReactionStore(id));
+    renderAllReactionBars();
+    return;
+  }
+
+  if (!supabase) return;
+
+  const { data, error } = await supabase
+    .from('reactions')
+    .select('message_id,user_id,emoji')
+    .in('message_id', messageIds);
+
+  if (error) {
+    console.error('Ошибка загрузки реакций:', error);
+    return;
+  }
+
+  messageIds.forEach((id) => ensureMessageReactionStore(id));
+  (data || []).forEach((row) => {
+    const msgStore = ensureMessageReactionStore(row.message_id);
+    if (!msgStore[row.emoji]) msgStore[row.emoji] = [];
+    msgStore[row.emoji].push(row.user_id);
+  });
+
+  renderAllReactionBars();
+}
+
+async function sendToSupabase(text, imageUrl = null) {
+  if (!supabase) return false;
+  if (!authUser) {
+    notify('Требуется авторизация', 'error');
+    return false;
+  }
+
+  try {
+    const payload = {
+      author: currentUser,
+      content: text,
+      channel: currentChannel,
+      user_id: authUser.id,
+      created_at: new Date().toISOString(),
+    };
+
+    if (replyToMessageId) {
+      payload.reply_to = replyToMessageId;
+    }
+
+    if (imageUrl) {
+      payload.image_url = imageUrl;
+    }
+
+    const { error } = await supabase.from('messages').insert(payload);
+
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    notify('Ошибка отправки: ' + e.message, 'error');
+    return false;
+  }
+}
+
+function snippetFromHtml(htmlOrText) {
+  try {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = String(htmlOrText || '');
+    return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+  } catch (_) {
+    return String(htmlOrText || '').replace(/\s+/g, ' ').trim();
+  }
+}
+
+function startReply(messageId) {
+  replyToMessageId = messageId;
+  const msg = messageStore[messageId];
+  const previewEl = document.getElementById('replyBannerPreview');
+  const banner = document.getElementById('replyBanner');
+  if (!banner || !previewEl) return;
+  const author = msg?.author || 'Сообщение';
+  const snip = snippetFromHtml(msg?.text || '').slice(0, 120);
+  previewEl.textContent = `${author}: ${snip || '(без текста)'}`;
+  banner.classList.add('show');
+  document.getElementById('message-input')?.focus();
+}
+
+function cancelReply() {
+  replyToMessageId = null;
+  const banner = document.getElementById('replyBanner');
+  if (banner) banner.classList.remove('show');
+}
+
+function scrollToMessage(messageId) {
+  const el = document.querySelector(`.message-group[data-id="${messageId}"]`);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.style.outline = '2px solid rgba(88,101,242,0.6)';
+  el.style.outlineOffset = '4px';
+  setTimeout(() => {
+    el.style.outline = '';
+    el.style.outlineOffset = '';
+  }, 1200);
+}
+
+// ===================== MESSAGE RENDERING =====================
+function renderMessage(record) {
+  const area = document.getElementById('messagesArea');
+  const author = record.author || 'Unknown';
+  const text = record.text || '';
+  const time = new Date(record.created);
+
+  // Проверяем, нужно ли группировать сообщения (если автор тот же и прошло меньше 5 минут)
+  const isConsecutive =
+    lastMessageAuthor === author &&
+    lastMessageTime &&
+    time - lastMessageTime < 5 * 60 * 1000;
+
+  const group = document.createElement('div');
+  group.className = 'message-group' + (isConsecutive ? '' : ' with-header');
+  group.dataset.id = record.id; // Важно для реакций и удаления
+
+  const color = getUserColor(author);
+
+  // --- ОБРАБОТКА MARKDOWN ---
+  marked.setOptions({ breaks: true });
+  const cleanHtml = DOMPurify.sanitize(marked.parse(text));
+
+  // cache для ответов
+  messageStore[record.id] = {
+    id: record.id,
+    author,
+    text,
+    created: record.created,
+    reply_to: record.reply_to || null,
+  };
+
+  const replyTo = record.reply_to ? messageStore[record.reply_to] : null;
+  const replyBlock = record.reply_to
+    ? `<div class="reply-preview" onclick="scrollToMessage('${escapeJsString(record.reply_to)}')">
+           <span>↩</span>
+           <span class="reply-author">${escHtml(replyTo?.author || 'Сообщение')}</span>
+           <span class="reply-snippet">${escHtml(
+             (snippetFromHtml(replyTo?.text || '') || '(без текста)').slice(0, 140)
+           )}</span>
+         </div>`
+    : '';
+
+  if (!isConsecutive) {
+    group.innerHTML = `
+        <div class="msg-avatar" style="background:${color}">${author[0].toUpperCase()}</div>
+        <div class="content-area">
+          <div class="message-header">
+            <span class="msg-author" style="color:${color}">${escHtml(author)}</span>
+            <span class="msg-timestamp">${formatTime(time)}</span>
+          </div>
+          ${replyBlock}
+          <div class="msg-text">${cleanHtml}</div>
+          ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
+          <div class="msg-reactions"></div> 
+        </div>`;
+  } else {
+    group.innerHTML = `
+        <div class="msg-avatar compact" style="background:${color}; opacity:0">${author[0].toUpperCase()}</div>
+        <div class="content-area">
+          ${replyBlock}
+          <div class="msg-text compact">${cleanHtml}</div>
+          ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
+          <div class="msg-reactions"></div>
+        </div>`;
+  }
+
+  // Добавляем кнопки действий при наведении (реакции и удаление для админа)
+  const hoverActions = document.createElement('div');
+  hoverActions.className = 'msg-hover-actions';
+  hoverActions.innerHTML = `
+      ${
+        isAdmin
+          ? `<div class="hover-btn" title="Удалить" onclick="deleteMessage('${record.id}')" style="color:var(--red);">🗑️</div>`
+          : ''
+      }
+    `;
+  group.appendChild(hoverActions);
+
+  area.appendChild(group);
+  ensureMessageReactionStore(record.id);
+  renderReactionBar(record.id);
+  lastMessageAuthor = author;
+  lastMessageTime = time;
+  scrollToBottom();
+}
+
+async function openReactionPicker(messageId, triggerEl, event) {
+  if (event) event.stopPropagation();
+  const picker = document.getElementById('reactionPicker');
+  if (!picker) return;
+
+  if (reactionPickerMessageId === messageId && picker.classList.contains('show')) {
+    closeReactionPicker();
+    return;
+  }
+
+  reactionPickerMessageId = messageId;
+  picker.innerHTML = REACTION_EMOJIS.map(
+    (emoji) =>
+      `<button class="reaction-picker-btn" type="button" onclick="pickReaction('${escapeJsString(
+        messageId
+      )}','${escapeJsString(emoji)}', event)">${emoji}</button>`
+  ).join('');
+
+  picker.classList.add('show');
+  picker.setAttribute('aria-hidden', 'false');
+  positionReactionPicker(triggerEl);
+}
+
+async function pickReaction(messageId, emoji, event) {
+  if (event) event.stopPropagation();
+  await toggleReaction(messageId, emoji);
+  closeReactionPicker();
+}
+
+async function toggleReaction(messageId, emoji) {
+  const userId = authUser?.id || 'demo-user';
+  const msgStore = ensureMessageReactionStore(messageId);
+  if (!msgStore[emoji]) msgStore[emoji] = [];
+  const hasOwnReaction = msgStore[emoji].includes(userId);
+
+  if (isDemoMode) {
+    msgStore[emoji] = hasOwnReaction
+      ? msgStore[emoji].filter((id) => id !== userId)
+      : [...msgStore[emoji], userId];
+    if (msgStore[emoji].length === 0) delete msgStore[emoji];
+    renderReactionBar(messageId);
+    return;
+  }
+
+  if (!supabase || !authUser) return;
+
+  try {
+    if (hasOwnReaction) {
+      const { error } = await supabase
+        .from('reactions')
+        .delete()
+        .eq('message_id', messageId)
+        .eq('user_id', authUser.id)
+        .eq('emoji', emoji);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from('reactions').insert({
+        message_id: messageId,
+        user_id: authUser.id,
+        emoji,
+      });
+      if (error) throw error;
+    }
+
+    await loadReactionsForMessages([messageId]);
+  } catch (err) {
+    console.error('Ошибка переключения реакции:', err);
+    notify('Не удалось обновить реакцию', 'error');
+  }
+}
+
+// ===================== FILE UPLOAD =====================
+async function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (isDemoMode) {
+    notify('Загрузка файлов в демо-режиме недоступна', 'info');
+    return;
+  }
+
+  if (!supabase) {
+    notify('Подключитесь к Supabase для загрузки файлов', 'error');
+    return;
+  }
+
+  isUploadingFile = true;
+  notify(`📤 Загружаю ${file.name}...`);
+
+  try {
+    // Генерируем уникальное имя файла
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${timestamp}-${randomStr}.${fileExt}`;
+    const filePath = `${currentChannel}/${fileName}`;
+
+    // Загружаем файл в Storage
+    const { error } = await supabase.storage.from('chat-media').upload(filePath, file);
+
+    if (error) throw error;
+
+    // Получаем публичный URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('chat-media').getPublicUrl(filePath);
+
+    // Отправляем сообщение с ссылкой
+    const input = document.getElementById('message-input');
+    const text = input.value.trim();
+    input.value = '';
+    autoResize(input);
+
+    if (isDemoMode) {
+      renderMessage({
+        author: currentUser,
+        text: text || file.name,
+        image_url: publicUrl,
+        created: new Date().toISOString(),
+        id: 'local_' + Date.now(),
+        user_id: 'demo',
+        reply_to: replyToMessageId,
+      });
+    } else {
+      const sent = await sendToSupabase(text || file.name, publicUrl);
+      if (!sent) {
+        renderMessage({
+          author: currentUser,
+          text: text || file.name,
+          image_url: publicUrl,
+          created: new Date().toISOString(),
+          id: 'local_' + Date.now(),
+          user_id: authUser.id,
+          reply_to: replyToMessageId,
+        });
+      }
+    }
+
+    notify(`✅ Файл ${file.name} загружен!`);
+    cancelReply();
+    scrollToBottom();
+  } catch (error) {
+    notify(`❌ Ошибка загрузки: ${error.message}`, 'error');
+    console.error('Upload error:', error);
+  } finally {
+    isUploadingFile = false;
+    event.target.value = ''; // Очищаем input
+  }
+}
+
+// ===================== SEND =====================
+async function sendMessage() {
+  const input = document.getElementById('message-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  autoResize(input);
+
+  if (isDemoMode) {
+    renderMessage({
+      author: currentUser,
+      text,
+      created: new Date().toISOString(),
+      id: 'local_' + Date.now(),
+      user_id: 'demo',
+      reply_to: replyToMessageId,
+    });
+    simulateReply(text);
+  } else {
+    const sent = await sendToSupabase(text);
+    if (!sent) {
+      renderMessage({
+        author: currentUser,
+        text,
+        created: new Date().toISOString(),
+        id: 'local_' + Date.now(),
+        user_id: authUser.id,
+        reply_to: replyToMessageId,
+      });
+    }
+  }
+  cancelReply();
+  scrollToBottom();
+}
+
+function simulateReply(userText) {
+  const replies = [
+    'Интересно!',
+    'Понял, понял 👍',
+    'Согласен полностью!',
+    'Хм, надо подумать...',
+    'Да ладно?! 😮',
+    'Прикольно!',
+    'Окей, буду иметь в виду',
+    'Спасибо за инфу!',
+    'Давай обсудим завтра?',
+    '🔥🔥🔥',
+    'Кайф',
+    'Ты серьёзно? 😂',
+  ];
+  const bots = ['Алексей', 'Мария', 'Иван'];
+  const bot = bots[Math.floor(Math.random() * bots.length)];
+
+  showTyping(bot);
+  setTimeout(() => {
+    hideTyping();
+    const reply = replies[Math.floor(Math.random() * replies.length)];
+    renderMessage({
+      author: bot,
+      text: reply,
+      created: new Date().toISOString(),
+      id: 'bot_' + Date.now(),
+      user_id: 'bot',
+    });
+  }, 1000 + Math.random() * 2000);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function switchChannel(ch) {
+  currentChannel = ch;
+  document.querySelectorAll('.channel-item').forEach((el) => el.classList.remove('active'));
+  event.target.closest('.channel-item').classList.add('active');
+  document.getElementById('channelTitle').textContent = ch;
+  document.getElementById('channelDesc').textContent = CHANNEL_DESCS[ch] || `Канал #${ch}`;
+  document.getElementById('message-input').placeholder = `Написать в #${ch}`;
+
+  const area = document.getElementById('messagesArea');
+  area.innerHTML = `
+      <div class="channel-welcome">
+        <div class="welcome-icon">💬</div>
+        <div class="welcome-title"># ${ch}</div>
+        <div class="welcome-desc">${CHANNEL_DESCS[ch] || 'Начало канала #' + ch}</div>
+      </div>
+      <div class="divider-date">Сегодня</div>
+    `;
+  lastMessageAuthor = null;
+  lastMessageTime = null;
+  clearReactionStore();
+  updateTypingIndicator();
+
+  if (!isDemoMode && supabase) {
+    subscribeToMessages();
+  }
+
+  if (isMobileLayout()) {
+    closeMobilePanels();
+  }
+}

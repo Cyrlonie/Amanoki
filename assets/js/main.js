@@ -67,6 +67,7 @@ window.onload = async () => {
 
       // Скрываем экран входа
       document.getElementById('authOverlay').style.display = 'none';
+      closeSetupOverlay();
 
       initApp();
       subscribeToMessages();
@@ -95,7 +96,9 @@ function initApp() {
   document.getElementById('myAvatar').innerHTML += '<div class="status-dot"></div>';
   document.getElementById('message-input').placeholder = `Написать в #${currentChannel}`;
 
-  userColors[currentUser] = color;
+  if (!userColors[currentUser]) {
+    userColors[currentUser] = color;
+  }
   if (isDemoMode) {
     addMember(currentUser, 'online');
   } else {

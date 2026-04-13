@@ -51,7 +51,7 @@ function applyPresenceFromChannel() {
 async function loadMembersDirectory() {
   if (isDemoMode || !supabase) return;
   try {
-    const { data, error } = await supabase.from('profiles').select('id, username, is_banned');
+    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color');
     if (error) throw error;
 
     memberDirectory = {};
@@ -59,6 +59,9 @@ async function loadMembersDirectory() {
       if (row.is_banned) return;
       if (!row.username) return;
       memberDirectory[row.id] = row.username;
+      if (row.avatar_color) {
+        userColors[row.username] = row.avatar_color;
+      }
     });
     applyPresenceFromChannel();
   } catch (e) {

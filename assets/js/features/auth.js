@@ -1,5 +1,9 @@
 // Auth / profile related logic (classic script).
 
+function closeSetupOverlay() {
+  document.getElementById('setupOverlay')?.classList.remove('is-open');
+}
+
 function showError(panelId, message) {
   const errorEl =
     document.querySelector(`#${panelId} .auth-error`) ||
@@ -47,6 +51,10 @@ async function loadUserProfile() {
     currentUserProfile = data;
     currentUser = data.username;
     isAdmin = data.is_admin === true;
+
+    if (data.avatar_color && data.username) {
+      userColors[data.username] = data.avatar_color;
+    }
 
     if (isAdmin) {
       const adminBtn = document.getElementById('adminBtn');
@@ -106,6 +114,7 @@ async function handleRegister(e) {
 
     setTimeout(() => {
       document.getElementById('authOverlay').style.display = 'none';
+      closeSetupOverlay();
       initApp();
       loadMembersDirectory();
       subscribeToMessages();
@@ -144,6 +153,7 @@ async function handleLogin(e) {
 
     setTimeout(() => {
       document.getElementById('authOverlay').style.display = 'none';
+      closeSetupOverlay();
       initApp();
       loadMembersDirectory();
       subscribeToMessages();
@@ -171,6 +181,7 @@ function demoMode() {
   );
 
   document.getElementById('authOverlay').style.display = 'none';
+  closeSetupOverlay();
 
   addMember(name, 'online');
   ['Алексей', 'Мария', 'Иван'].forEach((n) =>

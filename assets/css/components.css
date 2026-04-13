@@ -671,11 +671,15 @@
   .setup-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+  }
+
+  .setup-overlay.is-open {
+    display: flex;
   }
   .setup-card {
     background: var(--bg-secondary);

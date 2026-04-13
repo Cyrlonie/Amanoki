@@ -64,6 +64,12 @@ const CHANNEL_DESCS = {
   announcements: '📢 Важные объявления команды',
 };
 
+/** Каналы с текстовым чатом (для бейджей непрочитанного). */
+const TEXT_CHANNELS = Object.keys(CHANNEL_DESCS);
+
+/** Счётчики непрочитанных по каналу (в памяти; «прочитано» — в localStorage). */
+let unreadCounts = {};
+
 const DEMO_MESSAGES = [
   { author: 'Алексей', text: 'Всем привет! Как дела?', time: new Date(Date.now() - 1800000) },
   { author: 'Мария', text: 'Отлично! Закончила PR наконец-то 🎉', time: new Date(Date.now() - 1500000) },

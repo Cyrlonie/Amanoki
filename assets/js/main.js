@@ -127,6 +127,10 @@ function initApp() {
       toggleAdminPanel();
     }
   });
+
+  if (typeof updateChannelUnreadUI === 'function') {
+    updateChannelUnreadUI();
+  }
 }
 
 // ===================== ADMIN FUNCTIONS =====================
@@ -270,25 +274,61 @@ async function updateAdminStats() {
     console.error('Error updating admin stats:', e);
   }
 }
+let notificationAudioContext = null;
+
+function getNotificationAudioContext() {
+  const Ctor = window.AudioContext || window.webkitAudioContext;
+  if (!Ctor) return null;
+  if (!notificationAudioContext) {
+    notificationAudioContext = new Ctor();
+  }
+  if (notificationAudioContext.state === 'suspended') {
+    notificationAudioContext.resume().catch(() => {});
+  }
+  return notificationAudioContext;
+}
+
+/** Мягкое входящее: короткий «колокольчик» без резких атак и высоких пиков. */
 function createNotificationSound() {
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const volume = 0.3;
-    const duration = 0.3;
+    const ctx = getNotificationAudioContext();
+    if (!ctx) return;
 
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
+    const t0 = ctx.currentTime;
+    const duration = 0.26;
+    const peak = 0.085;
 
-    osc.frequency.setValueAtTime(800, audioContext.currentTime);
-    osc.frequency.setValueAtTime(1000, audioContext.currentTime + 0.05);
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0, t0);
+    master.gain.linearRampToValueAtTime(peak, t0 + 0.02);
+    master.gain.exponentialRampToValueAtTime(0.0009, t0 + duration);
+    master.connect(ctx.destination);
 
-    gain.gain.setValueAtTime(volume, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.setValueAtTime(2200, t0);
+    lowpass.Q.value = 0.6;
+    lowpass.connect(master);
 
-    osc.start(audioContext.currentTime);
-    osc.stop(audioContext.currentTime + duration);
+    const partials = [
+      { hz: 523.25, level: 0.55 },
+      { hz: 659.25, level: 0.32 },
+      { hz: 783.99, level: 0.12 },
+    ];
+
+    partials.forEach((p, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      const g = ctx.createGain();
+      g.gain.value = p.level;
+      osc.connect(g);
+      g.connect(lowpass);
+      const start = t0 + i * 0.012;
+      osc.frequency.setValueAtTime(p.hz * 0.985, start);
+      osc.frequency.exponentialRampToValueAtTime(p.hz, start + 0.06);
+      osc.start(start);
+      osc.stop(t0 + duration + 0.04);
+    });
   } catch (e) {
     console.warn('Sound notification not available:', e);
   }

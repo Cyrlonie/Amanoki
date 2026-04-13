@@ -1,6 +1,95 @@
 ﻿// Messages: Supabase realtime, rendering, reactions, replies, send, upload, channel switch.
 // Classic script. Uses globals from state/config/auth/presence and main.js (notify, escHtml, escapeJsString, formatTime, scrollToBottom, autoResize, playNotificationSound, getUserColor, deleteMessage, isAdmin).
 
+function unreadStorageKey() {
+  return `amanoki_lastRead_${authUser?.id || 'anon'}`;
+}
+
+function loadLastReadMap() {
+  try {
+    const raw = localStorage.getItem(unreadStorageKey());
+    if (!raw) return {};
+    const o = JSON.parse(raw);
+    return o && typeof o === 'object' ? o : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveLastReadMap(map) {
+  try {
+    localStorage.setItem(unreadStorageKey(), JSON.stringify(map));
+  } catch (_) {}
+}
+
+function markChannelReadTimestamp(ch, iso) {
+  if (!TEXT_CHANNELS.includes(ch)) return;
+  const map = loadLastReadMap();
+  const t = iso || new Date().toISOString();
+  if (map[ch] && new Date(t) <= new Date(map[ch])) {
+    unreadCounts[ch] = 0;
+    updateChannelUnreadUI();
+    return;
+  }
+  map[ch] = t;
+  saveLastReadMap(map);
+  unreadCounts[ch] = 0;
+  updateChannelUnreadUI();
+}
+
+function bumpUnread(ch) {
+  if (!TEXT_CHANNELS.includes(ch) || ch === currentChannel) return;
+  unreadCounts[ch] = (unreadCounts[ch] || 0) + 1;
+  updateChannelUnreadUI();
+}
+
+async function refreshUnreadCountsFromServer() {
+  if (isDemoMode || !supabase || !authUser) return;
+  const map = loadLastReadMap();
+  for (const ch of TEXT_CHANNELS) {
+    if (ch === currentChannel) {
+      unreadCounts[ch] = 0;
+      continue;
+    }
+    const since = map[ch];
+    if (!since) {
+      if (unreadCounts[ch] === undefined) unreadCounts[ch] = 0;
+      continue;
+    }
+    const { count, error } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('channel', ch)
+      .gt('created_at', since);
+    if (error) {
+      console.warn('Unread count', ch, error);
+      continue;
+    }
+    unreadCounts[ch] = count ?? 0;
+  }
+  updateChannelUnreadUI();
+}
+
+function updateChannelUnreadUI() {
+  TEXT_CHANNELS.forEach((ch) => {
+    const item = document.querySelector(`.channel-item[data-channel="${ch}"]`);
+    if (!item) return;
+    let badge = item.querySelector('.unread-badge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'unread-badge';
+      item.appendChild(badge);
+    }
+    const n = unreadCounts[ch] || 0;
+    if (n <= 0) {
+      badge.textContent = '';
+      badge.style.display = 'none';
+    } else {
+      badge.textContent = n > 99 ? '99+' : String(n);
+      badge.style.display = '';
+    }
+  });
+}
 
 // ===================== SUPABASE REALTIME =====================
 async function subscribeToMessages() {
@@ -49,28 +138,42 @@ async function subscribeToMessages() {
       await loadReactionsForMessages(data.map((r) => r.id));
     }
 
+    const latestIso =
+      data && data.length > 0 ? data[data.length - 1].created_at : new Date().toISOString();
+    markChannelReadTimestamp(currentChannel, latestIso);
+    await refreshUnreadCountsFromServer();
+
     await loadMembersDirectory();
 
     // Subscribe to realtime updates
     messageSubscription = supabase
       .channel('messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        if (payload.new.channel === currentChannel) {
-          const isOwnMessage = payload.new.user_id === authUser.id;
+        const row = payload.new;
+        const ch = row.channel;
+        if (!TEXT_CHANNELS.includes(ch)) return;
+
+        if (ch === currentChannel) {
+          const isOwnMessage = row.user_id === authUser.id;
 
           renderMessage({
-            id: payload.new.id,
-            author: payload.new.author,
-            text: payload.new.content,
-            created: payload.new.created_at,
-            user_id: payload.new.user_id,
-            image_url: payload.new.image_url,
-            reply_to: payload.new.reply_to,
+            id: row.id,
+            author: row.author,
+            text: row.content,
+            created: row.created_at,
+            user_id: row.user_id,
+            image_url: row.image_url,
+            reply_to: row.reply_to,
           });
           scrollToBottom();
+          markChannelReadTimestamp(ch, row.created_at);
 
-          // Звуковое уведомление если окно не в фокусе и это не мое сообщение
           if (!windowHasFocus && !isOwnMessage) {
+            playNotificationSound();
+          }
+        } else if (row.user_id !== authUser.id) {
+          bumpUnread(ch);
+          if (!windowHasFocus) {
             playNotificationSound();
           }
         }
@@ -618,8 +721,9 @@ function handleKey(e) {
 
 function switchChannel(ch) {
   currentChannel = ch;
-  document.querySelectorAll('.channel-item').forEach((el) => el.classList.remove('active'));
-  event.target.closest('.channel-item').classList.add('active');
+  document.querySelectorAll('.channel-item[data-channel]').forEach((el) => {
+    el.classList.toggle('active', el.dataset.channel === ch);
+  });
   document.getElementById('channelTitle').textContent = ch;
   document.getElementById('channelDesc').textContent = CHANNEL_DESCS[ch] || `Канал #${ch}`;
   document.getElementById('message-input').placeholder = `Написать в #${ch}`;

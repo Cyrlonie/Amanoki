@@ -149,6 +149,36 @@ function renderVoiceParticipants() {
   updateVoiceUiState();
 }
 
+function attachAudioTrack(track) {
+  if (!track || track.kind !== 'audio' || typeof track.attach !== 'function') return;
+  const elements = track.attach();
+  const audioElements = Array.isArray(elements) ? elements : elements ? [elements] : [];
+  audioElements.forEach((el) => {
+    if (!(el instanceof HTMLMediaElement)) return;
+    el.autoplay = true;
+    el.controls = false;
+    el.style.display = 'none';
+    document.body.appendChild(el);
+  });
+}
+
+function detachAudioTrack(track) {
+  if (!track || track.kind !== 'audio' || typeof track.detach !== 'function') return;
+  const elements = track.detach();
+  const audioElements = Array.isArray(elements) ? elements : elements ? [elements] : [];
+  audioElements.forEach((el) => el.remove());
+}
+
+function attachExistingParticipantAudio(participant) {
+  const pubs = participant?.audioTrackPublications || participant?.trackPublications;
+  if (!pubs) return;
+  const values = typeof pubs.values === 'function' ? Array.from(pubs.values()) : Object.values(pubs);
+  values.forEach((pub) => {
+    const track = pub?.track;
+    if (track?.kind === 'audio') attachAudioTrack(track);
+  });
+}
+
 function bindRoomEvents(room, RoomEvent) {
   room
     .on(RoomEvent.ParticipantConnected, () => syncVoiceParticipants(room))
@@ -157,6 +187,14 @@ function bindRoomEvents(room, RoomEvent) {
     .on(RoomEvent.TrackUnmuted, () => syncVoiceParticipants(room))
     .on(RoomEvent.LocalTrackUnpublished, () => syncVoiceParticipants(room))
     .on(RoomEvent.LocalTrackPublished, () => syncVoiceParticipants(room))
+    .on(RoomEvent.TrackSubscribed, (...args) => {
+      const track = args.find((arg) => arg?.kind === 'audio') || args.find((arg) => arg?.track?.kind === 'audio')?.track;
+      if (track) attachAudioTrack(track);
+    })
+    .on(RoomEvent.TrackUnsubscribed, (...args) => {
+      const track = args.find((arg) => arg?.kind === 'audio') || args.find((arg) => arg?.track?.kind === 'audio')?.track;
+      if (track) detachAudioTrack(track);
+    })
     .on(RoomEvent.Disconnected, () => {
       currentVoiceChannel = null;
       voiceRoom = null;
@@ -195,6 +233,7 @@ async function joinVoiceChannel(channelId) {
     const room = new Room();
     bindRoomEvents(room, RoomEvent);
     await room.connect(tokenData.url, tokenData.token);
+    room.remoteParticipants.forEach((participant) => attachExistingParticipantAudio(participant));
     await room.localParticipant.setMicrophoneEnabled(true);
 
     currentVoiceChannel = channelId;

@@ -212,8 +212,16 @@ function updateAudioGainForParticipant(participantId) {
   const volume = isVoiceDeafened ? 0 : voiceParticipants[participantId]?.volume ?? 1;
   trackIds.forEach((trackKey) => {
     const data = voiceAudioTrackData.get(trackKey);
+    if (!data) return;
     if (data?.gainNode) {
       data.gainNode.gain.value = volume;
+    }
+    if (Array.isArray(data.elements)) {
+      data.elements.forEach((el) => {
+        if (el instanceof HTMLMediaElement) {
+          el.volume = volume;
+        }
+      });
     }
   });
 }
@@ -274,7 +282,31 @@ function attachAudioTrack(track, participantId = null) {
     el.style.display = 'none';
     document.body.appendChild(el);
 
-    if (!ctx) return;
+    const elements = [el];
+    const volume = isVoiceDeafened ? 0 : voiceParticipants[participantId]?.volume ?? 1;
+    elements.forEach((audioEl) => {
+      if (audioEl instanceof HTMLMediaElement) {
+        audioEl.volume = volume;
+      }
+    });
+
+    if (!ctx) {
+      const trackData = {
+        participantId,
+        elements,
+        gainNode: null,
+        analyser: null,
+        rafId: null,
+        element: el,
+        track,
+      };
+      voiceAudioTrackData.set(trackKey, trackData);
+      const trackIds = voiceParticipantTrackMap.get(participantId) || new Set();
+      trackIds.add(trackKey);
+      voiceParticipantTrackMap.set(participantId, trackIds);
+      return;
+    }
+
     try {
       const source = ctx.createMediaElementSource(el);
       const analyser = ctx.createAnalyser();
@@ -283,10 +315,10 @@ function attachAudioTrack(track, participantId = null) {
       source.connect(analyser);
       analyser.connect(gainNode);
       gainNode.connect(ctx.destination);
-      const volume = isVoiceDeafened ? 0 : voiceParticipants[participantId]?.volume ?? 1;
       gainNode.gain.value = volume;
       const trackData = {
         participantId,
+        elements,
         gainNode,
         analyser,
         rafId: null,
@@ -299,7 +331,18 @@ function attachAudioTrack(track, participantId = null) {
       voiceParticipantTrackMap.set(participantId, trackIds);
       startVAD(trackKey);
     } catch (_) {
-      // ignore Web Audio issues on unsupported browsers
+      const trackData = {
+        participantId,
+        elements,
+        gainNode: null,
+        analyser: null,
+        rafId: null,
+        element: el,
+        track,
+      };
+      voiceAudioTrackData.set(trackKey, trackData);
+      const trackIds = voiceParticipantTrackMap.get(participantId) || new Set();
+      trackIds.add(trackKey);
     }
   });
 }
@@ -325,7 +368,11 @@ function detachAudioTrack(track) {
   if (data.analyser) {
     data.analyser.disconnect();
   }
-  if (data.element) {
+  if (Array.isArray(data.elements)) {
+    data.elements.forEach((el) => {
+      if (el instanceof HTMLElement) el.remove();
+    });
+  } else if (data.element) {
     data.element.remove();
   }
   voiceAudioTrackData.delete(trackKey);

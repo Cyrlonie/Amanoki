@@ -50,7 +50,7 @@ function updateOnlineCount() {
   const onlineCount = Object.values(members).filter(m => m.status === 'online').length;
   const countEl = document.getElementById('onlineCount');
   if (countEl) {
-    countEl.textContent = `${onlineCount} онлайн`;
+    countEl.textContent = String(onlineCount);
   }
 }
 

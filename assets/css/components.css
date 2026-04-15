@@ -84,11 +84,13 @@
   gap: 4px;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity 0.12s ease, visibility 0.12s ease;
 }
 .message-group:hover .msg-quick-actions {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 .msg-quick-actions .hover-btn {
   width: 28px;

@@ -276,7 +276,7 @@ function renderReactionBar(messageId) {
       )}" style="color:var(--red);">🗑️</button>`
     : '';
   quickEl.innerHTML = `${adminBtn}
-      <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" data-action="open-reaction-picker" data-message-id="${safeMessageId}">➕</button>
+      <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" data-action="open-reaction-picker" data-message-id="${safeMessageId}">❤️</button>
       <button class="reaction msg-quick-btn" type="button" title="Ответить" data-action="start-reply" data-message-id="${safeMessageId}">↩</button>`;
 }
 

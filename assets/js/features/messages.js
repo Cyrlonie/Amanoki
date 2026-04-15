@@ -423,7 +423,8 @@ function scrollToMessage(messageId) {
 function renderMessage(record) {
   const area = document.getElementById('messagesArea');
   const author = record.author || 'Unknown';
-  const text = record.text || '';
+  const text = String(record.text || '');
+  const hasVisibleText = text.trim().length > 0;
   const time = new Date(record.created);
 
   // Проверяем, нужно ли группировать сообщения (если автор тот же и прошло меньше 5 минут)
@@ -440,7 +441,7 @@ function renderMessage(record) {
 
   // --- ОБРАБОТКА MARKDOWN ---
   marked.setOptions({ breaks: true });
-  const cleanHtml = DOMPurify.sanitize(marked.parse(text));
+  const cleanHtml = hasVisibleText ? DOMPurify.sanitize(marked.parse(text)) : '';
 
   // cache для ответов
   messageStore[record.id] = {
@@ -474,7 +475,7 @@ function renderMessage(record) {
               <span class="msg-timestamp">${formatTime(time)}</span>
             </div>
             ${replyBlock}
-            <div class="msg-text">${cleanHtml}</div>
+            ${hasVisibleText ? `<div class="msg-text">${cleanHtml}</div>` : ''}
             ${
               record.image_url
                 ? `<img class="msg-image" src="${record.image_url}" data-action="open-image-preview" alt="Изображение в сообщении">`
@@ -492,7 +493,7 @@ function renderMessage(record) {
         <div class="content-area">
           <div class="msg-stack">
             ${replyBlock}
-            <div class="msg-text compact">${cleanHtml}</div>
+            ${hasVisibleText ? `<div class="msg-text compact">${cleanHtml}</div>` : ''}
             ${
               record.image_url
                 ? `<img class="msg-image" src="${record.image_url}" data-action="open-image-preview" alt="Изображение в сообщении">`
@@ -625,7 +626,9 @@ async function handleFileSelect(event) {
     const input = document.getElementById('message-input');
     const text = input.value.trim();
     const isMediaFile = file.type.startsWith('image/') || file.type.startsWith('video/');
-    const messageText = text || (isMediaFile ? '' : file.name);
+    // Some schemas require non-empty content even for media-only messages.
+    // Keep a single space for media-only payload and hide it in UI rendering.
+    const messageText = text || (isMediaFile ? ' ' : file.name);
     input.value = '';
     autoResize(input);
 

@@ -129,6 +129,16 @@ function openProfilePanel() {
   panel.setAttribute('aria-hidden', 'false');
   nameInput.focus();
 
+  // Add direct click listeners for close buttons
+  const closeButtons = panel.querySelectorAll('[data-action="close-profile"]');
+  closeButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Close button clicked directly');
+      closeProfilePanel();
+    });
+  });
+
   profilePanelKeyHandler = (e) => {
     if (e.key === 'Escape') closeProfilePanel();
   };

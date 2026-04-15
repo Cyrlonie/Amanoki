@@ -4,15 +4,15 @@ const TYPING_BROADCAST_TTL_MS = 4500;
 
 function applyPresenceFromChannel() {
   if (isDemoMode || !authUser) return;
-  const byUserId = {};
-  const statusRank = { offline: 0, online: 1, typing: 2 };
 
-  // База списка участников: все профили как offline
+  const byUserId = {};
+
+  // Seed all known profiles as offline first.
   Object.entries(memberDirectory).forEach(([id, name]) => {
     byUserId[id] = { name, status: 'offline' };
   });
 
-  // Накладываем presence-состояние для активных пользователей
+  // Overlay live presence for active users in the current channel.
   const state = presenceChannel ? presenceChannel.presenceState() : {};
   Object.keys(state).forEach((key) => {
     const presences = state[key];
@@ -20,10 +20,12 @@ function applyPresenceFromChannel() {
 
     presences.forEach((p) => {
       if (p.channel !== currentChannel) return;
+
       const id = String(p.user_id || key);
       const name = p.username || memberDirectory[id] || byUserId[id]?.name || 'Unknown';
       const status = p.typing ? 'typing' : 'online';
       const prev = byUserId[id]?.status || 'offline';
+
       byUserId[id] = {
         name,
         status: statusRank[status] >= statusRank[prev] ? status : prev,
@@ -31,13 +33,12 @@ function applyPresenceFromChannel() {
     });
   });
 
-  // Текущий пользователь всегда online
+  // Always mark the current user as online locally.
   const selfId = String(authUser.id);
   const selfName = memberDirectory[selfId] || currentUser || 'You';
   byUserId[selfId] = { name: selfName, status: 'online' };
-  currentUser = selfName;
 
-  // Для UI сворачиваем в объект name -> status
+  // Collapse to the UI-friendly map: username -> strongest status.
   members = {};
   Object.values(byUserId).forEach((entry) => {
     if (!entry?.name) return;
@@ -52,30 +53,41 @@ function applyPresenceFromChannel() {
 
 async function loadMembersDirectory() {
   if (isDemoMode || !supabase) return;
+
   try {
-    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url');
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, is_banned, avatar_color, avatar_url');
     if (error) throw error;
 
     const previousNames = new Set(Object.values(memberDirectory));
     memberDirectory = {};
+
     (data || []).forEach((row) => {
-      if (row.is_banned) return;
-      if (!row.username) return;
+      if (row.is_banned || !row.username) return;
+
       memberDirectory[row.id] = row.username;
       previousNames.delete(row.username);
+
       if (row.avatar_color) {
         userColors[row.username] = row.avatar_color;
       }
+
       if (row.avatar_url) {
         userAvatars[row.username] = row.avatar_url;
       } else {
         delete userAvatars[row.username];
       }
     });
-    previousNames.forEach((name) => delete userAvatars[name]);
+
+    previousNames.forEach((name) => {
+      delete userColors[name];
+      delete userAvatars[name];
+    });
+
     applyPresenceFromChannel();
   } catch (e) {
-    console.error('Ошибка загрузки списка пользователей:', e);
+    console.error('\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438 \u0441\u043f\u0438\u0441\u043a\u0430 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0435\u0439:', e);
   }
 }
 
@@ -85,6 +97,7 @@ function handleTyping() {
     isTyping = true;
     publishTypingStatus(true);
   }
+
   clearTimeout(typingTimer);
   typingTimer = setTimeout(() => {
     isTyping = false;
@@ -94,6 +107,7 @@ function handleTyping() {
 
 async function publishTypingStatus(isTyping2) {
   if (isDemoMode || !supabase || !authUser || !presenceChannel) return;
+
   try {
     await presenceChannel.track({
       user_id: authUser.id,
@@ -101,6 +115,7 @@ async function publishTypingStatus(isTyping2) {
       channel: currentChannel,
       typing: !!isTyping2,
     });
+
     await presenceChannel.send({
       type: 'broadcast',
       event: 'typing',
@@ -112,6 +127,7 @@ async function publishTypingStatus(isTyping2) {
         ts: Date.now(),
       },
     });
+
     // Refresh local UI immediately; remote clients receive sync separately.
     applyPresenceFromChannel();
   } catch (e) {
@@ -122,6 +138,7 @@ async function publishTypingStatus(isTyping2) {
 function applyTypingBroadcast(payload) {
   if (!payload || isDemoMode) return;
   if (payload.channel && payload.channel !== currentChannel) return;
+
   const id = String(payload.user_id || '');
   if (!id) return;
 
@@ -133,12 +150,14 @@ function applyTypingBroadcast(payload) {
   } else {
     delete typingBroadcastState[id];
   }
+
   updateTypingIndicator();
 }
 
 function updateTypingIndicator() {
   const el = document.getElementById('typingIndicator');
   if (!el) return;
+
   if (isDemoMode) {
     el.innerHTML = '';
     return;
@@ -200,8 +219,8 @@ function updateTypingIndicator() {
     return;
   }
 
-  const names = typingUsers.join(', ');
-  const verb = typingUsers.length === 1 ? 'печатает' : 'печатают';
+  const names = typingUsers.slice(0, 2).join(', ');
+  const verb = typingUsers.length === 1 ? '\u043f\u0435\u0447\u0430\u0442\u0430\u0435\u0442' : '\u043f\u0435\u0447\u0430\u0442\u0430\u044e\u0442';
   el.innerHTML = `<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div><span><strong>${escHtml(
     names
   )}</strong> ${verb}...</span>`;
@@ -210,9 +229,10 @@ function updateTypingIndicator() {
 function showTyping(name) {
   const el = document.getElementById('typingIndicator');
   if (!el) return;
+
   el.innerHTML = `<div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div><span><strong>${escHtml(
     name
-  )}</strong> печатает...</span>`;
+  )}</strong> \u043f\u0435\u0447\u0430\u0442\u0430\u0435\u0442...</span>`;
 }
 
 function hideTyping() {
@@ -232,6 +252,7 @@ function updateMemberList() {
   const online = document.getElementById('onlineMembers');
   const offline = document.getElementById('offlineMembers');
   if (!online || !offline) return;
+
   online.innerHTML = '';
   offline.innerHTML = '';
 
@@ -239,6 +260,7 @@ function updateMemberList() {
   sorted.forEach(([name, status]) => {
     const el = document.createElement('div');
     el.className = 'member-item';
+
     const color = getUserColor(name);
     const avatarUrl = userAvatars[name];
     const dotClass = status === 'typing' ? 'online typing' : status;
@@ -253,12 +275,13 @@ function updateMemberList() {
           <div class="status ${dotClass}"></div>
         </div>
         <div class="member-info">
-          <div class="mname">${escHtml(name)}</div>
-          ${status === 'typing' ? '<div class="mstatus">Печатывает...</div>' : ''}
-          ${status === 'idle' ? '<div class="mstatus">Не активен</div>' : ''}
-          ${status === 'dnd' ? '<div class="mstatus">Не беспокоить</div>' : ''}
+          <div class="member-name">${escHtml(name)}</div>
+          ${status === 'typing' ? '<div class="mstatus">\u041f\u0435\u0447\u0430\u0442\u0430\u0435\u0442...</div>' : ''}
+          ${status === 'idle' ? '<div class="mstatus">\u041d\u0435 \u0430\u043a\u0442\u0438\u0432\u0435\u043d</div>' : ''}
+          ${status === 'dnd' ? '<div class="mstatus">\u041d\u0435 \u0431\u0435\u0441\u043f\u043e\u043a\u043e\u0438\u0442\u044c</div>' : ''}
         </div>
       `;
+
     (status === 'offline' ? offline : online).appendChild(el);
   });
 }
@@ -267,46 +290,23 @@ function updateOnlineCount() {
   const el = document.getElementById('onlineCount');
   if (!el) return;
 
-  if (!isDemoMode && presenceChannel) {
-    try {
-      const state = presenceChannel.presenceState() || {};
-      const onlineUserIds = new Set();
-
-      Object.keys(state).forEach((key) => {
-        const presences = state[key];
-        if (!presences || !presences.length) return;
-        presences.forEach((p) => {
-          // Считаем онлайн только участников текущего канала.
-          if (p.channel && p.channel !== currentChannel) return;
-          onlineUserIds.add(String(p.user_id || key));
-        });
-      });
-
-      // Текущий пользователь должен учитываться всегда, даже если sync еще не пришел.
-      if (authUser?.id) {
-        onlineUserIds.add(String(authUser.id));
-      }
-
-      el.textContent = String(onlineUserIds.size);
-      return;
-    } catch (_) {
-      // Fallback ниже на локальное состояние members.
-    }
-  }
-
-  el.textContent = String(Object.values(members).filter((s) => s !== 'offline').length);
+  const onlineStatuses = new Set(['online', 'typing', 'idle', 'dnd']);
+  el.textContent = String(
+    Object.values(members).filter((status) => onlineStatuses.has(status)).length
+  );
 }
 
 function toggleMemberList() {
   const ml = document.getElementById('memberList');
   if (!ml) return;
+
   if (isMobileLayout()) {
     ml.classList.toggle('mobile-open');
     document.getElementById('channelSidebar')?.classList.remove('mobile-open');
     syncMobileBackdrop();
     return;
   }
+
   memberListVisible = !memberListVisible;
   ml.style.display = memberListVisible ? '' : 'none';
 }
-

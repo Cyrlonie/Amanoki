@@ -850,9 +850,43 @@
   padding: 6px 8px;
   font-size: 13px;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-participant.speaking {
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18);
+}
+
+.voice-participant-row {
+  display: flex;
   justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.voice-participant-controls {
+  display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+}
+
+.voice-participant-indicator {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.voice-volume-slider {
+  width: 100%;
+}
+
+.voice-participant-local {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .voice-participant-name {

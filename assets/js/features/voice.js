@@ -1,6 +1,12 @@
 // Voice chat MVP on LiveKit Cloud (classic script, no bundler).
 
 let livekitSdkPromise = null;
+let isVoiceDeafened = false;
+const voiceAudioTrackData = new Map();
+const voiceParticipantTrackMap = new Map();
+const voiceSpeakingTimers = {};
+let voiceAudioContext = null;
+const VAD_THRESHOLD = 0.03;
 
 function getVoiceChannelName(channelId) {
   const channel = VOICE_CHANNELS.find((item) => item.id === channelId);
@@ -72,6 +78,8 @@ function syncVoiceParticipants(room) {
     name: currentUser || 'You',
     isLocal: true,
     muted: !!isVoiceMuted,
+    volume: voiceParticipants[localId]?.volume ?? 1,
+    speaking: false,
   };
 
   room.remoteParticipants.forEach((participant) => {
@@ -81,11 +89,14 @@ function syncVoiceParticipants(room) {
       participant.identity ||
       memberDirectory[id] ||
       'Участник';
+    const previous = voiceParticipants[id] || {};
     next[id] = {
       id,
       name,
       isLocal: false,
       muted: participantMicMuted(participant),
+      volume: previous.volume ?? 1,
+      speaking: previous.speaking ?? false,
     };
   });
 
@@ -101,10 +112,15 @@ function updateVoiceUiState() {
   const channelLabel = document.getElementById('voiceCurrentChannel');
 
   if (panel) panel.classList.toggle('show', !!currentVoiceChannel);
+  const deafenBtn = document.getElementById('voiceDeafenBtn');
   if (leaveBtn) leaveBtn.disabled = !currentVoiceChannel;
   if (muteBtn) muteBtn.disabled = !currentVoiceChannel;
+  if (deafenBtn) deafenBtn.disabled = !currentVoiceChannel;
   if (muteBtn) {
     muteBtn.textContent = isVoiceMuted ? '🎤 Включить микрофон' : '🔇 Выключить микрофон';
+  }
+  if (deafenBtn) {
+    deafenBtn.textContent = isVoiceDeafened ? '🎧 Включить звук' : '🙉 Отключить звук';
   }
   if (channelLabel) {
     channelLabel.textContent = currentVoiceChannel
@@ -113,7 +129,7 @@ function updateVoiceUiState() {
   }
   if (status) {
     status.textContent = currentVoiceChannel
-      ? `Вы в канале ${getVoiceChannelName(currentVoiceChannel)}`
+      ? `Вы в канале ${getVoiceChannelName(currentVoiceChannel)}${isVoiceDeafened ? ' (без звука)' : ''}`
       : 'Голосовой канал не подключен';
   }
 
@@ -138,44 +154,227 @@ function renderVoiceParticipants() {
 
   list.innerHTML = participants
     .sort((a, b) => Number(b.isLocal) - Number(a.isLocal) || a.name.localeCompare(b.name, 'ru'))
-    .map(
-      (p) => `<div class="voice-participant">
-        <span class="voice-participant-name">${escHtml(p.name)}${p.isLocal ? ' (вы)' : ''}</span>
-        <span class="voice-participant-state">${p.muted ? '🔇' : '🎤'}</span>
-      </div>`
-    )
+    .map((p) => {
+      const indicator = p.speaking ? '🔊' : '◦';
+      const volumeValue = Math.round((p.volume ?? 1) * 100);
+      const slider = p.isLocal
+        ? '<span class="voice-participant-local">Ваш уровень</span>'
+        : `<input type="range" min="0" max="100" value="${volumeValue}" class="voice-volume-slider" data-action="change-volume" data-participant-id="${escHtml(
+            p.id
+          )}" />`;
+
+      return `<div class="voice-participant${p.speaking ? ' speaking' : ''}" data-participant-id="${escHtml(
+        p.id
+      )}">
+        <div class="voice-participant-row">
+          <span class="voice-participant-name">${escHtml(p.name)}${p.isLocal ? ' (вы)' : ''}</span>
+          <span class="voice-participant-indicator">${indicator}</span>
+          <span class="voice-participant-state">${p.muted ? '🔇' : '🎤'}</span>
+        </div>
+        <div class="voice-participant-controls">${slider}</div>
+      </div>`;
+    })
     .join('');
 
   updateVoiceUiState();
 }
 
-function attachAudioTrack(track) {
+function getTrackKey(track) {
+  return String(track?.sid || track?.trackSid || track?.name || Math.random());
+}
+
+function getParticipantIdFromArgs(args) {
+  return String(
+    args.find((arg) => arg?.identity)?.identity ||
+      args.find((arg) => arg?.sid)?.sid ||
+      args.find((arg) => arg?.participant)?.participant?.identity ||
+      args.find((arg) => arg?.participant)?.participant?.sid ||
+      authUser?.id ||
+      'remote'
+  );
+}
+
+function ensureVoiceAudioContext() {
+  if (!voiceAudioContext) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    voiceAudioContext = new Ctor();
+  }
+  if (voiceAudioContext.state === 'suspended') {
+    voiceAudioContext.resume().catch(() => {});
+  }
+  return voiceAudioContext;
+}
+
+function updateAudioGainForParticipant(participantId) {
+  const trackIds = voiceParticipantTrackMap.get(participantId);
+  if (!trackIds) return;
+  const volume = isVoiceDeafened ? 0 : voiceParticipants[participantId]?.volume ?? 1;
+  trackIds.forEach((trackKey) => {
+    const data = voiceAudioTrackData.get(trackKey);
+    if (data?.gainNode) {
+      data.gainNode.gain.value = volume;
+    }
+  });
+}
+
+function updateAllAudioGains() {
+  Array.from(voiceParticipantTrackMap.keys()).forEach((participantId) => updateAudioGainForParticipant(participantId));
+}
+
+function updateParticipantSpeaking(participantId, isSpeaking) {
+  if (!participantId || !voiceParticipants[participantId]) return;
+  if (isSpeaking) {
+    if (!voiceParticipants[participantId].speaking) {
+      voiceParticipants[participantId].speaking = true;
+      renderVoiceParticipants();
+    }
+    clearTimeout(voiceSpeakingTimers[participantId]);
+    voiceSpeakingTimers[participantId] = window.setTimeout(() => {
+      if (voiceParticipants[participantId]?.speaking) {
+        voiceParticipants[participantId].speaking = false;
+        renderVoiceParticipants();
+      }
+    }, 300);
+  }
+}
+
+function startVAD(trackKey) {
+  const data = voiceAudioTrackData.get(trackKey);
+  if (!data || !data.analyser) return;
+
+  const buffer = new Uint8Array(data.analyser.fftSize);
+  const tick = () => {
+    data.analyser.getByteTimeDomainData(buffer);
+    let sum = 0;
+    for (let i = 0; i < buffer.length; i += 1) {
+      const value = buffer[i] - 128;
+      sum += value * value;
+    }
+    const rms = Math.sqrt(sum / buffer.length) / 128;
+    updateParticipantSpeaking(data.participantId, rms > VAD_THRESHOLD);
+    data.rafId = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function attachAudioTrack(track, participantId = null) {
   if (!track || track.kind !== 'audio' || typeof track.attach !== 'function') return;
+  participantId = participantId || String(track?.participant?.identity || track?.participant?.sid || 'remote');
+  const trackKey = getTrackKey(track);
   const elements = track.attach();
   const audioElements = Array.isArray(elements) ? elements : elements ? [elements] : [];
+  const ctx = ensureVoiceAudioContext();
+
   audioElements.forEach((el) => {
     if (!(el instanceof HTMLMediaElement)) return;
     el.autoplay = true;
     el.controls = false;
+    el.muted = true;
     el.style.display = 'none';
     document.body.appendChild(el);
+
+    if (!ctx) return;
+    try {
+      const source = ctx.createMediaElementSource(el);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      const gainNode = ctx.createGain();
+      source.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      const volume = isVoiceDeafened ? 0 : voiceParticipants[participantId]?.volume ?? 1;
+      gainNode.gain.value = volume;
+      const trackData = {
+        participantId,
+        gainNode,
+        analyser,
+        rafId: null,
+        element: el,
+        track,
+      };
+      voiceAudioTrackData.set(trackKey, trackData);
+      const trackIds = voiceParticipantTrackMap.get(participantId) || new Set();
+      trackIds.add(trackKey);
+      voiceParticipantTrackMap.set(participantId, trackIds);
+      startVAD(trackKey);
+    } catch (_) {
+      // ignore Web Audio issues on unsupported browsers
+    }
   });
 }
 
 function detachAudioTrack(track) {
-  if (!track || track.kind !== 'audio' || typeof track.detach !== 'function') return;
-  const elements = track.detach();
-  const audioElements = Array.isArray(elements) ? elements : elements ? [elements] : [];
-  audioElements.forEach((el) => el.remove());
+  const trackKey = getTrackKey(track);
+  const data = voiceAudioTrackData.get(trackKey);
+  if (!data) {
+    if (typeof track.detach === 'function') {
+      const elements = track.detach();
+      const audioElements = Array.isArray(elements) ? elements : elements ? [elements] : [];
+      audioElements.forEach((el) => el.remove());
+    }
+    return;
+  }
+
+  if (data.rafId) {
+    cancelAnimationFrame(data.rafId);
+  }
+  if (data.gainNode) {
+    data.gainNode.disconnect();
+  }
+  if (data.analyser) {
+    data.analyser.disconnect();
+  }
+  if (data.element) {
+    data.element.remove();
+  }
+  voiceAudioTrackData.delete(trackKey);
+  const trackIds = voiceParticipantTrackMap.get(data.participantId);
+  if (trackIds) {
+    trackIds.delete(trackKey);
+    if (!trackIds.size) {
+      voiceParticipantTrackMap.delete(data.participantId);
+    }
+  }
+}
+
+function detachAudioTrackByKey(trackKey) {
+  const data = voiceAudioTrackData.get(trackKey);
+  if (!data) return;
+  if (data.track) {
+    detachAudioTrack(data.track);
+  } else {
+    if (data.rafId) {
+      cancelAnimationFrame(data.rafId);
+    }
+    if (data.gainNode) {
+      data.gainNode.disconnect();
+    }
+    if (data.analyser) {
+      data.analyser.disconnect();
+    }
+    if (data.element) {
+      data.element.remove();
+    }
+    voiceAudioTrackData.delete(trackKey);
+    const trackIds = voiceParticipantTrackMap.get(data.participantId);
+    if (trackIds) {
+      trackIds.delete(trackKey);
+      if (!trackIds.size) {
+        voiceParticipantTrackMap.delete(data.participantId);
+      }
+    }
+  }
 }
 
 function attachExistingParticipantAudio(participant) {
   const pubs = participant?.audioTrackPublications || participant?.trackPublications;
   if (!pubs) return;
   const values = typeof pubs.values === 'function' ? Array.from(pubs.values()) : Object.values(pubs);
+  const participantId = String(participant.identity || participant.sid);
   values.forEach((pub) => {
     const track = pub?.track;
-    if (track?.kind === 'audio') attachAudioTrack(track);
+    if (track?.kind === 'audio') attachAudioTrack(track, participantId);
   });
 }
 
@@ -189,13 +388,15 @@ function bindRoomEvents(room, RoomEvent) {
     .on(RoomEvent.LocalTrackPublished, () => syncVoiceParticipants(room))
     .on(RoomEvent.TrackSubscribed, (...args) => {
       const track = args.find((arg) => arg?.kind === 'audio') || args.find((arg) => arg?.track?.kind === 'audio')?.track;
-      if (track) attachAudioTrack(track);
+      const participantId = getParticipantIdFromArgs(args);
+      if (track) attachAudioTrack(track, participantId);
     })
     .on(RoomEvent.TrackUnsubscribed, (...args) => {
       const track = args.find((arg) => arg?.kind === 'audio') || args.find((arg) => arg?.track?.kind === 'audio')?.track;
       if (track) detachAudioTrack(track);
     })
     .on(RoomEvent.Disconnected, () => {
+      cleanupVoiceAudioTracks();
       currentVoiceChannel = null;
       voiceRoom = null;
       isVoiceMuted = false;
@@ -204,6 +405,39 @@ function bindRoomEvents(room, RoomEvent) {
       updateVoiceUiState();
     });
 }
+
+function cleanupVoiceAudioTracks() {
+  Array.from(voiceAudioTrackData.keys()).forEach((trackKey) => detachAudioTrackByKey(trackKey));
+}
+
+function setParticipantVolume(participantId, volume) {
+  if (!voiceParticipants[participantId]) return;
+  voiceParticipants[participantId].volume = volume;
+  renderVoiceParticipants();
+  updateAudioGainForParticipant(participantId);
+}
+
+async function toggleVoiceDeafen() {
+  if (!voiceRoom) {
+    notify('Сначала подключитесь к голосовому каналу', 'error');
+    return;
+  }
+  isVoiceDeafened = !isVoiceDeafened;
+  updateAllAudioGains();
+  renderVoiceParticipants();
+  updateVoiceUiState();
+}
+
+function handleVoiceVolumeInput(event) {
+  const target = event.target instanceof HTMLInputElement ? event.target : null;
+  if (!target || target.dataset.action !== 'change-volume') return;
+  const participantId = target.dataset.participantId;
+  if (!participantId) return;
+  const volume = Number(target.value) / 100;
+  setParticipantVolume(participantId, volume);
+}
+
+document.addEventListener('input', handleVoiceVolumeInput);
 
 async function joinVoiceChannel(channelId) {
   if (isDemoMode) {
@@ -261,6 +495,7 @@ async function leaveVoiceChannel(silent = false) {
     }
   } catch (_) {}
 
+  cleanupVoiceAudioTracks();
   currentVoiceChannel = null;
   voiceRoom = null;
   isVoiceMuted = false;

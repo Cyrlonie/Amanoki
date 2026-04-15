@@ -122,6 +122,9 @@ function setupDomEventHandlers() {
       case 'toggle-voice-mute':
         await toggleVoiceMute();
         break;
+      case 'toggle-voice-deafen':
+        await toggleVoiceDeafen();
+        break;
       case 'reload-admin-users':
         await loadAdminUsers();
         break;

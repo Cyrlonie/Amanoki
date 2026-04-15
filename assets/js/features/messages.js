@@ -424,6 +424,27 @@ function scrollToMessage(messageId) {
   }, 1200);
 }
 
+function isVideoMediaUrl(url) {
+  if (!url) return false;
+  try {
+    const noQuery = String(url).split('?')[0].toLowerCase();
+    return /\.(mp4|webm|mov|m4v|ogg)$/i.test(noQuery);
+  } catch (_) {
+    return false;
+  }
+}
+
+function renderMessageMedia(url) {
+  if (!url) return '';
+  if (isVideoMediaUrl(url)) {
+    return `<video class="msg-video" controls preload="metadata" playsinline>
+      <source src="${url}">
+      Ваш браузер не поддерживает воспроизведение видео.
+    </video>`;
+  }
+  return `<img class="msg-image" src="${url}" data-action="open-image-preview" alt="Изображение в сообщении">`;
+}
+
 // ===================== MESSAGE RENDERING =====================
 function renderMessage(record) {
   const area = document.getElementById('messagesArea');
@@ -481,11 +502,7 @@ function renderMessage(record) {
             </div>
             ${replyBlock}
             ${hasVisibleText ? `<div class="msg-text">${cleanHtml}</div>` : ''}
-            ${
-              record.image_url
-                ? `<img class="msg-image" src="${record.image_url}" data-action="open-image-preview" alt="Изображение в сообщении">`
-                : ''
-            }
+            ${renderMessageMedia(record.image_url)}
             <div class="msg-reaction-chips"></div>
           </div>
           <div class="msg-aside">
@@ -499,11 +516,7 @@ function renderMessage(record) {
           <div class="msg-stack">
             ${replyBlock}
             ${hasVisibleText ? `<div class="msg-text compact">${cleanHtml}</div>` : ''}
-            ${
-              record.image_url
-                ? `<img class="msg-image" src="${record.image_url}" data-action="open-image-preview" alt="Изображение в сообщении">`
-                : ''
-            }
+            ${renderMessageMedia(record.image_url)}
             <div class="msg-reaction-chips"></div>
           </div>
           <div class="msg-aside">

@@ -194,6 +194,15 @@
 .reaction-picker-btn:hover { background: var(--bg-hover); }
 
 .msg-image { max-width: 400px; max-height: 300px; border-radius: 4px; margin-top: 4px; display: block; cursor: zoom-in; }
+.msg-video {
+  max-width: 420px;
+  max-height: 320px;
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 6px;
+  display: block;
+  background: #000;
+}
 
 .image-lightbox {
   position: fixed;

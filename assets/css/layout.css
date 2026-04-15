@@ -983,6 +983,42 @@
     max-height: 220px;
   }
 
+  .msg-video {
+    max-width: calc(100vw - 76px);
+    max-height: 220px;
+  }
+
+  .msg-quick-actions {
+    gap: 3px;
+  }
+
+  .msg-quick-actions .msg-quick-btn,
+  .msg-quick-actions .hover-btn {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    min-height: 26px;
+    font-size: 13px;
+    border-radius: 6px;
+    padding: 0;
+  }
+
+  .msg-reaction-chips {
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  .reaction {
+    padding: 2px 5px;
+    font-size: 12px;
+    border-radius: 6px;
+    gap: 3px;
+  }
+
+  .reaction .count {
+    font-size: 11px;
+  }
+
   .typing-indicator {
     padding: 3px 10px;
   }

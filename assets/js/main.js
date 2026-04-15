@@ -282,17 +282,21 @@ window.onload = async () => {
 
 // ===================== INIT APP =====================
 function initApp() {
-  const initial = currentUser && currentUser[0] ? currentUser[0].toUpperCase() : '?';
-  const color = getUserColor(currentUser);
+  if (typeof refreshSidebarUserChip === 'function') {
+    refreshSidebarUserChip();
+  } else {
+    const initial = currentUser && currentUser[0] ? currentUser[0].toUpperCase() : '?';
+    const color = getUserColor(currentUser);
 
-  document.getElementById('myName').textContent = currentUser;
-  document.getElementById('myAvatar').textContent = initial;
-  document.getElementById('myAvatar').style.background = color;
-  document.getElementById('myAvatar').innerHTML += '<div class="status-dot"></div>';
+    document.getElementById('myName').textContent = currentUser;
+    document.getElementById('myAvatar').textContent = initial;
+    document.getElementById('myAvatar').style.background = color;
+    document.getElementById('myAvatar').innerHTML += '<div class="status-dot"></div>';
+  }
   document.getElementById('message-input').placeholder = `Написать в #${currentChannel}`;
 
   if (!userColors[currentUser]) {
-    userColors[currentUser] = color;
+    userColors[currentUser] = getUserColor(currentUser);
   }
   if (isDemoMode) {
     addMember(currentUser, 'online');

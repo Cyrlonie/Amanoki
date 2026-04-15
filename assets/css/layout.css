@@ -25,6 +25,30 @@
   position: relative;
   user-select: none;
 }
+.server-list > div:last-child > .server-icon {
+  background: var(--bg-secondary);
+  color: transparent !important;
+  font-size: 0 !important;
+}
+.server-list > div:last-child > .server-icon::before,
+.server-list > div:last-child > .server-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+.server-list > div:last-child > .server-icon::before,
+.server-list > div:last-child > .server-icon::after {
+  background: var(--text-secondary);
+}
+.server-list > div:last-child > .server-icon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
 .server-icon:hover {
   border-radius: 18px;
   transform: scale(1.04);

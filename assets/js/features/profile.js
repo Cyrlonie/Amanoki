@@ -19,11 +19,15 @@ function refreshSidebarUserChip() {
   nameEl.textContent = currentUser;
   if (avatarUrl) {
     av.textContent = '';
+    av.innerHTML = '';
     av.style.backgroundImage = `url('${escapeJsString(avatarUrl)}')`;
-    av.style.background = '';
+    av.style.backgroundColor = 'transparent';
+    av.style.background = 'transparent';
   } else {
+    av.innerHTML = '';
     av.textContent = initial;
     av.style.backgroundImage = '';
+    av.style.backgroundColor = color;
     av.style.background = color;
   }
   av.innerHTML += '<div class="status-dot"></div>';
@@ -179,7 +183,7 @@ async function saveProfileSettings(e) {
   }
 
   const prevName = profileOriginalUsername || currentUser;
-  let avatarUrl = null;
+  let avatarUrl = currentUserProfile?.avatar_url || userAvatars[prevName] || null;
 
   if (selectedProfileAvatarFile) {
     try {

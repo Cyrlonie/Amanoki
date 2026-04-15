@@ -66,7 +66,9 @@ window.addEventListener('resize', () => {
 
 function setupDomEventHandlers() {
   document.addEventListener('click', async (event) => {
-    const actionEl = event.target.closest('[data-action]');
+    const targetEl = event.target instanceof Element ? event.target : null;
+    if (!targetEl) return;
+    const actionEl = targetEl.closest('[data-action]');
     if (!actionEl) return;
 
     const action = actionEl.dataset.action;
@@ -193,7 +195,11 @@ function setupDomEventHandlers() {
   });
 
   const profileNameInput = document.getElementById('profileDisplayName');
-  profileNameInput?.addEventListener('input', updateProfilePreview);
+  profileNameInput?.addEventListener('input', () => {
+    if (typeof updateProfilePreview === 'function') {
+      updateProfilePreview();
+    }
+  });
 
   const profileCard = document.querySelector('.profile-panel-card');
   profileCard?.addEventListener('click', (event) => event.stopPropagation());

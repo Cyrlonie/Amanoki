@@ -217,7 +217,11 @@ function setupDomEventHandlers() {
   });
 
   const profileCard = document.querySelector('.profile-panel-card');
-  profileCard?.addEventListener('click', (event) => event.stopPropagation());
+  profileCard?.addEventListener('click', (event) => {
+    const targetEl = event.target instanceof Element ? event.target : null;
+    if (targetEl?.closest('[data-action="close-profile"]')) return;
+    event.stopPropagation();
+  });
 
   document.getElementById('profileLogoutBtn')?.addEventListener('click', async () => {
     await handleLogout();

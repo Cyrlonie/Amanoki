@@ -6,6 +6,7 @@ let selectedProfileAvatarFile = null;
 let selectedProfileAvatarPreviewUrl = null;
 let profileOriginalUsername = '';
 let profileSwatchClickHandler = null;
+let profileLastFocusedElement = null;
 
 function refreshSidebarUserChip() {
   const av = document.getElementById('myAvatar');
@@ -69,7 +70,11 @@ function updateProfilePreview() {
   if (!input || !prev) return;
 
   const name = input.value.trim() || currentUser || '?';
-  const avatarUrl = selectedProfileAvatarFile ? selectedProfileAvatarPreviewUrl : '';
+  const avatarUrl =
+    (selectedProfileAvatarFile ? selectedProfileAvatarPreviewUrl : '') ||
+    currentUserProfile?.avatar_url ||
+    userAvatars[currentUser] ||
+    '';
 
   if (avatarUrl) {
     prev.textContent = '';
@@ -102,6 +107,9 @@ function openProfilePanel() {
   const panel = document.getElementById('profilePanel');
   if (!panel) return;
 
+  profileLastFocusedElement =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
   const nameInput = document.getElementById('profileDisplayName');
   const emailHint = document.getElementById('profileEmailHint');
 
@@ -130,6 +138,7 @@ function openProfilePanel() {
 
   panel.classList.add('show');
   panel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
   nameInput.focus();
 
   profilePanelKeyHandler = (e) => {
@@ -144,10 +153,17 @@ function closeProfilePanel() {
     panel.classList.remove('show');
     panel.setAttribute('aria-hidden', 'true');
   }
+  cleanupProfileAvatarPreview();
+  selectedProfileAvatarFile = null;
+  document.body.style.overflow = '';
   if (profilePanelKeyHandler) {
     document.removeEventListener('keydown', profilePanelKeyHandler);
     profilePanelKeyHandler = null;
   }
+  if (profileLastFocusedElement && document.contains(profileLastFocusedElement)) {
+    profileLastFocusedElement.focus();
+  }
+  profileLastFocusedElement = null;
 }
 
 function validateProfileUsername(raw) {

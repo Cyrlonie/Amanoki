@@ -7,6 +7,7 @@ const voiceParticipantTrackMap = new Map();
 const voiceSpeakingTimers = {};
 let voiceAudioContext = null;
 const VAD_THRESHOLD = 0.03;
+let voiceConnectionGeneration = 0;
 
 function getVoiceChannelName(channelId) {
   const channel = VOICE_CHANNELS.find((item) => item.id === channelId);
@@ -445,36 +446,55 @@ function attachExistingParticipantAudio(participant) {
   });
 }
 
-function bindRoomEvents(room, RoomEvent) {
+function bindRoomEvents(room, RoomEvent, generation) {
   room
-    .on(RoomEvent.ParticipantConnected, () => syncVoiceParticipants(room))
-    .on(RoomEvent.ParticipantDisconnected, () => syncVoiceParticipants(room))
-    .on(RoomEvent.TrackMuted, () => syncVoiceParticipants(room))
-    .on(RoomEvent.TrackUnmuted, () => syncVoiceParticipants(room))
-    .on(RoomEvent.LocalTrackUnpublished, () => syncVoiceParticipants(room))
-    .on(RoomEvent.LocalTrackPublished, () => syncVoiceParticipants(room))
+    .on(RoomEvent.ParticipantConnected, () => {
+      if (generation !== voiceConnectionGeneration) return;
+      syncVoiceParticipants(room);
+    })
+    .on(RoomEvent.ParticipantDisconnected, () => {
+      if (generation !== voiceConnectionGeneration) return;
+      syncVoiceParticipants(room);
+    })
+    .on(RoomEvent.TrackMuted, () => {
+      if (generation !== voiceConnectionGeneration) return;
+      syncVoiceParticipants(room);
+    })
+    .on(RoomEvent.TrackUnmuted, () => {
+      if (generation !== voiceConnectionGeneration) return;
+      syncVoiceParticipants(room);
+    })
+    .on(RoomEvent.LocalTrackUnpublished, () => {
+      if (generation !== voiceConnectionGeneration) return;
+      syncVoiceParticipants(room);
+    })
+    .on(RoomEvent.LocalTrackPublished, () => {
+      if (generation !== voiceConnectionGeneration) return;
+      syncVoiceParticipants(room);
+    })
     .on(RoomEvent.TrackSubscribed, (...args) => {
+      if (generation !== voiceConnectionGeneration) return;
       const track = args.find((arg) => arg?.kind === 'audio') || args.find((arg) => arg?.track?.kind === 'audio')?.track;
       const participantId = getParticipantIdFromArgs(args);
       if (track) attachAudioTrack(track, participantId);
     })
     .on(RoomEvent.TrackUnsubscribed, (...args) => {
+      if (generation !== voiceConnectionGeneration) return;
       const track = args.find((arg) => arg?.kind === 'audio') || args.find((arg) => arg?.track?.kind === 'audio')?.track;
       if (track) detachAudioTrack(track);
     })
     .on(RoomEvent.Disconnected, () => {
-      cleanupVoiceAudioTracks();
-      currentVoiceChannel = null;
-      voiceRoom = null;
-      isVoiceMuted = false;
-      voiceParticipants = {};
-      renderVoiceParticipants();
-      updateVoiceUiState();
+      if (generation !== voiceConnectionGeneration) return;
+      resetVoiceState();
     });
 }
 
 function cleanupVoiceAudioTracks() {
   Array.from(voiceAudioTrackData.keys()).forEach((trackKey) => detachAudioTrackByKey(trackKey));
+  Object.keys(voiceSpeakingTimers).forEach((participantId) => {
+    clearTimeout(voiceSpeakingTimers[participantId]);
+    delete voiceSpeakingTimers[participantId];
+  });
 }
 
 function setParticipantVolume(participantId, volume) {
@@ -506,6 +526,17 @@ function handleVoiceVolumeInput(event) {
 
 document.addEventListener('input', handleVoiceVolumeInput);
 
+function resetVoiceState() {
+  cleanupVoiceAudioTracks();
+  currentVoiceChannel = null;
+  voiceRoom = null;
+  isVoiceMuted = false;
+  isVoiceDeafened = false;
+  voiceParticipants = {};
+  renderVoiceParticipants();
+  updateVoiceUiState();
+}
+
 async function joinVoiceChannel(channelId) {
   if (isDemoMode) {
     notify('Голосовой чат недоступен в демо-режиме', 'error');
@@ -520,6 +551,8 @@ async function joinVoiceChannel(channelId) {
   if (!channelId) return;
   if (currentVoiceChannel === channelId && voiceRoom) return;
 
+  const generation = ++voiceConnectionGeneration;
+
   try {
     if (voiceRoom) {
       await leaveVoiceChannel(true);
@@ -532,43 +565,44 @@ async function joinVoiceChannel(channelId) {
     ]);
 
     const room = new Room();
-    bindRoomEvents(room, RoomEvent);
+    bindRoomEvents(room, RoomEvent, generation);
     await room.connect(tokenData.url, tokenData.token);
+    if (generation !== voiceConnectionGeneration) {
+      room.disconnect();
+      return;
+    }
     room.remoteParticipants.forEach((participant) => attachExistingParticipantAudio(participant));
     await room.localParticipant.setMicrophoneEnabled(true);
+    if (generation !== voiceConnectionGeneration) {
+      room.disconnect();
+      return;
+    }
 
     currentVoiceChannel = channelId;
     voiceRoom = room;
     isVoiceMuted = false;
+    isVoiceDeafened = false;
 
     syncVoiceParticipants(room);
     updateVoiceUiState();
     notify(`Вы подключились к ${getVoiceChannelName(channelId)}`, 'success');
   } catch (error) {
-    currentVoiceChannel = null;
-    voiceRoom = null;
-    isVoiceMuted = false;
-    voiceParticipants = {};
-    renderVoiceParticipants();
-    updateVoiceUiState();
+    if (generation === voiceConnectionGeneration) {
+      resetVoiceState();
+    }
     notify(`Ошибка voice подключения: ${error.message}`, 'error');
   }
 }
 
 async function leaveVoiceChannel(silent = false) {
+  voiceConnectionGeneration += 1;
   try {
     if (voiceRoom) {
       voiceRoom.disconnect();
     }
   } catch (_) {}
 
-  cleanupVoiceAudioTracks();
-  currentVoiceChannel = null;
-  voiceRoom = null;
-  isVoiceMuted = false;
-  voiceParticipants = {};
-  renderVoiceParticipants();
-  updateVoiceUiState();
+  resetVoiceState();
 
   if (!silent) {
     notify('Вы вышли из голосового канала', 'info');

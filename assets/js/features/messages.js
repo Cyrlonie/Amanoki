@@ -1,6 +1,8 @@
 ﻿// Messages: Supabase realtime, rendering, reactions, replies, send, upload, channel switch.
 // Classic script. Uses globals from state/config/auth/presence and main.js (notify, escHtml, escapeJsString, formatTime, scrollToBottom, autoResize, playNotificationSound, getUserColor, deleteMessage, isAdmin).
 
+let messageSubscriptionGeneration = 0;
+
 function unreadStorageKey() {
   return `amanoki_lastRead_${authUser?.id || 'anon'}`;
 }
@@ -96,6 +98,8 @@ async function subscribeToMessages() {
   if (!supabase && !isDemoMode) return;
   if (isDemoMode) return;
 
+  const generation = ++messageSubscriptionGeneration;
+
   try {
     if (messageSubscription) {
       await supabase.removeChannel(messageSubscription);
@@ -117,6 +121,8 @@ async function subscribeToMessages() {
       .eq('channel', currentChannel)
       .order('created_at', { ascending: true })
       .limit(50);
+
+    if (generation !== messageSubscriptionGeneration) return;
 
     if (error) {
       notify('Ошибка загрузки сообщений: ' + error.message, 'error');
@@ -149,6 +155,7 @@ async function subscribeToMessages() {
     messageSubscription = supabase
       .channel('messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        if (generation !== messageSubscriptionGeneration) return;
         const row = payload.new;
         const ch = row.channel;
         if (!TEXT_CHANNELS.includes(ch)) return;
@@ -178,11 +185,20 @@ async function subscribeToMessages() {
           }
         }
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, (payload) => {
+        if (generation !== messageSubscriptionGeneration) return;
+        const messageId = payload.old?.id;
+        if (!messageId) return;
+        delete messageStore[messageId];
+        delete reactionStore[messageId];
+        document.querySelector(`.message-group[data-id="${messageId}"]`)?.remove();
+      })
       .subscribe();
 
     reactionSubscription = supabase
       .channel(`reactions:${currentChannel}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, async () => {
+        if (generation !== messageSubscriptionGeneration) return;
         const ids = [...document.querySelectorAll('.message-group[data-id]')].map((el) => el.dataset.id);
         if (!ids.length) return;
         await loadReactionsForMessages(ids);
@@ -198,15 +214,26 @@ async function subscribeToMessages() {
     });
 
     presenceChannel
-      .on('presence', { event: 'sync' }, () => applyPresenceFromChannel())
-      .on('presence', { event: 'join' }, () => applyPresenceFromChannel())
-      .on('presence', { event: 'leave' }, () => applyPresenceFromChannel())
+      .on('presence', { event: 'sync' }, () => {
+        if (generation !== messageSubscriptionGeneration) return;
+        applyPresenceFromChannel();
+      })
+      .on('presence', { event: 'join' }, () => {
+        if (generation !== messageSubscriptionGeneration) return;
+        applyPresenceFromChannel();
+      })
+      .on('presence', { event: 'leave' }, () => {
+        if (generation !== messageSubscriptionGeneration) return;
+        applyPresenceFromChannel();
+      })
       .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (generation !== messageSubscriptionGeneration) return;
         if (typeof applyTypingBroadcast === 'function') {
           applyTypingBroadcast(payload);
         }
       })
       .subscribe(async (status) => {
+        if (generation !== messageSubscriptionGeneration) return;
         if (status === 'SUBSCRIBED' && presenceChannel) {
           try {
             // Показываем себя онлайн сразу, не дожидаясь sync
@@ -223,7 +250,10 @@ async function subscribeToMessages() {
             });
             applyPresenceFromChannel();
             // На некоторых сетапах sync приходит чуть позже
-            setTimeout(applyPresenceFromChannel, 500);
+            setTimeout(() => {
+              if (generation !== messageSubscriptionGeneration) return;
+              applyPresenceFromChannel();
+            }, 500);
           } catch (e) {
             console.error('Presence track error:', e);
           }

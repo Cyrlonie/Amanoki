@@ -66,13 +66,10 @@ window.addEventListener('resize', () => {
 
 function setupDomEventHandlers() {
   document.addEventListener('click', async (event) => {
-    console.log('Click event:', event.target);
     const targetEl = event.target instanceof Element ? event.target : null;
     if (!targetEl) return;
     const actionEl = targetEl.closest('[data-action]');
     if (!actionEl) return;
-
-    console.log('Action element found:', actionEl, 'action:', actionEl.dataset.action);
 
     const action = actionEl.dataset.action;
     if (!action) return;
@@ -105,7 +102,6 @@ function setupDomEventHandlers() {
         openProfilePanel();
         break;
       case 'close-profile':
-        console.log('close-profile action triggered');
         closeProfilePanel();
         break;
       case 'logout':

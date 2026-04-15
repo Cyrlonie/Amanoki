@@ -134,7 +134,6 @@ function openProfilePanel() {
   closeButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      console.log('Close button clicked directly');
       closeProfilePanel();
     });
   });
@@ -146,11 +145,8 @@ function openProfilePanel() {
 }
 
 function closeProfilePanel() {
-  console.log('closeProfilePanel called');
   const panel = document.getElementById('profilePanel');
-  console.log('panel:', panel);
   if (panel) {
-    console.log('removing show class');
     panel.classList.remove('show');
     panel.setAttribute('aria-hidden', 'true');
   }
@@ -173,14 +169,11 @@ function validateProfileUsername(raw) {
 
 async function saveProfileSettings(e) {
   e.preventDefault();
-  console.log('saveProfileSettings called');
   const nameInput = document.getElementById('profileDisplayName');
   const saveBtn = document.getElementById('profileSaveBtn');
   const username = nameInput.value.trim();
-  console.log('Username:', username);
   const err = validateProfileUsername(username);
   if (err) {
-    console.log('Validation error:', err);
     notify(err, 'error');
     return;
   }
@@ -189,19 +182,15 @@ async function saveProfileSettings(e) {
   let avatarUrl = null;
 
   if (selectedProfileAvatarFile) {
-    console.log('Uploading file:', selectedProfileAvatarFile.name);
     try {
       avatarUrl = await uploadProfileAvatar(selectedProfileAvatarFile);
-      console.log('Uploaded avatarUrl:', avatarUrl);
     } catch (uploadErr) {
-      console.error('Upload failed:', uploadErr);
       notify('Не удалось загрузить аватар: ' + uploadErr.message, 'error');
       return;
     }
   }
 
   if (isDemoMode) {
-    console.log('Demo mode save');
     if (members[prevName] !== undefined && prevName !== username) {
       delete members[prevName];
     }
@@ -257,6 +246,7 @@ async function saveProfileSettings(e) {
     currentUser = username;
 
     await loadUserProfile();
+    refreshSidebarUserChip();
     await loadMembersDirectory();
     applyPresenceFromChannel();
 

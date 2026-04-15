@@ -92,4 +92,5 @@ const DEMO_MESSAGES = [
 
 // Derived
 const userColors = {};
+let userAvatars = {};
 

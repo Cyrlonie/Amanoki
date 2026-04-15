@@ -145,6 +145,14 @@
   gap: 8px;
   border-top: 1px solid var(--border);
 }
+.user-avatar,
+.member-avatar,
+.profile-preview-avatar,
+.msg-avatar {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 .user-avatar {
   width: 32px;
   height: 32px;

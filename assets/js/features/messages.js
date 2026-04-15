@@ -245,6 +245,14 @@ function ensureMessageReactionStore(messageId) {
   return reactionStore[messageId];
 }
 
+function getMessageAvatarStyle(author, color) {
+  const avatarUrl = userAvatars[author];
+  if (avatarUrl) {
+    return `background-image:url('${escapeJsString(avatarUrl)}'); color: transparent;`;
+  }
+  return `background:${color};`;
+}
+
 function renderReactionBar(messageId) {
   const group = document.querySelector(`.message-group[data-id="${messageId}"]`);
   if (!group) return;
@@ -491,9 +499,11 @@ function renderMessage(record) {
          </button>`
     : '';
 
+  const avatarStyle = getMessageAvatarStyle(author, color);
+
   if (!isConsecutive) {
     group.innerHTML = `
-        <div class="msg-avatar" style="background:${color}">${author[0].toUpperCase()}</div>
+        <div class="msg-avatar" style="${avatarStyle}">${author[0].toUpperCase()}</div>
         <div class="content-area">
           <div class="msg-stack">
             <div class="message-header">
@@ -511,7 +521,7 @@ function renderMessage(record) {
         </div>`;
   } else {
     group.innerHTML = `
-        <div class="msg-avatar compact" style="background:${color}; opacity:0">${author[0].toUpperCase()}</div>
+        <div class="msg-avatar compact" style="${avatarStyle}; opacity:0">${author[0].toUpperCase()}</div>
         <div class="content-area">
           <div class="msg-stack">
             ${replyBlock}

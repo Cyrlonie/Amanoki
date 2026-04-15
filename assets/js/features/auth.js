@@ -55,6 +55,9 @@ async function loadUserProfile() {
     if (data.avatar_color && data.username) {
       userColors[data.username] = data.avatar_color;
     }
+    if (data.avatar_url && data.username) {
+      userAvatars[data.username] = data.avatar_url;
+    }
 
     if (isAdmin) {
       const adminBtn = document.getElementById('adminBtn');
@@ -104,6 +107,7 @@ async function handleRegister(e) {
       username: username,
       email: email,
       avatar_color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      avatar_url: null,
     });
 
     if (profileError) throw profileError;

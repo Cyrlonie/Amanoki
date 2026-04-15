@@ -53,7 +53,7 @@ function applyPresenceFromChannel() {
 async function loadMembersDirectory() {
   if (isDemoMode || !supabase) return;
   try {
-    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color');
+    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url');
     if (error) throw error;
 
     memberDirectory = {};
@@ -63,6 +63,9 @@ async function loadMembersDirectory() {
       memberDirectory[row.id] = row.username;
       if (row.avatar_color) {
         userColors[row.username] = row.avatar_color;
+      }
+      if (row.avatar_url) {
+        userAvatars[row.username] = row.avatar_url;
       }
     });
     applyPresenceFromChannel();
@@ -232,15 +235,21 @@ function updateMemberList() {
     const el = document.createElement('div');
     el.className = 'member-item';
     const color = getUserColor(name);
+    const avatarUrl = userAvatars[name];
     const dotClass = status === 'typing' ? 'online typing' : status;
+    const avatarStyle = avatarUrl
+      ? `background-image:url('${escapeJsString(avatarUrl)}');`
+      : `background:${color};`;
+    const avatarContent = avatarUrl ? '' : name[0].toUpperCase();
+
     el.innerHTML = `
-        <div class="member-avatar" style="background:${color}">
-          ${name[0].toUpperCase()}
+        <div class="member-avatar" style="${avatarStyle}">
+          ${avatarContent}
           <div class="status ${dotClass}"></div>
         </div>
         <div class="member-info">
           <div class="mname">${escHtml(name)}</div>
-          ${status === 'typing' ? '<div class="mstatus">Печатает...</div>' : ''}
+          ${status === 'typing' ? '<div class="mstatus">Печатывает...</div>' : ''}
           ${status === 'idle' ? '<div class="mstatus">Не активен</div>' : ''}
           ${status === 'dnd' ? '<div class="mstatus">Не беспокоить</div>' : ''}
         </div>

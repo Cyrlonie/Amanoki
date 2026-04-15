@@ -2,6 +2,7 @@
 
 let profilePanelKeyHandler = null;
 let selectedProfileColor = null;
+let selectedProfileAvatarUrl = null;
 let profileOriginalUsername = '';
 let profileSwatchClickHandler = null;
 
@@ -12,11 +13,19 @@ function refreshSidebarUserChip() {
 
   const initial = currentUser && currentUser[0] ? currentUser[0].toUpperCase() : '?';
   const color = getUserColor(currentUser);
+  const avatarUrl = currentUserProfile?.avatar_url || userAvatars[currentUser];
 
   nameEl.textContent = currentUser;
-  av.textContent = initial;
-  av.style.background = color;
-  av.innerHTML = `${initial}<div class="status-dot"></div>`;
+  if (avatarUrl) {
+    av.textContent = '';
+    av.style.backgroundImage = `url('${escapeJsString(avatarUrl)}')`;
+    av.style.background = '';
+  } else {
+    av.textContent = initial;
+    av.style.backgroundImage = '';
+    av.style.background = color;
+  }
+  av.innerHTML += '<div class="status-dot"></div>';
 }
 
 function buildProfileColorSwatches() {
@@ -45,12 +54,22 @@ function buildProfileColorSwatches() {
 
 function updateProfilePreview() {
   const input = document.getElementById('profileDisplayName');
+  const avatarInput = document.getElementById('profileAvatarUrl');
   const prev = document.getElementById('profilePreviewAvatar');
   if (!input || !prev) return;
 
   const name = input.value.trim() || currentUser || '?';
-  prev.textContent = name[0].toUpperCase();
-  prev.style.background = selectedProfileColor || COLORS[0];
+  const avatarUrl = (avatarInput?.value || selectedProfileAvatarUrl || '').trim();
+
+  if (avatarUrl) {
+    prev.textContent = '';
+    prev.style.backgroundImage = `url('${escapeJsString(avatarUrl)}')`;
+    prev.style.background = '';
+  } else {
+    prev.textContent = name[0].toUpperCase();
+    prev.style.backgroundImage = '';
+    prev.style.background = selectedProfileColor || COLORS[0];
+  }
 }
 
 function openProfilePanel() {
@@ -69,6 +88,8 @@ function openProfilePanel() {
     (currentUserProfile && currentUserProfile.avatar_color) ||
     userColors[currentUser] ||
     COLORS[0];
+  selectedProfileAvatarUrl = (currentUserProfile && currentUserProfile.avatar_url) || '';
+  document.getElementById('profileAvatarUrl').value = selectedProfileAvatarUrl;
 
   if (isDemoMode) {
     emailHint.textContent = 'Демо: имя и цвет только в этой сессии.';
@@ -126,15 +147,21 @@ async function saveProfileSettings(e) {
   }
 
   const prevName = profileOriginalUsername || currentUser;
+  const avatarUrlInput = document.getElementById('profileAvatarUrl');
+  const avatarUrl = avatarUrlInput?.value.trim() || null;
 
   if (isDemoMode) {
     if (members[prevName] !== undefined && prevName !== username) {
       delete members[prevName];
     }
     delete userColors[prevName];
+    delete userAvatars[prevName];
     currentUser = username;
     userColors[currentUser] = selectedProfileColor;
-    currentUserProfile = { username, avatar_color: selectedProfileColor };
+    if (avatarUrl) {
+      userAvatars[currentUser] = avatarUrl;
+    }
+    currentUserProfile = { username, avatar_color: selectedProfileColor, avatar_url: avatarUrl };
     refreshSidebarUserChip();
     addMember(currentUser, 'online');
     notify('Профиль обновлён (демо)', 'success');
@@ -154,6 +181,7 @@ async function saveProfileSettings(e) {
       .update({
         username,
         avatar_color: selectedProfileColor,
+        avatar_url: avatarUrl,
       })
       .eq('id', authUser.id);
 
@@ -161,8 +189,14 @@ async function saveProfileSettings(e) {
 
     if (prevName !== username) {
       delete userColors[prevName];
+      delete userAvatars[prevName];
     }
     userColors[username] = selectedProfileColor;
+    if (avatarUrl) {
+      userAvatars[username] = avatarUrl;
+    } else {
+      delete userAvatars[username];
+    }
     currentUser = username;
 
     await loadUserProfile();
@@ -191,3 +225,6 @@ async function saveProfileSettings(e) {
     saveBtn.disabled = false;
   }
 }
+
+const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
+profileAvatarUrlInput?.addEventListener('input', updateProfilePreview);

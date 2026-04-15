@@ -627,8 +627,9 @@ async function handleFileSelect(event) {
     const text = input.value.trim();
     const isMediaFile = file.type.startsWith('image/') || file.type.startsWith('video/');
     // Some schemas require non-empty content even for media-only messages.
-    // Keep a single space for media-only payload and hide it in UI rendering.
-    const messageText = text || (isMediaFile ? ' ' : file.name);
+    // Use zero-width space for media-only payload so DB constraints pass,
+    // while UI keeps the text visually empty.
+    const messageText = text || (isMediaFile ? '\u200B' : file.name);
     input.value = '';
     autoResize(input);
 

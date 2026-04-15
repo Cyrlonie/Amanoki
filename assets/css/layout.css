@@ -1,4 +1,4 @@
-/* === SERVER LIST === */
+﻿/* === SERVER LIST === */
 .server-list {
   width: 72px;
   background: var(--bg-tertiary);
@@ -976,20 +976,43 @@
 
   .message-group .content-area {
     padding-left: 50px;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .message-group .content-area .msg-stack {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .message-group .content-area .msg-aside {
+    order: 2;
+    width: 100%;
+    margin-top: 2px;
+    align-self: auto;
   }
 
   .msg-image {
-    max-width: calc(100vw - 76px);
+    width: 100%;
+    max-width: 100%;
     max-height: 220px;
+    height: auto;
+    object-fit: contain;
   }
 
   .msg-video {
-    max-width: calc(100vw - 76px);
+    width: 100%;
+    max-width: 100%;
     max-height: 220px;
+    height: auto;
   }
 
   .msg-quick-actions {
     gap: 3px;
+    justify-content: flex-start;
+    width: 100%;
   }
 
   .msg-quick-actions .msg-quick-btn,

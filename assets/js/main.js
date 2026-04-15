@@ -330,7 +330,25 @@ function initApp() {
 
 // ===================== ADMIN FUNCTIONS =====================
 async function deleteMessage(messageId) {
-  if (!isAdmin || !supabase) return;
+  if (!supabase) return;
+
+  // Получить сообщение, чтобы проверить автора
+  const { data: message, error: fetchError } = await supabase
+    .from('messages')
+    .select('user_id')
+    .eq('id', messageId)
+    .single();
+
+  if (fetchError || !message) {
+    notify('❌ Ошибка: сообщение не найдено', 'error');
+    return;
+  }
+
+  const isAuthor = message.user_id === authUser?.id;
+  if (!isAdmin && !isAuthor) {
+    notify('❌ Нет прав на удаление этого сообщения', 'error');
+    return;
+  }
 
   if (!confirm('🗑️ Удалить это сообщение?')) return;
 

@@ -278,12 +278,14 @@ function renderReactionBar(messageId) {
   const safeMessageId = escapeJsString(messageId);
   chipsEl.innerHTML = chips;
 
-  const adminBtn = isAdmin
+  const messageData = messageStore[messageId];
+  const canDelete = isAdmin || (messageData && messageData.user_id === (authUser?.id || 'demo-user'));
+  const deleteBtn = canDelete
     ? `<button class="hover-btn" type="button" title="Удалить" data-action="delete-message" data-message-id="${escapeJsString(
         messageId
       )}" style="color:var(--red);">🗑️</button>`
     : '';
-  quickEl.innerHTML = `${adminBtn}
+  quickEl.innerHTML = `${deleteBtn}
       <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" data-action="open-reaction-picker" data-message-id="${safeMessageId}">❤️</button>
       <button class="reaction msg-quick-btn" type="button" title="Ответить" data-action="start-reply" data-message-id="${safeMessageId}">↩</button>`;
 }
@@ -483,6 +485,7 @@ function renderMessage(record) {
     author,
     text,
     created: record.created,
+    user_id: record.user_id,
     reply_to: record.reply_to || null,
   };
 

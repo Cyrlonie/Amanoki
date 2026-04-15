@@ -140,8 +140,6 @@
   word-break: break-word;
   white-space: pre-wrap;
 }
-.msg-text > :first-child { margin-top: 0; }
-.msg-text > :last-child { margin-bottom: 0; }
 .msg-text.compact { padding-left: 0; }
 .msg-edited { font-size: 10px; color: var(--text-muted); margin-left: 2px; }
 
@@ -149,7 +147,7 @@
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .reaction {
   background: var(--reaction-bg);
@@ -195,13 +193,13 @@
 }
 .reaction-picker-btn:hover { background: var(--bg-hover); }
 
-.msg-image { max-width: 400px; max-height: 300px; border-radius: 4px; margin-top: 2px; display: block; cursor: zoom-in; }
+.msg-image { max-width: 400px; max-height: 300px; border-radius: 4px; margin-top: 4px; display: block; cursor: zoom-in; }
 .msg-video {
   max-width: 420px;
   max-height: 320px;
   width: 100%;
   border-radius: 8px;
-  margin-top: 2px;
+  margin-top: 6px;
   display: block;
   background: #000;
 }

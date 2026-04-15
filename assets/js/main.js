@@ -565,7 +565,10 @@ function escapeJsString(s) {
 document.addEventListener('click', (event) => {
   const picker = document.getElementById('reactionPicker');
   if (!picker || !picker.classList.contains('show')) return;
-  if (picker.contains(event.target)) return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+  if (picker.contains(target)) return;
+  if (target.closest('[data-action="open-reaction-picker"]')) return;
   closeReactionPicker();
 });
 

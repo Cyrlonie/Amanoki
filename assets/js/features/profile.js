@@ -168,11 +168,14 @@ function validateProfileUsername(raw) {
 
 async function saveProfileSettings(e) {
   e.preventDefault();
+  console.log('saveProfileSettings called');
   const nameInput = document.getElementById('profileDisplayName');
   const saveBtn = document.getElementById('profileSaveBtn');
   const username = nameInput.value.trim();
+  console.log('Username:', username);
   const err = validateProfileUsername(username);
   if (err) {
+    console.log('Validation error:', err);
     notify(err, 'error');
     return;
   }
@@ -180,12 +183,22 @@ async function saveProfileSettings(e) {
   const prevName = profileOriginalUsername || currentUser;
   const avatarUrlInput = document.getElementById('profileAvatarUrl');
   let avatarUrl = avatarUrlInput?.value.trim() || null;
+  console.log('Initial avatarUrl:', avatarUrl);
 
   if (selectedProfileAvatarFile) {
-    avatarUrl = await uploadProfileAvatar(selectedProfileAvatarFile);
+    console.log('Uploading file:', selectedProfileAvatarFile.name);
+    try {
+      avatarUrl = await uploadProfileAvatar(selectedProfileAvatarFile);
+      console.log('Uploaded avatarUrl:', avatarUrl);
+    } catch (uploadErr) {
+      console.error('Upload failed:', uploadErr);
+      notify('Не удалось загрузить аватар: ' + uploadErr.message, 'error');
+      return;
+    }
   }
 
   if (isDemoMode) {
+    console.log('Demo mode save');
     if (members[prevName] !== undefined && prevName !== username) {
       delete members[prevName];
     }
@@ -205,11 +218,13 @@ async function saveProfileSettings(e) {
   }
 
   if (!supabase || !authUser) {
+    console.log('No supabase or authUser');
     notify('Нет подключения к серверу', 'error');
     return;
   }
 
   saveBtn.disabled = true;
+  console.log('Saving to DB');
   try {
     const { error } = await supabase
       .from('profiles')
@@ -220,8 +235,12 @@ async function saveProfileSettings(e) {
       })
       .eq('id', authUser.id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('DB update error:', error);
+      throw error;
+    }
 
+    console.log('DB update successful');
     if (prevName !== username) {
       delete userColors[prevName];
       delete userAvatars[prevName];
@@ -255,6 +274,7 @@ async function saveProfileSettings(e) {
     notify('Профиль сохранён', 'success');
     closeProfilePanel();
   } catch (e2) {
+    console.error('Save error:', e2);
     notify('Не удалось сохранить: ' + e2.message, 'error');
   } finally {
     saveBtn.disabled = false;
@@ -265,14 +285,21 @@ async function uploadProfileAvatar(file) {
   if (!supabase) {
     throw new Error('Нет подключения к Supabase');
   }
+  console.log('Starting avatar upload for file:', file.name, file.size);
   const safeExt = String(file.name).split('.').pop().toLowerCase() || 'png';
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExt}`;
   const filePath = `avatars/${authUser.id}/${fileName}`;
+  console.log('Upload path:', filePath);
 
   const { error } = await supabase.storage.from('avatar').upload(filePath, file);
-  if (error) throw error;
+  if (error) {
+    console.error('Upload error:', error);
+    throw error;
+  }
+  console.log('Upload successful');
 
   const { data } = supabase.storage.from('avatar').getPublicUrl(filePath);
+  console.log('Public URL:', data?.publicUrl);
   return data?.publicUrl || null;
 }
 

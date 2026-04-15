@@ -62,19 +62,17 @@
 .msg-avatar.compact { top: 2px; }
 .message-group .content-area {
   padding-left: 56px;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 8px;
+  display: block;
   min-width: 0;
 }
 .msg-stack {
-  flex: 1;
   min-width: 0;
 }
 .msg-aside {
-  flex-shrink: 0;
-  align-self: center;
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  z-index: 2;
 }
 .msg-reaction-chips:empty {
   display: none;
@@ -157,6 +155,10 @@
   word-break: break-word;
   white-space: pre-wrap;
 }
+.msg-media {
+  margin-top: 6px;
+  max-width: min(420px, 100%);
+}
 .msg-text.compact { padding-left: 0; }
 .msg-edited { font-size: 10px; color: var(--text-muted); margin-left: 2px; }
 
@@ -210,7 +212,7 @@
 }
 .reaction-picker-btn:hover { background: var(--bg-hover); }
 
-.msg-image { max-width: 400px; max-height: 300px; border-radius: 4px; margin-top: 0; display: block; cursor: zoom-in; }
+.msg-image { width: 100%; max-width: 400px; max-height: 300px; border-radius: 10px; margin-top: 0; display: block; cursor: zoom-in; object-fit: cover; }
 .msg-video {
   max-width: 420px;
   max-height: 320px;

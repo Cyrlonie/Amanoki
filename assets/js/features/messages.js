@@ -478,12 +478,12 @@ function renderMessageMedia(url) {
   if (!url) return '';
   const safeUrl = escHtml(String(url));
   if (isVideoMediaUrl(url)) {
-    return `<video class="msg-video" controls preload="metadata" playsinline>
+    return `<div class="msg-media"><video class="msg-video" controls preload="metadata" playsinline>
       <source src="${safeUrl}">
       Ваш браузер не поддерживает воспроизведение видео.
-    </video>`;
+    </video></div>`;
   }
-  return `<img class="msg-image" src="${safeUrl}" data-action="open-image-preview" alt="Изображение в сообщении">`;
+  return `<div class="msg-media"><img class="msg-image" src="${safeUrl}" data-action="open-image-preview" alt="Изображение в сообщении"></div>`;
 }
 
 // ===================== MESSAGE RENDERING =====================

@@ -7,6 +7,7 @@ let selectedProfileAvatarPreviewUrl = null;
 let profileOriginalUsername = '';
 let profileSwatchClickHandler = null;
 let profileLastFocusedElement = null;
+let removeProfileAvatar = false;
 
 function refreshSidebarUserChip() {
   const av = document.getElementById('myAvatar');
@@ -72,8 +73,9 @@ function updateProfilePreview() {
   const name = input.value.trim() || currentUser || '?';
   const avatarUrl =
     (selectedProfileAvatarFile ? selectedProfileAvatarPreviewUrl : '') ||
-    currentUserProfile?.avatar_url ||
-    userAvatars[currentUser] ||
+    (!removeProfileAvatar &&
+      (currentUserProfile?.avatar_url ||
+      userAvatars[currentUser])) ||
     '';
 
   if (avatarUrl) {
@@ -92,6 +94,7 @@ function handleProfileAvatarFileSelect(event) {
   if (!(fileInput instanceof HTMLInputElement)) return;
 
   selectedProfileAvatarFile = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+  removeProfileAvatar = false;
   cleanupProfileAvatarPreview();
 
   if (selectedProfileAvatarFile) {
@@ -121,6 +124,7 @@ function openProfilePanel() {
     userColors[currentUser] ||
     COLORS[0];
   selectedProfileAvatarFile = null;
+  removeProfileAvatar = false;
   cleanupProfileAvatarPreview();
   const fileInput = document.getElementById('profileAvatarFile');
   if (fileInput) fileInput.value = '';
@@ -155,6 +159,7 @@ function closeProfilePanel() {
   }
   cleanupProfileAvatarPreview();
   selectedProfileAvatarFile = null;
+  removeProfileAvatar = false;
   document.body.style.overflow = '';
   if (profilePanelKeyHandler) {
     document.removeEventListener('keydown', profilePanelKeyHandler);
@@ -189,7 +194,7 @@ async function saveProfileSettings(e) {
   }
 
   const prevName = profileOriginalUsername || currentUser;
-  let avatarUrl = currentUserProfile?.avatar_url || userAvatars[prevName] || null;
+  let avatarUrl = removeProfileAvatar ? null : (currentUserProfile?.avatar_url || userAvatars[prevName] || null);
 
   if (selectedProfileAvatarFile) {
     try {
@@ -310,6 +315,17 @@ function initProfileFormEvents() {
   const profileForm = document.getElementById('profileForm');
   if (!profileForm || profileForm.dataset.profileEventsInit === '1') return;
 
+  if (!document.getElementById('profileRemoveAvatarBtn')) {
+    const fileInput = document.getElementById('profileAvatarFile');
+    const hint = fileInput?.nextElementSibling;
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.id = 'profileRemoveAvatarBtn';
+    removeBtn.className = 'profile-btn profile-btn-secondary';
+    removeBtn.textContent = 'Удалить аватар';
+    hint?.insertAdjacentElement('afterend', removeBtn);
+  }
+
   const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
   profileAvatarUrlInput?.addEventListener('input', () => {
     selectedProfileAvatarFile = null;
@@ -319,6 +335,15 @@ function initProfileFormEvents() {
 
   const profileAvatarFileInput = document.getElementById('profileAvatarFile');
   profileAvatarFileInput?.addEventListener('change', handleProfileAvatarFileSelect);
+
+  document.getElementById('profileRemoveAvatarBtn')?.addEventListener('click', () => {
+    removeProfileAvatar = true;
+    selectedProfileAvatarFile = null;
+    cleanupProfileAvatarPreview();
+    const fileInput = document.getElementById('profileAvatarFile');
+    if (fileInput) fileInput.value = '';
+    updateProfilePreview();
+  });
 
   profileForm.dataset.profileEventsInit = '1';
 }

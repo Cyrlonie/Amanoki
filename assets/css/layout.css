@@ -1009,9 +1009,7 @@
   .message-group .content-area {
     padding-left: 50px;
     min-width: 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
+    display: block;
   }
 
   .message-group .content-area .msg-stack {
@@ -1020,10 +1018,13 @@
   }
 
   .message-group .content-area .msg-aside {
-    order: 2;
+    position: static;
     width: 100%;
-    margin-top: 2px;
-    align-self: auto;
+    margin-top: 6px;
+  }
+
+  .msg-media {
+    max-width: 100%;
   }
 
   .msg-image {

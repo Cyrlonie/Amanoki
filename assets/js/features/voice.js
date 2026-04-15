@@ -551,12 +551,14 @@ async function joinVoiceChannel(channelId) {
   if (!channelId) return;
   if (currentVoiceChannel === channelId && voiceRoom) return;
 
-  const generation = ++voiceConnectionGeneration;
+  let generation = 0;
 
   try {
     if (voiceRoom) {
       await leaveVoiceChannel(true);
     }
+
+    generation = ++voiceConnectionGeneration;
 
     const roomName = getVoiceRoomName(channelId);
     const [{ Room, RoomEvent }, tokenData] = await Promise.all([

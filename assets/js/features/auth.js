@@ -70,6 +70,7 @@ async function loadUserProfile() {
     const adminBtn = document.getElementById('adminBtn');
     if (adminBtn) adminBtn.style.display = isAdmin ? 'flex' : 'none';
   } catch (_) {
+    currentUserProfile = null;
     isAdmin = false;
     currentUser = authUser.email.split('@')[0];
     const adminBtn = document.getElementById('adminBtn');

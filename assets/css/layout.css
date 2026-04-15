@@ -976,20 +976,39 @@
 
   .message-group .content-area {
     padding-left: 50px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
   }
 
   .msg-image {
-    max-width: calc(100vw - 76px);
+    width: min(100%, calc(100vw - 88px));
+    max-width: calc(100vw - 88px);
     max-height: 220px;
+    height: auto;
   }
 
   .msg-video {
-    max-width: calc(100vw - 76px);
+    width: min(100%, calc(100vw - 88px));
+    max-width: calc(100vw - 88px);
     max-height: 220px;
+    height: auto;
+  }
+
+  .msg-stack {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .msg-aside {
+    align-self: stretch;
+    width: 100%;
   }
 
   .msg-quick-actions {
     gap: 3px;
+    justify-content: flex-start;
+    margin-top: 0;
   }
 
   .msg-quick-actions .msg-quick-btn,

@@ -138,7 +138,9 @@ function openProfilePanel() {
 function closeProfilePanel() {
   console.log('closeProfilePanel called');
   const panel = document.getElementById('profilePanel');
+  console.log('panel:', panel);
   if (panel) {
+    console.log('removing show class');
     panel.classList.remove('show');
     panel.setAttribute('aria-hidden', 'true');
   }

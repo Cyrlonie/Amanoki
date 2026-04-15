@@ -113,6 +113,15 @@ function setupDomEventHandlers() {
       case 'toggle-admin':
         toggleAdminPanel();
         break;
+      case 'join-voice':
+        await joinVoiceChannel(actionEl.dataset.voiceChannel);
+        break;
+      case 'leave-voice':
+        await leaveVoiceChannel();
+        break;
+      case 'toggle-voice-mute':
+        await toggleVoiceMute();
+        break;
       case 'reload-admin-users':
         await loadAdminUsers();
         break;

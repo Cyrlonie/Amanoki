@@ -131,11 +131,11 @@
         <span>Голосовые каналы</span>
         <span class="add-btn">+</span>
       </div>
-      <div class="channel-item" data-action="notify" data-message="Голосовые каналы в альфа недоступны">
+      <div class="channel-item voice-channel-item" data-action="join-voice" data-voice-channel="general-voice">
         <span class="ch-icon">🔊</span>
         <span class="ch-name">General Voice</span>
       </div>
-      <div class="channel-item" data-action="notify" data-message="Голосовые каналы в альфа недоступны">
+      <div class="channel-item voice-channel-item" data-action="join-voice" data-voice-channel="dev-room">
         <span class="ch-icon">🔊</span>
         <span class="ch-name">Dev Room</span>
       </div>
@@ -150,8 +150,8 @@
         <div class="ustatus">В сети</div>
       </div>
       <div class="footer-icons">
-        <div class="footer-icon" title="Микрофон">🎤</div>
-        <div class="footer-icon" title="Наушники">🎧</div>
+        <div class="footer-icon" title="Микрофон" data-action="toggle-voice-mute">🎤</div>
+        <div class="footer-icon" title="Выйти из войса" data-action="leave-voice">📴</div>
         <div class="footer-icon" title="Профиль" data-action="open-profile">⚙️</div>
       </div>
     </div>
@@ -207,6 +207,26 @@
     <div id="onlineMembers"></div>
     <div class="member-section-title">Не в сети</div>
     <div id="offlineMembers"></div>
+  </div>
+
+  <div class="voice-panel" id="voicePanel">
+    <div class="voice-panel-header">
+      <div>
+        <div class="voice-panel-title">Голосовой канал</div>
+        <div class="voice-panel-channel" id="voiceCurrentChannel">Не подключено</div>
+      </div>
+      <div class="voice-panel-actions">
+        <button type="button" class="voice-btn" id="voiceMuteBtn" data-action="toggle-voice-mute">🔇 Выключить микрофон</button>
+        <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice">Выйти</button>
+      </div>
+    </div>
+    <div class="voice-panel-status" id="voiceStatus">Голосовой канал не подключен</div>
+    <div class="voice-participants-block">
+      <div class="voice-participants-title">Участники: <span id="voiceParticipantCount">0</span></div>
+      <div class="voice-participants" id="voiceParticipants">
+        <div class="voice-participant-empty">Нет участников</div>
+      </div>
+    </div>
   </div>
 
   <div class="mobile-backdrop" id="mobileBackdrop" data-action="close-mobile-panels"></div>
@@ -286,6 +306,7 @@
   <script src="assets/js/features/auth.js"></script>
   <script src="assets/js/features/presence.js"></script>
   <script src="assets/js/features/messages.js"></script>
+  <script src="assets/js/features/voice.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/features/profile.js"></script>
 </body>

@@ -19,6 +19,12 @@ let messageSubscription = null;
 let presenceChannel = null;
 let reactionSubscription = null;
 
+// Voice state
+let currentVoiceChannel = null;
+let voiceRoom = null;
+let isVoiceMuted = false;
+let voiceParticipants = {};
+
 // UI/state flags
 let isDemoMode = false;
 let typingTimer = null;
@@ -63,6 +69,11 @@ const CHANNEL_DESCS = {
   'dev-talk': 'Обсуждаем код, архитектуру и технологии',
   announcements: '📢 Важные объявления команды',
 };
+
+const VOICE_CHANNELS = [
+  { id: 'general-voice', name: 'General Voice' },
+  { id: 'dev-room', name: 'Dev Room' },
+];
 
 /** Каналы с текстовым чатом (для бейджей непрочитанного). */
 const TEXT_CHANNELS = Object.keys(CHANNEL_DESCS);

@@ -2,7 +2,6 @@
 
 let profilePanelKeyHandler = null;
 let selectedProfileColor = null;
-let selectedProfileAvatarUrl = null;
 let selectedProfileAvatarFile = null;
 let selectedProfileAvatarPreviewUrl = null;
 let profileOriginalUsername = '';
@@ -63,14 +62,11 @@ function cleanupProfileAvatarPreview() {
 
 function updateProfilePreview() {
   const input = document.getElementById('profileDisplayName');
-  const avatarInput = document.getElementById('profileAvatarUrl');
   const prev = document.getElementById('profilePreviewAvatar');
   if (!input || !prev) return;
 
   const name = input.value.trim() || currentUser || '?';
-  const avatarUrl = selectedProfileAvatarFile
-    ? selectedProfileAvatarPreviewUrl
-    : (avatarInput?.value || selectedProfileAvatarUrl || '').trim();
+  const avatarUrl = selectedProfileAvatarFile ? selectedProfileAvatarPreviewUrl : '';
 
   if (avatarUrl) {
     prev.textContent = '';
@@ -92,8 +88,6 @@ function handleProfileAvatarFileSelect(event) {
 
   if (selectedProfileAvatarFile) {
     selectedProfileAvatarPreviewUrl = URL.createObjectURL(selectedProfileAvatarFile);
-    const urlInput = document.getElementById('profileAvatarUrl');
-    if (urlInput) urlInput.value = '';
   }
 
   updateProfilePreview();
@@ -115,10 +109,8 @@ function openProfilePanel() {
     (currentUserProfile && currentUserProfile.avatar_color) ||
     userColors[currentUser] ||
     COLORS[0];
-  selectedProfileAvatarUrl = (currentUserProfile && currentUserProfile.avatar_url) || '';
   selectedProfileAvatarFile = null;
   cleanupProfileAvatarPreview();
-  document.getElementById('profileAvatarUrl').value = selectedProfileAvatarUrl;
   const fileInput = document.getElementById('profileAvatarFile');
   if (fileInput) fileInput.value = '';
 
@@ -144,6 +136,7 @@ function openProfilePanel() {
 }
 
 function closeProfilePanel() {
+  console.log('closeProfilePanel called');
   const panel = document.getElementById('profilePanel');
   if (panel) {
     panel.classList.remove('show');
@@ -181,9 +174,7 @@ async function saveProfileSettings(e) {
   }
 
   const prevName = profileOriginalUsername || currentUser;
-  const avatarUrlInput = document.getElementById('profileAvatarUrl');
-  let avatarUrl = avatarUrlInput?.value.trim() || null;
-  console.log('Initial avatarUrl:', avatarUrl);
+  let avatarUrl = null;
 
   if (selectedProfileAvatarFile) {
     console.log('Uploading file:', selectedProfileAvatarFile.name);

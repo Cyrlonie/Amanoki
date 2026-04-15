@@ -3,6 +3,7 @@
 let profilePanelKeyHandler = null;
 let selectedProfileColor = null;
 let profileOriginalUsername = '';
+let profileSwatchClickHandler = null;
 
 function refreshSidebarUserChip() {
   const av = document.getElementById('myAvatar');
@@ -27,13 +28,19 @@ function buildProfileColorSwatches() {
       `<button type="button" class="profile-color-swatch${c === selectedProfileColor ? ' selected' : ''}" style="--swatch:${c}" data-color="${c}" aria-label="Цвет ${c}"></button>`
   ).join('');
 
-  wrap.onclick = (e) => {
+  if (profileSwatchClickHandler) {
+    wrap.removeEventListener('click', profileSwatchClickHandler);
+  }
+
+  profileSwatchClickHandler = (e) => {
     const btn = e.target.closest('[data-color]');
     if (!btn) return;
     selectedProfileColor = btn.dataset.color;
     wrap.querySelectorAll('.profile-color-swatch').forEach((b) => b.classList.toggle('selected', b.dataset.color === selectedProfileColor));
     updateProfilePreview();
   };
+
+  wrap.addEventListener('click', profileSwatchClickHandler);
 }
 
 function updateProfilePreview() {

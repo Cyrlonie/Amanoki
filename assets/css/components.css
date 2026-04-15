@@ -195,6 +195,62 @@
 
 .msg-image { max-width: 400px; max-height: 300px; border-radius: 4px; margin-top: 4px; display: block; cursor: zoom-in; }
 
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: none;
+}
+
+.image-lightbox.show {
+  display: block;
+}
+
+.image-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(2px);
+}
+
+.image-lightbox-content {
+  position: absolute;
+  inset: 0;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-lightbox-preview {
+  max-width: min(96vw, 1400px);
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+  object-fit: contain;
+}
+
+.image-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.image-lightbox-close:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
+
 .system-msg {
   padding: 4px 16px;
   font-size: 13px;

@@ -32,17 +32,17 @@
             <input class="auth-input" id="supabaseUrl" type="text" placeholder="Supabase URL (https://xxxxx.supabase.co)">
             <input class="auth-input" id="supabaseKey" type="password" placeholder="Anon Key">
             <input class="auth-input" id="adminUserId" type="text" placeholder="[Опционально] Ваш User ID для админ панели" style="font-size:11px;color:var(--text-muted);">
-            <button class="auth-btn" onclick="initSupabase()" style="background:var(--bg-hover);color:var(--text-primary);margin-bottom:8px;">
+            <button class="auth-btn" type="button" data-action="init-supabase" style="background:var(--bg-hover);color:var(--text-primary);margin-bottom:8px;">
               ✓ Готово
             </button>
-            <button class="demo-mode-btn" onclick="demoMode()">Демо-режим (без сервера)</button>
+            <button class="demo-mode-btn" type="button" data-action="demo-mode">Демо-режим (без сервера)</button>
           </div>
         </div>
 
         <!-- Окно Логина -->
         <div id="loginPanel">
           <div class="auth-error" id="loginError"></div>
-          <form class="auth-form" onsubmit="handleLogin(event)">
+          <form class="auth-form" id="loginForm">
             <input class="auth-input" id="loginEmail" type="email" placeholder="Электронная почта" required>
             <input class="auth-input" id="loginPassword" type="password" placeholder="Пароль" required>
             <button type="submit" class="auth-btn">
@@ -50,14 +50,14 @@
             </button>
           </form>
           <div class="auth-toggle">
-            Нет аккаунта? <a onclick="switchToRegister()">Создать</a>
+            Нет аккаунта? <a href="#" data-action="switch-to-register">Создать</a>
           </div>
         </div>
 
         <!-- Окно Регистрации -->
         <div id="registerPanel" style="display:none;">
           <div class="auth-error" id="registerError"></div>
-          <form class="auth-form" onsubmit="handleRegister(event)">
+          <form class="auth-form" id="registerForm">
             <input class="auth-input" id="registerUsername" type="text" placeholder="Имя в чате" maxlength="32" required>
             <input class="auth-input" id="registerEmail" type="email" placeholder="Электронная почта" required>
             <input class="auth-input" id="registerPassword" type="password" placeholder="Пароль (мин. 6 символов)" required>
@@ -67,7 +67,7 @@
             </button>
           </form>
           <div class="auth-toggle">
-            Уже есть аккаунт? <a onclick="switchToLogin()">Войти</a>
+            Уже есть аккаунт? <a href="#" data-action="switch-to-login">Войти</a>
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@
     <div class="setup-card">
       <div class="setup-title">💬 DevChat</div>
       <div class="setup-subtitle">Подключитесь к Supabase для начала общения</div>
-      <button type="button" class="setup-btn" onclick="document.getElementById('authOverlay').style.display='flex'; closeSetupOverlay();">
+      <button type="button" class="setup-btn" data-action="back-to-login">
         Вернуться к логину
       </button>
     </div>
@@ -89,11 +89,11 @@
   <div class="server-list">
     <div class="server-icon home active" title="DevChat">💬</div>
     <div class="server-divider"></div>
-    <div class="server-icon server-s1" title="Проект Alpha" onclick="notify('Переключение серверов в альфа-версии недоступно')">A</div>
-    <div class="server-icon server-s2" title="Backend Team" onclick="notify('Переключение серверов в альфа-версии недоступно')">B</div>
-    <div class="server-icon server-s3" title="Design" onclick="notify('Переключение серверов в альфа-версии недоступно')">D</div>
+    <div class="server-icon server-s1" title="Проект Alpha" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">A</div>
+    <div class="server-icon server-s2" title="Backend Team" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">B</div>
+    <div class="server-icon server-s3" title="Design" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">D</div>
     <div style="margin-top:auto;">
-      <div class="server-icon" style="background:var(--bg-secondary);color:var(--text-secondary);font-size:28px;font-weight:300;" title="Добавить сервер" onclick="notify('Создание серверов в альфа-версии недоступно')">+</div>
+      <div class="server-icon" style="background:var(--bg-secondary);color:var(--text-secondary);font-size:28px;font-weight:300;" title="Добавить сервер" data-action="notify" data-message="Создание серверов в альфа-версии недоступно">+</div>
     </div>
   </div>
 
@@ -108,19 +108,19 @@
         <span>Текстовые каналы</span>
         <span class="add-btn">+</span>
       </div>
-      <div class="channel-item active" data-channel="general" onclick="switchChannel('general')">
+      <div class="channel-item active" data-channel="general">
         <span class="ch-icon">#</span>
         <span class="ch-name">general</span>
       </div>
-      <div class="channel-item" data-channel="random" onclick="switchChannel('random')">
+      <div class="channel-item" data-channel="random">
         <span class="ch-icon">#</span>
         <span class="ch-name">random</span>
       </div>
-      <div class="channel-item" data-channel="dev-talk" onclick="switchChannel('dev-talk')">
+      <div class="channel-item" data-channel="dev-talk">
         <span class="ch-icon">#</span>
         <span class="ch-name">dev-talk</span>
       </div>
-      <div class="channel-item" data-channel="announcements" onclick="switchChannel('announcements')">
+      <div class="channel-item" data-channel="announcements">
         <span class="ch-icon">📢</span>
         <span class="ch-name">announcements</span>
       </div>
@@ -131,11 +131,11 @@
         <span>Голосовые каналы</span>
         <span class="add-btn">+</span>
       </div>
-      <div class="channel-item" onclick="notify('Голосовые каналы в альфа недоступны')">
+      <div class="channel-item" data-action="notify" data-message="Голосовые каналы в альфа недоступны">
         <span class="ch-icon">🔊</span>
         <span class="ch-name">General Voice</span>
       </div>
-      <div class="channel-item" onclick="notify('Голосовые каналы в альфа недоступны')">
+      <div class="channel-item" data-action="notify" data-message="Голосовые каналы в альфа недоступны">
         <span class="ch-icon">🔊</span>
         <span class="ch-name">Dev Room</span>
       </div>
@@ -152,22 +152,22 @@
       <div class="footer-icons">
         <div class="footer-icon" title="Микрофон">🎤</div>
         <div class="footer-icon" title="Наушники">🎧</div>
-        <div class="footer-icon" title="Профиль" onclick="openProfilePanel()">⚙️</div>
+        <div class="footer-icon" title="Профиль" data-action="open-profile">⚙️</div>
       </div>
     </div>
   </div>
 
   <div class="chat-area">
     <div class="chat-header">
-      <div class="header-btn mobile-only" title="Каналы" onclick="toggleSidebar()">☰</div>
+      <div class="header-btn mobile-only" title="Каналы" data-action="toggle-sidebar">☰</div>
       <span class="ch-hash">#</span>
       <span class="ch-title" id="channelTitle">general</span>
       <span class="ch-desc" id="channelDesc">Добро пожаловать в #general — место для всех!</span>
       <div class="header-actions">
-        <div class="header-btn" title="Поиск" onclick="notify('Поиск в альфа-версии недоступен')">🔍</div>
-        <div class="header-btn" title="Участники" onclick="toggleMemberList()">👥</div>
+        <div class="header-btn" title="Поиск" data-action="notify" data-message="Поиск в альфа-версии недоступен">🔍</div>
+        <div class="header-btn" title="Участники" data-action="toggle-members">👥</div>
         <div class="header-btn" title="Уведомления">🔔</div>
-        <div class="header-btn" id="adminBtn" title="Админ панель" onclick="toggleAdminPanel()" style="display:none;color:var(--red);">⚙️</div>
+        <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin" style="display:none;color:var(--red);">⚙️</div>
       </div>
     </div>
 
@@ -186,17 +186,17 @@
       <div class="reply-banner" id="replyBanner">
         <span class="label">Ответ</span>
         <span class="preview" id="replyBannerPreview"></span>
-        <button class="close" type="button" title="Отменить" onclick="cancelReply()">✕</button>
+        <button class="close" type="button" title="Отменить" data-action="cancel-reply">✕</button>
       </div>
       <div class="input-wrapper">
-        <div class="input-side-btn" title="Прикрепить файл" onclick="document.getElementById('fileInput').click()">📎</div>
-        <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,application/pdf,.zip,.txt,.json,.csv" onchange="handleFileSelect(event)">
-        <textarea id="message-input" rows="1" placeholder="Написать в #general" onkeydown="handleKey(event)" oninput="autoResize(this); handleTyping()"></textarea>
+        <div class="input-side-btn" title="Прикрепить файл" data-action="open-file-dialog">📎</div>
+        <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,application/pdf,.zip,.txt,.json,.csv">
+        <textarea id="message-input" rows="1" placeholder="Написать в #general"></textarea>
         <div class="input-right-btns">
-          <div class="input-icon" title="GIF" onclick="notify('GIF в альфа-версии недоступны')">GIF</div>
-          <div class="input-icon" title="Стикер" onclick="notify('Стикеры в альфа-версии недоступны')">🎭</div>
-          <div class="input-icon" title="Эмодзи" onclick="insertEmoji()">😀</div>
-          <div class="send-btn" onclick="sendMessage()" title="Отправить">▶</div>
+          <div class="input-icon" title="GIF" data-action="notify" data-message="GIF в альфа-версии недоступны">GIF</div>
+          <div class="input-icon" title="Стикер" data-action="notify" data-message="Стикеры в альфа-версии недоступны">🎭</div>
+          <div class="input-icon" title="Эмодзи" data-action="insert-emoji">😀</div>
+          <div class="send-btn" data-action="send-message" title="Отправить">▶</div>
         </div>
       </div>
     </div>
@@ -209,14 +209,21 @@
     <div id="offlineMembers"></div>
   </div>
 
-  <div class="mobile-backdrop" id="mobileBackdrop" onclick="closeMobilePanels()"></div>
+  <div class="mobile-backdrop" id="mobileBackdrop" data-action="close-mobile-panels"></div>
   <div class="reaction-picker" id="reactionPicker" aria-hidden="true"></div>
+  <div id="imageLightbox" class="image-lightbox" aria-hidden="true">
+    <div class="image-lightbox-backdrop" data-action="close-image-preview"></div>
+    <div class="image-lightbox-content">
+      <button type="button" class="image-lightbox-close" data-action="close-image-preview" aria-label="Закрыть">✕</button>
+      <img id="imageLightboxPreview" class="image-lightbox-preview" src="" alt="Увеличенное изображение" />
+    </div>
+  </div>
 
   <!-- ADMIN PANEL -->
   <div id="adminPanel">
     <div class="admin-header">
       <span>⚙️ Админ панель</span>
-      <button class="admin-close-btn" onclick="toggleAdminPanel()">✕</button>
+      <button class="admin-close-btn" type="button" data-action="toggle-admin">✕</button>
     </div>
 
     <div class="admin-section">
@@ -231,7 +238,7 @@
     <div class="admin-section">
       <div class="admin-section-title">👥 Управление пользователями</div>
       <div id="adminUsersList" style="max-height: 300px; overflow-y: auto;"></div>
-      <button class="admin-btn admin-btn-small" onclick="loadAdminUsers()" style="width: 100%; margin-top: 8px;">🔄 Обновить</button>
+      <button class="admin-btn admin-btn-small" type="button" data-action="reload-admin-users" style="width: 100%; margin-top: 8px;">🔄 Обновить</button>
     </div>
 
     <div class="admin-section">
@@ -244,13 +251,13 @@
 
   <!-- PROFILE -->
   <div id="profilePanel" class="profile-panel-overlay" aria-hidden="true">
-    <div class="profile-panel-backdrop" onclick="closeProfilePanel()"></div>
-    <div class="profile-panel-card" role="dialog" aria-labelledby="profilePanelTitle" onclick="event.stopPropagation()">
+    <div class="profile-panel-backdrop" data-action="close-profile"></div>
+    <div class="profile-panel-card" role="dialog" aria-labelledby="profilePanelTitle">
       <div class="profile-panel-header">
         <h2 id="profilePanelTitle">Профиль</h2>
-        <button type="button" class="profile-panel-close" onclick="closeProfilePanel()" aria-label="Закрыть">✕</button>
+        <button type="button" class="profile-panel-close" data-action="close-profile" aria-label="Закрыть">✕</button>
       </div>
-      <form id="profileForm" class="profile-panel-body" onsubmit="saveProfileSettings(event)">
+      <form id="profileForm" class="profile-panel-body">
         <div class="profile-preview-row">
           <div id="profilePreviewAvatar" class="profile-preview-avatar">?</div>
           <div class="profile-preview-fields">
@@ -262,7 +269,6 @@
               maxlength="32"
               autocomplete="nickname"
               required
-              oninput="updateProfilePreview()"
             />
             <p class="profile-hint" id="profileEmailHint"></p>
           </div>
@@ -270,7 +276,7 @@
         <label class="profile-label">Цвет аватара</label>
         <div id="profileColorSwatches" class="profile-color-swatches"></div>
         <div class="profile-actions">
-          <button type="button" class="profile-btn profile-btn-secondary" onclick="closeProfilePanel()">Отмена</button>
+          <button type="button" class="profile-btn profile-btn-secondary" data-action="close-profile">Отмена</button>
           <button type="submit" class="profile-btn profile-btn-primary" id="profileSaveBtn">Сохранить</button>
         </div>
       </form>

@@ -256,7 +256,9 @@ function renderReactionBar(messageId) {
     .map(([emoji, users]) => {
       const active = users.includes(currentUserId) ? ' active' : '';
       const safeEmoji = escapeJsString(emoji);
-      return `<div class="reaction${active}" onclick="toggleReaction('${messageId}','${safeEmoji}')">${emoji} <span class="count">${users.length}</span></div>`;
+      return `<button class="reaction${active}" type="button" data-action="toggle-reaction" data-message-id="${escapeJsString(
+        messageId
+      )}" data-emoji="${safeEmoji}">${emoji} <span class="count">${users.length}</span></button>`;
     })
     .join('');
 
@@ -264,11 +266,13 @@ function renderReactionBar(messageId) {
   chipsEl.innerHTML = chips;
 
   const adminBtn = isAdmin
-    ? `<div class="hover-btn" title="Удалить" onclick="deleteMessage('${messageId}')" style="color:var(--red);">🗑️</div>`
+    ? `<button class="hover-btn" type="button" title="Удалить" data-action="delete-message" data-message-id="${escapeJsString(
+        messageId
+      )}" style="color:var(--red);">🗑️</button>`
     : '';
   quickEl.innerHTML = `${adminBtn}
-      <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" onclick="openReactionPicker('${safeMessageId}', this, event)">➕</button>
-      <button class="reaction msg-quick-btn" type="button" title="Ответить" onclick="startReply('${safeMessageId}')">↩</button>`;
+      <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" data-action="open-reaction-picker" data-message-id="${safeMessageId}">➕</button>
+      <button class="reaction msg-quick-btn" type="button" title="Ответить" data-action="start-reply" data-message-id="${safeMessageId}">↩</button>`;
 }
 
 function renderAllReactionBars() {
@@ -449,13 +453,15 @@ function renderMessage(record) {
 
   const replyTo = record.reply_to ? messageStore[record.reply_to] : null;
   const replyBlock = record.reply_to
-    ? `<div class="reply-preview" onclick="scrollToMessage('${escapeJsString(record.reply_to)}')">
+    ? `<button class="reply-preview" type="button" data-action="scroll-to-message" data-message-id="${escapeJsString(
+        record.reply_to
+      )}">
            <span>↩</span>
            <span class="reply-author">${escHtml(replyTo?.author || 'Сообщение')}</span>
            <span class="reply-snippet">${escHtml(
              (snippetFromHtml(replyTo?.text || '') || '(без текста)').slice(0, 140)
            )}</span>
-         </div>`
+         </button>`
     : '';
 
   if (!isConsecutive) {
@@ -469,7 +475,11 @@ function renderMessage(record) {
             </div>
             ${replyBlock}
             <div class="msg-text">${cleanHtml}</div>
-            ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
+            ${
+              record.image_url
+                ? `<img class="msg-image" src="${record.image_url}" data-action="open-image-preview" alt="Изображение в сообщении">`
+                : ''
+            }
             <div class="msg-reaction-chips"></div>
           </div>
           <div class="msg-aside">
@@ -483,7 +493,11 @@ function renderMessage(record) {
           <div class="msg-stack">
             ${replyBlock}
             <div class="msg-text compact">${cleanHtml}</div>
-            ${record.image_url ? `<img class="msg-image" src="${record.image_url}">` : ''}
+            ${
+              record.image_url
+                ? `<img class="msg-image" src="${record.image_url}" data-action="open-image-preview" alt="Изображение в сообщении">`
+                : ''
+            }
             <div class="msg-reaction-chips"></div>
           </div>
           <div class="msg-aside">
@@ -513,9 +527,9 @@ async function openReactionPicker(messageId, triggerEl, event) {
   reactionPickerMessageId = messageId;
   picker.innerHTML = REACTION_EMOJIS.map(
     (emoji) =>
-      `<button class="reaction-picker-btn" type="button" onclick="pickReaction('${escapeJsString(
+      `<button class="reaction-picker-btn" type="button" data-action="pick-reaction" data-message-id="${escapeJsString(
         messageId
-      )}','${escapeJsString(emoji)}', event)">${emoji}</button>`
+      )}" data-emoji="${escapeJsString(emoji)}">${emoji}</button>`
   ).join('');
 
   picker.classList.add('show');
@@ -610,13 +624,15 @@ async function handleFileSelect(event) {
     // Отправляем сообщение с ссылкой
     const input = document.getElementById('message-input');
     const text = input.value.trim();
+    const isMediaFile = file.type.startsWith('image/') || file.type.startsWith('video/');
+    const messageText = text || (isMediaFile ? '' : file.name);
     input.value = '';
     autoResize(input);
 
     if (isDemoMode) {
       renderMessage({
         author: currentUser,
-        text: text || file.name,
+        text: messageText,
         image_url: publicUrl,
         created: new Date().toISOString(),
         id: 'local_' + Date.now(),
@@ -624,11 +640,11 @@ async function handleFileSelect(event) {
         reply_to: replyToMessageId,
       });
     } else {
-      const sent = await sendToSupabase(text || file.name, publicUrl);
+      const sent = await sendToSupabase(messageText, publicUrl);
       if (!sent) {
         renderMessage({
           author: currentUser,
-          text: text || file.name,
+          text: messageText,
           image_url: publicUrl,
           created: new Date().toISOString(),
           id: 'local_' + Date.now(),

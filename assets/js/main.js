@@ -19,6 +19,29 @@ function syncMobileBackdrop() {
   backdrop.classList.toggle('show', needsBackdrop);
 }
 
+function openImagePreview(src, alt = 'Изображение') {
+  const lightbox = document.getElementById('imageLightbox');
+  const preview = document.getElementById('imageLightboxPreview');
+  if (!lightbox || !preview || !src) return;
+
+  preview.src = src;
+  preview.alt = alt || 'Изображение';
+  lightbox.classList.add('show');
+  lightbox.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImagePreview() {
+  const lightbox = document.getElementById('imageLightbox');
+  const preview = document.getElementById('imageLightboxPreview');
+  if (!lightbox || !preview) return;
+
+  lightbox.classList.remove('show');
+  lightbox.setAttribute('aria-hidden', 'true');
+  preview.src = '';
+  document.body.style.overflow = '';
+}
+
 function toggleSidebar() {
   if (!isMobileLayout()) return;
   const sidebar = document.getElementById('channelSidebar');
@@ -40,6 +63,153 @@ window.addEventListener('resize', () => {
     closeMobilePanels();
   }
 });
+
+function setupDomEventHandlers() {
+  document.addEventListener('click', async (event) => {
+    const actionEl = event.target.closest('[data-action]');
+    if (!actionEl) return;
+
+    const action = actionEl.dataset.action;
+    if (!action) return;
+
+    if (actionEl.tagName === 'A') {
+      event.preventDefault();
+    }
+
+    switch (action) {
+      case 'init-supabase':
+        await initSupabase();
+        break;
+      case 'demo-mode':
+        demoMode();
+        break;
+      case 'switch-to-register':
+        switchToRegister();
+        break;
+      case 'switch-to-login':
+        switchToLogin();
+        break;
+      case 'back-to-login':
+        document.getElementById('authOverlay').style.display = 'flex';
+        closeSetupOverlay();
+        break;
+      case 'notify':
+        notify(actionEl.dataset.message || '');
+        break;
+      case 'open-profile':
+        openProfilePanel();
+        break;
+      case 'close-profile':
+        closeProfilePanel();
+        break;
+      case 'toggle-sidebar':
+        toggleSidebar();
+        break;
+      case 'toggle-members':
+        toggleMemberList();
+        break;
+      case 'toggle-admin':
+        toggleAdminPanel();
+        break;
+      case 'reload-admin-users':
+        await loadAdminUsers();
+        break;
+      case 'cancel-reply':
+        cancelReply();
+        break;
+      case 'open-file-dialog':
+        document.getElementById('fileInput')?.click();
+        break;
+      case 'insert-emoji':
+        insertEmoji();
+        break;
+      case 'send-message':
+        await sendMessage();
+        break;
+      case 'close-mobile-panels':
+        closeMobilePanels();
+        break;
+      case 'open-image-preview':
+        openImagePreview(actionEl.getAttribute('src'), actionEl.getAttribute('alt'));
+        break;
+      case 'close-image-preview':
+        closeImagePreview();
+        break;
+      case 'toggle-reaction':
+        await toggleReaction(actionEl.dataset.messageId, actionEl.dataset.emoji);
+        break;
+      case 'open-reaction-picker':
+        event.stopPropagation();
+        await openReactionPicker(actionEl.dataset.messageId, actionEl, event);
+        break;
+      case 'pick-reaction':
+        event.stopPropagation();
+        await pickReaction(actionEl.dataset.messageId, actionEl.dataset.emoji, event);
+        break;
+      case 'start-reply':
+        startReply(actionEl.dataset.messageId);
+        break;
+      case 'scroll-to-message':
+        scrollToMessage(actionEl.dataset.messageId);
+        break;
+      case 'delete-message':
+        await deleteMessage(actionEl.dataset.messageId);
+        break;
+      case 'ban-user':
+        await banUser(actionEl.dataset.userId, actionEl.dataset.username);
+        break;
+      case 'unban-user':
+        await unbanUser(actionEl.dataset.userId, actionEl.dataset.username);
+        break;
+      default:
+        break;
+    }
+  });
+
+  document.addEventListener('submit', async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (form.id === 'loginForm') {
+      await handleLogin(event);
+      return;
+    }
+    if (form.id === 'registerForm') {
+      await handleRegister(event);
+      return;
+    }
+    if (form.id === 'profileForm') {
+      await saveProfileSettings(event);
+    }
+  });
+
+  const fileInput = document.getElementById('fileInput');
+  fileInput?.addEventListener('change', handleFileSelect);
+
+  const messageInput = document.getElementById('message-input');
+  messageInput?.addEventListener('keydown', handleKey);
+  messageInput?.addEventListener('input', (event) => {
+    autoResize(event.target);
+    handleTyping();
+  });
+
+  const profileNameInput = document.getElementById('profileDisplayName');
+  profileNameInput?.addEventListener('input', updateProfilePreview);
+
+  const profileCard = document.querySelector('.profile-panel-card');
+  profileCard?.addEventListener('click', (event) => event.stopPropagation());
+
+  document.querySelectorAll('.channel-item[data-channel]').forEach((el) => {
+    el.addEventListener('click', () => switchChannel(el.dataset.channel));
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeImagePreview();
+    }
+  });
+}
+
+setupDomEventHandlers();
 
 // ===================== ADMIN PANEL =====================
 function getUserColor(name) {
@@ -237,12 +407,12 @@ async function loadAdminUsers() {
           <div class="admin-actions">
             ${
               user.is_banned
-                ? `<button class="admin-btn admin-btn-unban" onclick="unbanUser('${user.id}', '${escHtml(
+                ? `<button class="admin-btn admin-btn-unban" type="button" data-action="unban-user" data-user-id="${user.id}" data-username="${escHtml(
                     user.username
-                  )}')">Разбан</button>`
-                : `<button class="admin-btn admin-btn-ban" onclick="banUser('${user.id}', '${escHtml(
+                  )}">Разбан</button>`
+                : `<button class="admin-btn admin-btn-ban" type="button" data-action="ban-user" data-user-id="${user.id}" data-username="${escHtml(
                     user.username
-                  )}')">Бан</button>`
+                  )}">Бан</button>`
             }
           </div>
         `;

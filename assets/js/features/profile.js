@@ -22,7 +22,6 @@ function refreshSidebarUserChip() {
     av.innerHTML = '';
     av.style.backgroundImage = `url('${escapeJsString(avatarUrl)}')`;
     av.style.backgroundColor = 'transparent';
-    av.style.background = 'transparent';
   } else {
     av.innerHTML = '';
     av.textContent = initial;
@@ -75,11 +74,11 @@ function updateProfilePreview() {
   if (avatarUrl) {
     prev.textContent = '';
     prev.style.backgroundImage = `url('${escapeJsString(avatarUrl)}')`;
-    prev.style.background = '';
+    prev.style.backgroundColor = 'transparent';
   } else {
     prev.textContent = name[0].toUpperCase();
     prev.style.backgroundImage = '';
-    prev.style.background = selectedProfileColor || COLORS[0];
+    prev.style.backgroundColor = selectedProfileColor || COLORS[0];
   }
 }
 

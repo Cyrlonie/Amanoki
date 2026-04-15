@@ -104,6 +104,9 @@ function setupDomEventHandlers() {
       case 'close-profile':
         closeProfilePanel();
         break;
+      case 'logout':
+        await handleLogout();
+        break;
       case 'toggle-sidebar':
         toggleSidebar();
         break;

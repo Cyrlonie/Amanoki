@@ -165,6 +165,19 @@ async function handleLogin(e) {
   }
 }
 
+async function handleLogout() {
+  try {
+    await initializeSupabaseClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+  } catch (e) {
+    console.warn('Logout failed', e);
+  } finally {
+    window.location.reload();
+  }
+}
+
 function demoMode() {
   const name = 'Гость_' + Math.floor(Math.random() * 10000);
   currentUser = name;

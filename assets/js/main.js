@@ -447,7 +447,7 @@ async function loadAdminUsers() {
       item.innerHTML = `
           <div>
             <div class="admin-item-name">${escHtml(user.username)}</div>
-            <div class="admin-item-status">${user.email} • ${
+            <div class="admin-item-status">${escHtml(user.email || '')} • ${
               user.is_banned ? '🚫 Забанен' : '✅ Активен'
             }</div>
           </div>

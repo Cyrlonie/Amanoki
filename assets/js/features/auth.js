@@ -40,6 +40,7 @@ function showLoginPanel() {
 // Новая функция для загрузки профиля (нужна для админки)
 async function loadUserProfile() {
   if (!authUser || !supabase) return;
+  const prevUsername = currentUserProfile?.username || currentUser;
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -52,19 +53,27 @@ async function loadUserProfile() {
     currentUser = data.username;
     isAdmin = data.is_admin === true;
 
+    if (prevUsername && prevUsername !== data.username) {
+      delete userColors[prevUsername];
+      delete userAvatars[prevUsername];
+    }
+
     if (data.avatar_color && data.username) {
       userColors[data.username] = data.avatar_color;
     }
     if (data.avatar_url && data.username) {
       userAvatars[data.username] = data.avatar_url;
+    } else if (data.username) {
+      delete userAvatars[data.username];
     }
 
-    if (isAdmin) {
-      const adminBtn = document.getElementById('adminBtn');
-      if (adminBtn) adminBtn.style.display = 'flex';
-    }
+    const adminBtn = document.getElementById('adminBtn');
+    if (adminBtn) adminBtn.style.display = isAdmin ? 'flex' : 'none';
   } catch (_) {
+    isAdmin = false;
     currentUser = authUser.email.split('@')[0];
+    const adminBtn = document.getElementById('adminBtn');
+    if (adminBtn) adminBtn.style.display = 'none';
   }
 }
 

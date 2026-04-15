@@ -219,6 +219,10 @@ function setupDomEventHandlers() {
   const profileCard = document.querySelector('.profile-panel-card');
   profileCard?.addEventListener('click', (event) => event.stopPropagation());
 
+  document.getElementById('profileLogoutBtn')?.addEventListener('click', async () => {
+    await handleLogout();
+  });
+
   document.querySelectorAll('.channel-item[data-channel]').forEach((el) => {
     el.addEventListener('click', () => switchChannel(el.dataset.channel));
   });

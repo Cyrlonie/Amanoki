@@ -64,7 +64,7 @@
   padding-left: 56px;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   min-width: 0;
 }
@@ -75,6 +75,10 @@
 .msg-aside {
   flex-shrink: 0;
   align-self: center;
+}
+.msg-reaction-chips:empty {
+  display: none;
+  margin-top: 0;
 }
 .msg-quick-actions {
   display: flex;

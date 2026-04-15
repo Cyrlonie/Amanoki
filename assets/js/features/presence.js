@@ -172,7 +172,35 @@ function updateMemberList() {
 function updateOnlineCount() {
   const el = document.getElementById('onlineCount');
   if (!el) return;
-  el.textContent = Object.values(members).filter((s) => s !== 'offline').length;
+
+  if (!isDemoMode && presenceChannel) {
+    try {
+      const state = presenceChannel.presenceState() || {};
+      const onlineUserIds = new Set();
+
+      Object.keys(state).forEach((key) => {
+        const presences = state[key];
+        if (!presences || !presences.length) return;
+        presences.forEach((p) => {
+          // Считаем онлайн только участников текущего канала.
+          if (p.channel && p.channel !== currentChannel) return;
+          onlineUserIds.add(String(p.user_id || key));
+        });
+      });
+
+      // Текущий пользователь должен учитываться всегда, даже если sync еще не пришел.
+      if (authUser?.id) {
+        onlineUserIds.add(String(authUser.id));
+      }
+
+      el.textContent = String(onlineUserIds.size);
+      return;
+    } catch (_) {
+      // Fallback ниже на локальное состояние members.
+    }
+  }
+
+  el.textContent = String(Object.values(members).filter((s) => s !== 'offline').length);
 }
 
 function toggleMemberList() {

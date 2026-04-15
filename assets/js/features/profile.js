@@ -276,11 +276,29 @@ async function uploadProfileAvatar(file) {
   return data?.publicUrl || null;
 }
 
-const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
-profileAvatarUrlInput?.addEventListener('input', () => {
-  selectedProfileAvatarFile = null;
-  cleanupProfileAvatarPreview();
-  updateProfilePreview();
-});
-const profileAvatarFileInput = document.getElementById('profileAvatarFile');
-profileAvatarFileInput?.addEventListener('change', handleProfileAvatarFileSelect);
+function initProfileFormEvents() {
+  const profileForm = document.getElementById('profileForm');
+  if (!profileForm || profileForm.dataset.profileEventsInit === '1') return;
+
+  profileForm.addEventListener('submit', saveProfileSettings);
+
+  const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
+  profileAvatarUrlInput?.addEventListener('input', () => {
+    selectedProfileAvatarFile = null;
+    cleanupProfileAvatarPreview();
+    updateProfilePreview();
+  });
+
+  const profileAvatarFileInput = document.getElementById('profileAvatarFile');
+  profileAvatarFileInput?.addEventListener('change', handleProfileAvatarFileSelect);
+
+  const profileSaveBtn = document.getElementById('profileSaveBtn');
+  profileSaveBtn?.addEventListener('click', async (event) => {
+    event.preventDefault();
+    await saveProfileSettings({ preventDefault: () => {}, target: profileForm });
+  });
+
+  profileForm.dataset.profileEventsInit = '1';
+}
+
+initProfileFormEvents();

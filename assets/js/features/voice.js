@@ -210,16 +210,19 @@ function updateAudioGainForParticipant(participantId) {
   const trackIds = voiceParticipantTrackMap.get(participantId);
   if (!trackIds) return;
   const volume = isVoiceDeafened ? 0 : voiceParticipants[participantId]?.volume ?? 1;
+  const muted = isVoiceDeafened || volume <= 0;
   trackIds.forEach((trackKey) => {
     const data = voiceAudioTrackData.get(trackKey);
     if (!data) return;
-    if (data?.gainNode) {
-      data.gainNode.gain.value = volume;
+    if (data.gainNode) {
+      const gain = Math.max(0, Math.min(volume, 1));
+      data.gainNode.gain.setValueAtTime(gain, voiceAudioContext?.currentTime || 0);
     }
     if (Array.isArray(data.elements)) {
       data.elements.forEach((el) => {
         if (el instanceof HTMLMediaElement) {
-          el.volume = volume;
+          el.volume = Math.max(0, Math.min(volume, 1));
+          el.muted = muted;
         }
       });
     }
@@ -282,16 +285,22 @@ function attachAudioTrack(track, participantId = null) {
     el.style.display = 'none';
     document.body.appendChild(el);
 
-    const elements = [el];
     const volume = isVoiceDeafened ? 0 : voiceParticipants[participantId]?.volume ?? 1;
-    elements.forEach((audioEl) => {
-      if (audioEl instanceof HTMLMediaElement) {
-        audioEl.volume = volume;
-      }
-    });
+    el.volume = Math.max(0, Math.min(volume, 1));
+    el.muted = volume <= 0 || isVoiceDeafened;
+
+    const elements = [el];
+    const existingData = voiceAudioTrackData.get(trackKey);
+    if (existingData) {
+      existingData.elements = Array.isArray(existingData.elements)
+        ? existingData.elements.concat(elements)
+        : existingData.elements
+        ? [existingData.elements].concat(elements)
+        : elements;
+    }
 
     if (!ctx) {
-      const trackData = {
+      const trackData = existingData || {
         participantId,
         elements,
         gainNode: null,
@@ -315,8 +324,8 @@ function attachAudioTrack(track, participantId = null) {
       source.connect(analyser);
       analyser.connect(gainNode);
       gainNode.connect(ctx.destination);
-      gainNode.gain.value = volume;
-      const trackData = {
+      gainNode.gain.setValueAtTime(Math.max(0, Math.min(volume, 1)), ctx.currentTime || 0);
+      const trackData = existingData || {
         participantId,
         elements,
         gainNode,
@@ -325,13 +334,21 @@ function attachAudioTrack(track, participantId = null) {
         element: el,
         track,
       };
+      trackData.gainNode = gainNode;
+      trackData.analyser = analyser;
+      trackData.track = track;
+      trackData.element = el;
+      trackData.rafId = trackData.rafId || null;
+      trackData.elements = Array.isArray(trackData.elements)
+        ? Array.from(new Set([].concat(trackData.elements, elements)))
+        : elements;
       voiceAudioTrackData.set(trackKey, trackData);
       const trackIds = voiceParticipantTrackMap.get(participantId) || new Set();
       trackIds.add(trackKey);
       voiceParticipantTrackMap.set(participantId, trackIds);
       startVAD(trackKey);
     } catch (_) {
-      const trackData = {
+      const trackData = existingData || {
         participantId,
         elements,
         gainNode: null,
@@ -340,6 +357,9 @@ function attachAudioTrack(track, participantId = null) {
         element: el,
         track,
       };
+      trackData.elements = Array.isArray(trackData.elements)
+        ? Array.from(new Set([].concat(trackData.elements, elements)))
+        : elements;
       voiceAudioTrackData.set(trackKey, trackData);
       const trackIds = voiceParticipantTrackMap.get(participantId) || new Set();
       trackIds.add(trackKey);

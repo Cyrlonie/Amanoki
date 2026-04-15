@@ -92,7 +92,7 @@ async function handleRegister(e) {
     btnEl.disabled = true;
 
     const {
-      data: { user },
+      data: { session, user },
       error: signUpError,
     } = await supabase.auth.signUp({
       email,
@@ -111,6 +111,16 @@ async function handleRegister(e) {
     });
 
     if (profileError) throw profileError;
+
+    if (!session) {
+      document.getElementById('registerBtnText').textContent = 'Проверьте почту';
+      btnEl.disabled = false;
+      showError('registerPanel', 'Аккаунт создан. Подтвердите почту и затем войдите.');
+      switchToLogin();
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = '';
+      return;
+    }
 
     authUser = user;
     currentUser = username;

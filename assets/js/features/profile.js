@@ -132,15 +132,6 @@ function openProfilePanel() {
   panel.setAttribute('aria-hidden', 'false');
   nameInput.focus();
 
-  // Add direct click listeners for close buttons
-  const closeButtons = panel.querySelectorAll('[data-action="close-profile"]');
-  closeButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      closeProfilePanel();
-    });
-  });
-
   profilePanelKeyHandler = (e) => {
     if (e.key === 'Escape') closeProfilePanel();
   };
@@ -303,8 +294,6 @@ function initProfileFormEvents() {
   const profileForm = document.getElementById('profileForm');
   if (!profileForm || profileForm.dataset.profileEventsInit === '1') return;
 
-  profileForm.addEventListener('submit', saveProfileSettings);
-
   const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
   profileAvatarUrlInput?.addEventListener('input', () => {
     selectedProfileAvatarFile = null;
@@ -314,12 +303,6 @@ function initProfileFormEvents() {
 
   const profileAvatarFileInput = document.getElementById('profileAvatarFile');
   profileAvatarFileInput?.addEventListener('change', handleProfileAvatarFileSelect);
-
-  const profileSaveBtn = document.getElementById('profileSaveBtn');
-  profileSaveBtn?.addEventListener('click', async (event) => {
-    event.preventDefault();
-    await saveProfileSettings({ preventDefault: () => {}, target: profileForm });
-  });
 
   profileForm.dataset.profileEventsInit = '1';
 }

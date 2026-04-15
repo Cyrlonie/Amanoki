@@ -677,15 +677,9 @@ async function handleFileSelect(event) {
     } else {
       const sent = await sendToSupabase(messageText, publicUrl);
       if (!sent) {
-        renderMessage({
-          author: currentUser,
-          text: messageText,
-          image_url: publicUrl,
-          created: new Date().toISOString(),
-          id: 'local_' + Date.now(),
-          user_id: authUser.id,
-          reply_to: replyToMessageId,
-        });
+        input.value = text;
+        autoResize(input);
+        return;
       }
     }
 
@@ -722,14 +716,9 @@ async function sendMessage() {
   } else {
     const sent = await sendToSupabase(text);
     if (!sent) {
-      renderMessage({
-        author: currentUser,
-        text,
-        created: new Date().toISOString(),
-        id: 'local_' + Date.now(),
-        user_id: authUser.id,
-        reply_to: replyToMessageId,
-      });
+      input.value = text;
+      autoResize(input);
+      return;
     }
   }
   cancelReply();
@@ -796,6 +785,7 @@ function switchChannel(ch) {
   lastMessageAuthor = null;
   lastMessageTime = null;
   clearReactionStore();
+  cancelReply();
   updateTypingIndicator();
 
   if (!isDemoMode && supabase) {

@@ -56,18 +56,23 @@ async function loadMembersDirectory() {
     const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url');
     if (error) throw error;
 
+    const previousNames = new Set(Object.values(memberDirectory));
     memberDirectory = {};
     (data || []).forEach((row) => {
       if (row.is_banned) return;
       if (!row.username) return;
       memberDirectory[row.id] = row.username;
+      previousNames.delete(row.username);
       if (row.avatar_color) {
         userColors[row.username] = row.avatar_color;
       }
       if (row.avatar_url) {
         userAvatars[row.username] = row.avatar_url;
+      } else {
+        delete userAvatars[row.username];
       }
     });
+    previousNames.forEach((name) => delete userAvatars[name]);
     applyPresenceFromChannel();
   } catch (e) {
     console.error('Ошибка загрузки списка пользователей:', e);

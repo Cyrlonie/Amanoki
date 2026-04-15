@@ -302,7 +302,9 @@
           placeholder="https://example.com/avatar.png"
           autocomplete="off"
         />
-        <p class="profile-hint">Оставьте пустым, чтобы использовать цветной вариант с инициалами.</p>
+        <label class="profile-label" for="profileAvatarFile">Загрузить аватар</label>
+        <input class="profile-input" id="profileAvatarFile" type="file" accept="image/*" />
+        <p class="profile-hint">Если выбран файл, он заменит URL и будет загружен в хранилище.</p>
         <label class="profile-label">Цвет аватара</label>
         <div id="profileColorSwatches" class="profile-color-swatches"></div>
         <div class="profile-actions">

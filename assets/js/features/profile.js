@@ -3,6 +3,8 @@
 let profilePanelKeyHandler = null;
 let selectedProfileColor = null;
 let selectedProfileAvatarUrl = null;
+let selectedProfileAvatarFile = null;
+let selectedProfileAvatarPreviewUrl = null;
 let profileOriginalUsername = '';
 let profileSwatchClickHandler = null;
 
@@ -52,6 +54,13 @@ function buildProfileColorSwatches() {
   wrap.addEventListener('click', profileSwatchClickHandler);
 }
 
+function cleanupProfileAvatarPreview() {
+  if (selectedProfileAvatarPreviewUrl) {
+    URL.revokeObjectURL(selectedProfileAvatarPreviewUrl);
+    selectedProfileAvatarPreviewUrl = null;
+  }
+}
+
 function updateProfilePreview() {
   const input = document.getElementById('profileDisplayName');
   const avatarInput = document.getElementById('profileAvatarUrl');
@@ -59,7 +68,9 @@ function updateProfilePreview() {
   if (!input || !prev) return;
 
   const name = input.value.trim() || currentUser || '?';
-  const avatarUrl = (avatarInput?.value || selectedProfileAvatarUrl || '').trim();
+  const avatarUrl = selectedProfileAvatarFile
+    ? selectedProfileAvatarPreviewUrl
+    : (avatarInput?.value || selectedProfileAvatarUrl || '').trim();
 
   if (avatarUrl) {
     prev.textContent = '';
@@ -70,6 +81,22 @@ function updateProfilePreview() {
     prev.style.backgroundImage = '';
     prev.style.background = selectedProfileColor || COLORS[0];
   }
+}
+
+function handleProfileAvatarFileSelect(event) {
+  const fileInput = event.target;
+  if (!(fileInput instanceof HTMLInputElement)) return;
+
+  selectedProfileAvatarFile = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+  cleanupProfileAvatarPreview();
+
+  if (selectedProfileAvatarFile) {
+    selectedProfileAvatarPreviewUrl = URL.createObjectURL(selectedProfileAvatarFile);
+    const urlInput = document.getElementById('profileAvatarUrl');
+    if (urlInput) urlInput.value = '';
+  }
+
+  updateProfilePreview();
 }
 
 function openProfilePanel() {
@@ -89,7 +116,11 @@ function openProfilePanel() {
     userColors[currentUser] ||
     COLORS[0];
   selectedProfileAvatarUrl = (currentUserProfile && currentUserProfile.avatar_url) || '';
+  selectedProfileAvatarFile = null;
+  cleanupProfileAvatarPreview();
   document.getElementById('profileAvatarUrl').value = selectedProfileAvatarUrl;
+  const fileInput = document.getElementById('profileAvatarFile');
+  if (fileInput) fileInput.value = '';
 
   if (isDemoMode) {
     emailHint.textContent = 'Демо: имя и цвет только в этой сессии.';
@@ -148,7 +179,11 @@ async function saveProfileSettings(e) {
 
   const prevName = profileOriginalUsername || currentUser;
   const avatarUrlInput = document.getElementById('profileAvatarUrl');
-  const avatarUrl = avatarUrlInput?.value.trim() || null;
+  let avatarUrl = avatarUrlInput?.value.trim() || null;
+
+  if (selectedProfileAvatarFile) {
+    avatarUrl = await uploadProfileAvatar(selectedProfileAvatarFile);
+  }
 
   if (isDemoMode) {
     if (members[prevName] !== undefined && prevName !== username) {
@@ -226,5 +261,26 @@ async function saveProfileSettings(e) {
   }
 }
 
+async function uploadProfileAvatar(file) {
+  if (!supabase) {
+    throw new Error('Нет подключения к Supabase');
+  }
+  const safeExt = String(file.name).split('.').pop().toLowerCase() || 'png';
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExt}`;
+  const filePath = `avatars/${authUser.id}/${fileName}`;
+
+  const { error } = await supabase.storage.from('avatar').upload(filePath, file);
+  if (error) throw error;
+
+  const { data } = supabase.storage.from('avatar').getPublicUrl(filePath);
+  return data?.publicUrl || null;
+}
+
 const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
-profileAvatarUrlInput?.addEventListener('input', updateProfilePreview);
+profileAvatarUrlInput?.addEventListener('input', () => {
+  selectedProfileAvatarFile = null;
+  cleanupProfileAvatarPreview();
+  updateProfilePreview();
+});
+const profileAvatarFileInput = document.getElementById('profileAvatarFile');
+profileAvatarFileInput?.addEventListener('change', handleProfileAvatarFileSelect);

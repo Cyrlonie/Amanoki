@@ -102,6 +102,7 @@ function setupDomEventHandlers() {
         openProfilePanel();
         break;
       case 'close-profile':
+        console.log('close-profile action triggered');
         closeProfilePanel();
         break;
       case 'logout':

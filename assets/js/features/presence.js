@@ -91,6 +91,8 @@ async function publishTypingStatus(isTyping2) {
       channel: currentChannel,
       typing: !!isTyping2,
     });
+    // Refresh local UI immediately; remote clients receive sync separately.
+    applyPresenceFromChannel();
   } catch (e) {
     console.error('Presence typing error:', e);
   }
@@ -103,9 +105,42 @@ function updateTypingIndicator() {
     el.innerHTML = '';
     return;
   }
-  const typingUsers = Object.entries(members)
-    .filter(([name, st]) => st === 'typing' && name !== currentUser)
-    .map(([name]) => name);
+
+  let typingUsers = [];
+  if (presenceChannel && typeof presenceChannel.presenceState === 'function') {
+    try {
+      const state = presenceChannel.presenceState() || {};
+      const byUserId = new Map();
+      const selfId = authUser?.id ? String(authUser.id) : '';
+
+      Object.keys(state).forEach((key) => {
+        const presences = state[key];
+        if (!presences || !presences.length) return;
+
+        presences.forEach((p) => {
+          if (p.channel && p.channel !== currentChannel) return;
+          if (!p.typing) return;
+
+          const id = String(p.user_id || key);
+          if (selfId && id === selfId) return;
+
+          const name = p.username || memberDirectory[id] || 'Unknown';
+          if (!byUserId.has(id)) byUserId.set(id, name);
+        });
+      });
+
+      typingUsers = Array.from(byUserId.values()).filter(Boolean);
+    } catch (_) {
+      typingUsers = [];
+    }
+  }
+
+  // Fallback for cases where presence state is unavailable.
+  if (!typingUsers.length) {
+    typingUsers = Object.entries(members)
+      .filter(([name, st]) => st === 'typing' && name !== currentUser)
+      .map(([name]) => name);
+  }
 
   if (typingUsers.length === 0) {
     el.innerHTML = '';

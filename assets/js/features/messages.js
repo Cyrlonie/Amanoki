@@ -201,6 +201,11 @@ async function subscribeToMessages() {
       .on('presence', { event: 'sync' }, () => applyPresenceFromChannel())
       .on('presence', { event: 'join' }, () => applyPresenceFromChannel())
       .on('presence', { event: 'leave' }, () => applyPresenceFromChannel())
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (typeof applyTypingBroadcast === 'function') {
+          applyTypingBroadcast(payload);
+        }
+      })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && presenceChannel) {
           try {

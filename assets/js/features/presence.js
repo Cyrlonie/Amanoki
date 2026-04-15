@@ -1,4 +1,6 @@
 // Presence / members / typing (classic script).
+const typingBroadcastState = {};
+const TYPING_BROADCAST_TTL_MS = 4500;
 
 function applyPresenceFromChannel() {
   if (isDemoMode || !authUser) return;
@@ -91,11 +93,39 @@ async function publishTypingStatus(isTyping2) {
       channel: currentChannel,
       typing: !!isTyping2,
     });
+    await presenceChannel.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: {
+        user_id: authUser.id,
+        username: currentUser,
+        channel: currentChannel,
+        typing: !!isTyping2,
+        ts: Date.now(),
+      },
+    });
     // Refresh local UI immediately; remote clients receive sync separately.
     applyPresenceFromChannel();
   } catch (e) {
     console.error('Presence typing error:', e);
   }
+}
+
+function applyTypingBroadcast(payload) {
+  if (!payload || isDemoMode) return;
+  if (payload.channel && payload.channel !== currentChannel) return;
+  const id = String(payload.user_id || '');
+  if (!id) return;
+
+  if (payload.typing) {
+    typingBroadcastState[id] = {
+      username: payload.username || memberDirectory[id] || 'Unknown',
+      expiresAt: Date.now() + TYPING_BROADCAST_TTL_MS,
+    };
+  } else {
+    delete typingBroadcastState[id];
+  }
+  updateTypingIndicator();
 }
 
 function updateTypingIndicator() {
@@ -106,12 +136,19 @@ function updateTypingIndicator() {
     return;
   }
 
+  const selfId = authUser?.id ? String(authUser.id) : '';
+  const now = Date.now();
+  Object.keys(typingBroadcastState).forEach((id) => {
+    if (typingBroadcastState[id].expiresAt <= now) {
+      delete typingBroadcastState[id];
+    }
+  });
+
   let typingUsers = [];
   if (presenceChannel && typeof presenceChannel.presenceState === 'function') {
     try {
       const state = presenceChannel.presenceState() || {};
       const byUserId = new Map();
-      const selfId = authUser?.id ? String(authUser.id) : '';
 
       Object.keys(state).forEach((key) => {
         const presences = state[key];
@@ -133,6 +170,14 @@ function updateTypingIndicator() {
     } catch (_) {
       typingUsers = [];
     }
+  }
+
+  // Broadcast fallback for environments where presence sync is unreliable.
+  if (!typingUsers.length) {
+    typingUsers = Object.entries(typingBroadcastState)
+      .filter(([id]) => !selfId || id !== selfId)
+      .map(([_, data]) => data.username)
+      .filter(Boolean);
   }
 
   // Fallback for cases where presence state is unavailable.

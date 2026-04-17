@@ -315,7 +315,15 @@ function renderReactionBar(messageId) {
         messageId
       )}" style="color:var(--red);">🗑️</button>`
     : '';
-  quickEl.innerHTML = `${deleteBtn}
+  
+  const canEdit = authUser && (record.user_id === authUser.id || isAdmin);
+  const editBtn = canEdit
+    ? `<button class="hover-btn" type="button" title="Редактировать" data-action="edit-message" data-message-id="${escapeJsString(
+        messageId
+      )}">✏️</button>`
+    : '';
+  
+  quickEl.innerHTML = `${editBtn}${deleteBtn}
       <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" data-action="open-reaction-picker" data-message-id="${safeMessageId}">❤️</button>
       <button class="reaction msg-quick-btn" type="button" title="Ответить" data-action="start-reply" data-message-id="${safeMessageId}">↩</button>`;
 }
@@ -907,4 +915,111 @@ function switchChannel(ch) {
   if (isMobileLayout()) {
     closeMobilePanels();
   }
+
+  applyPresenceFromChannel();
 }
+
+function handleSearch(event) {
+  const query = event.target.value.trim().toLowerCase();
+  const resultsContainer = document.getElementById('searchResults');
+  
+  if (!query || query.length < 2) {
+    resultsContainer.innerHTML = '';
+    return;
+  }
+  
+  const messages = document.querySelectorAll('.message-group');
+  const results = [];
+  
+  messages.forEach((msg) => {
+    const textElement = msg.querySelector('.msg-text');
+    if (!textElement) return;
+    
+    const text = textElement.textContent.toLowerCase();
+    if (text.includes(query)) {
+      const author = msg.querySelector('.msg-author')?.textContent || 'Unknown';
+      const textContent = textElement.textContent;
+      const timestamp = msg.querySelector('.msg-timestamp')?.textContent || '';
+      
+      results.push({
+        author,
+        text: textContent,
+        timestamp,
+        element: msg
+      });
+    }
+  });
+  
+  if (results.length === 0) {
+    resultsContainer.innerHTML = '<div class="search-no-results">Нет результатов</div>';
+    return;
+  }
+  
+  resultsContainer.innerHTML = results.map(result => {
+    const highlightedText = highlightText(result.text, query);
+    return `
+      <div class="search-result-item" data-message-id="${result.element.id}">
+        <div class="result-author">${escapeHtml(result.author)}</div>
+        <div class="result-text">${highlightedText}</div>
+        <div class="result-time">${escapeHtml(result.timestamp)}</div>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click listeners to results
+  resultsContainer.querySelectorAll('.search-result-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const messageId = item.dataset.messageId;
+      const messageElement = document.getElementById(messageId);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        messageElement.style.animation = 'none';
+        messageElement.offsetHeight; // Trigger reflow
+        messageElement.style.animation = 'messageSlideIn 0.3s ease';
+        closeSearchPanel();
+      }
+    });
+  });
+}
+
+function highlightText(text, query) {
+  const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+  return escapeHtml(text).replace(regex, '<span class="search-result-highlight">$1</span>');
+}
+
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function updateMessageInSupabase(messageId, newText) {
+  if (!supabase || !authUser) return false;
+  
+  try {
+    const { error } = await supabase
+      .from('messages')
+      .update({ text: newText })
+      .eq('id', messageId)
+      .eq('user_id', authUser.id);
+    
+    if (error) throw error;
+    
+    // Update the message in the DOM
+    const messageGroup = document.querySelector(`.message-group[data-id="${messageId}"]`);
+    const textElement = messageGroup?.querySelector('.msg-text');
+    if (textElement) {
+      textElement.textContent = newText;
+    }
+    
+    // Update in message store
+    if (messageStore[messageId]) {
+      messageStore[messageId].text = newText;
+    }
+    
+    return true;
+  } catch (e) {
+    console.error('Error updating message:', e);
+    return false;
+  }
+}
+
+// ===================== SUBSCRIPTION =====================

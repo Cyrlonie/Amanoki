@@ -182,7 +182,7 @@
       <span class="ch-title" id="channelTitle">general</span>
       <span class="ch-desc" id="channelDesc">Добро пожаловать в #general — место для всех!</span>
       <div class="header-actions">
-        <div class="header-btn" title="Поиск" data-action="notify" data-message="Поиск в альфа-версии недоступен" role="button" tabindex="0" aria-label="Поиск"><span class="material-icons-round">search</span></div>
+        <div class="header-btn" title="Поиск" data-action="open-search" role="button" tabindex="0" aria-label="Поиск"><span class="material-icons-round">search</span></div>
         <div class="header-btn" title="Участники" data-action="toggle-members" role="button" tabindex="0" aria-label="Показать участников"><span class="material-icons-round">people</span></div>
         <div class="header-btn" title="Уведомления" role="button" tabindex="0" aria-label="Уведомления"><span class="material-icons-round">notifications</span></div>
         <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin" style="display:none;color:var(--red);" role="button" tabindex="0" aria-label="Админ панель"><span class="material-icons-round">admin_panel_settings</span></div>
@@ -273,6 +273,39 @@
     <div class="image-lightbox-content">
       <button type="button" class="image-lightbox-close" data-action="close-image-preview" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
       <img id="imageLightboxPreview" class="image-lightbox-preview" src="" alt="Увеличенное изображение" />
+    </div>
+  </div>
+
+  <!-- SEARCH PANEL -->
+  <div id="searchPanel" class="search-panel" aria-hidden="true">
+    <div class="search-panel-backdrop" data-action="close-search"></div>
+    <div class="search-panel-content">
+      <div class="search-panel-header">
+        <h3>Поиск сообщений</h3>
+        <button type="button" class="search-panel-close" data-action="close-search" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="search-panel-body">
+        <input type="text" id="searchInput" class="search-input" placeholder="Поиск по сообщениям..." autocomplete="off">
+        <div id="searchResults" class="search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MESSAGE PANEL -->
+  <div id="editMessagePanel" class="edit-message-panel" aria-hidden="true">
+    <div class="edit-message-backdrop" data-action="close-edit-message"></div>
+    <div class="edit-message-content">
+      <div class="edit-message-header">
+        <h3>Редактировать сообщение</h3>
+        <button type="button" class="edit-message-close" data-action="close-edit-message" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="edit-message-body">
+        <textarea id="editMessageInput" class="edit-message-input" placeholder="Введите текст сообщения..."></textarea>
+        <div class="edit-message-actions">
+          <button type="button" class="edit-message-cancel" data-action="close-edit-message">Отмена</button>
+          <button type="button" class="edit-message-save" data-action="save-edit-message">Сохранить</button>
+        </div>
+      </div>
     </div>
   </div>
 

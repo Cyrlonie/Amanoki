@@ -42,6 +42,74 @@ function closeImagePreview() {
   document.body.style.overflow = '';
 }
 
+function openSearchPanel() {
+  const panel = document.getElementById('searchPanel');
+  if (!panel) return;
+  panel.classList.add('show');
+  panel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('searchInput').focus();
+}
+
+function closeSearchPanel() {
+  const panel = document.getElementById('searchPanel');
+  if (!panel) return;
+  panel.classList.remove('show');
+  panel.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+}
+
+let currentEditingMessageId = null;
+
+function openEditMessagePanel(messageId) {
+  const panel = document.getElementById('editMessagePanel');
+  const input = document.getElementById('editMessageInput');
+  if (!panel || !input) return;
+  
+  const messageGroup = document.querySelector(`.message-group[data-id="${messageId}"]`);
+  const textElement = messageGroup?.querySelector('.msg-text');
+  if (!textElement) return;
+  
+  input.value = textElement.textContent;
+  currentEditingMessageId = messageId;
+  
+  panel.classList.add('show');
+  panel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  input.focus();
+}
+
+function closeEditMessagePanel() {
+  const panel = document.getElementById('editMessagePanel');
+  if (!panel) return;
+  panel.classList.remove('show');
+  panel.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  document.getElementById('editMessageInput').value = '';
+  currentEditingMessageId = null;
+}
+
+async function saveEditedMessage() {
+  const input = document.getElementById('editMessageInput');
+  const newText = input.value.trim();
+  
+  if (!newText || !currentEditingMessageId) return;
+  
+  if (typeof updateMessageInSupabase === 'function') {
+    const success = await updateMessageInSupabase(currentEditingMessageId, newText);
+    if (success) {
+      closeEditMessagePanel();
+      notify('Сообщение обновлено', 'success');
+    } else {
+      notify('Не удалось обновить сообщение', 'error');
+    }
+  } else {
+    notify('Функция обновления не доступна', 'error');
+  }
+}
+
 function toggleSidebar() {
   if (!isMobileLayout()) return;
   const sidebar = document.getElementById('channelSidebar');
@@ -152,6 +220,21 @@ function setupDomEventHandlers() {
       case 'close-image-preview':
         closeImagePreview();
         break;
+      case 'open-search':
+        openSearchPanel();
+        break;
+      case 'close-search':
+        closeSearchPanel();
+        break;
+      case 'edit-message':
+        openEditMessagePanel(actionEl.dataset.messageId);
+        break;
+      case 'close-edit-message':
+        closeEditMessagePanel();
+        break;
+      case 'save-edit-message':
+        saveEditedMessage();
+        break;
       case 'toggle-reaction':
         await toggleReaction(actionEl.dataset.messageId, actionEl.dataset.emoji);
         break;
@@ -240,6 +323,15 @@ function setupDomEventHandlers() {
   // Direct click listener for image lightbox backdrop
   const imageLightboxBackdrop = document.querySelector('.image-lightbox-backdrop');
   imageLightboxBackdrop?.addEventListener('click', closeImagePreview);
+
+  // Search input event listener
+  const searchInput = document.getElementById('searchInput');
+  searchInput?.addEventListener('input', handleSearch);
+  searchInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeSearchPanel();
+    }
+  });
 }
 
 setupDomEventHandlers();

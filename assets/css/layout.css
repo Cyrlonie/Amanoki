@@ -263,14 +263,7 @@
   z-index: 10;
 }
 .chat-header .ch-hash { color: var(--text-muted); font-size: 22px; font-weight: 300; }
-.chat-header .ch-title {
-  font-weight: 700;
-  font-size: 15px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
+.chat-header .ch-title { font-weight: 700; font-size: 15px; }
 .chat-header .ch-desc { color: var(--text-muted); font-size: 13px; border-left: 1px solid var(--bg-channel); padding-left: 12px; margin-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .header-actions { margin-left: auto; display: flex; gap: 4px; }
 .header-btn {
@@ -1235,6 +1228,10 @@
     width: 38px;
     min-height: 40px;
     font-size: 18px;
+  }
+
+  .input-wrapper {
+    overflow: hidden;
   }
 
   #message-input {

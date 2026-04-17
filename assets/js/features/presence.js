@@ -14,12 +14,18 @@ function applyPresenceFromChannel() {
 
   // Накладываем presence-состояние для активных пользователей
   const state = presenceChannel ? presenceChannel.presenceState() : {};
+  console.log('Presence state:', state);
+  
+  let presenceUsersCount = 0;
   Object.keys(state).forEach((key) => {
     const presences = state[key];
     if (!presences || !presences.length) return;
 
     presences.forEach((p) => {
-      if (p.channel !== currentChannel) return;
+      // Проверяем канал - если не указан, считаем что это текущий канал
+      const userChannel = p.channel || currentChannel;
+      if (userChannel !== currentChannel) return;
+      
       const id = String(p.user_id || key);
       const name = p.username || memberDirectory[id] || byUserId[id]?.name || 'Unknown';
       const status = p.typing ? 'typing' : 'online';
@@ -28,8 +34,12 @@ function applyPresenceFromChannel() {
         name,
         status: statusRank[status] >= statusRank[prev] ? status : prev,
       };
+      presenceUsersCount++;
+      console.log(`User ${name} (${id}) is ${status} in channel ${userChannel}`);
     });
   });
+
+  console.log(`Presence users count: ${presenceUsersCount}`);
 
   // Текущий пользователь всегда online
   const selfId = String(authUser.id);
@@ -44,6 +54,8 @@ function applyPresenceFromChannel() {
     const prev = members[entry.name] || 'offline';
     members[entry.name] = statusRank[entry.status] >= statusRank[prev] ? entry.status : prev;
   });
+  
+  console.log('Members after presence:', members);
 
   updateMemberList();
   updateOnlineCount();

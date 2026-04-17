@@ -211,6 +211,9 @@ async function subscribeToMessages() {
           key: authUser.id,
         },
       },
+      presence: {
+        key: authUser.id,
+      },
     });
 
     presenceChannel

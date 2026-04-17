@@ -1073,9 +1073,6 @@
 
   .chat-header .ch-title {
     max-width: 22vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .chat-header .ch-desc {

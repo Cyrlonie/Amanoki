@@ -316,7 +316,7 @@ function renderReactionBar(messageId) {
       )}" style="color:var(--red);">🗑️</button>`
     : '';
   
-  const canEdit = authUser && (record.user_id === authUser.id || isAdmin);
+  const canEdit = authUser && (messageData && messageData.user_id === authUser.id || isAdmin);
   const editBtn = canEdit
     ? `<button class="hover-btn" type="button" title="Редактировать" data-action="edit-message" data-message-id="${escapeJsString(
         messageId

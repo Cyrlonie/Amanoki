@@ -66,14 +66,15 @@
   padding-left: 56px;
   display: block;
   min-width: 0;
+  position: relative;
 }
 .msg-stack {
   min-width: 0;
 }
 .msg-aside {
   position: absolute;
-  top: 10px;
-  right: 16px;
+  top: 0;
+  right: 0;
   z-index: 2;
 }
 .msg-reaction-chips:empty {

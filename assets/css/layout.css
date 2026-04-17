@@ -263,7 +263,14 @@
   z-index: 10;
 }
 .chat-header .ch-hash { color: var(--text-muted); font-size: 22px; font-weight: 300; }
-.chat-header .ch-title { font-weight: 700; font-size: 15px; }
+.chat-header .ch-title {
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
 .chat-header .ch-desc { color: var(--text-muted); font-size: 13px; border-left: 1px solid var(--bg-channel); padding-left: 12px; margin-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .header-actions { margin-left: auto; display: flex; gap: 4px; }
 .header-btn {
@@ -1063,6 +1070,7 @@
   .chat-header {
     padding: 0 8px;
     gap: 6px;
+    overflow: hidden;
   }
 
   .chat-header .ch-hash {

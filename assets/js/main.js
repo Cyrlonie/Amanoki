@@ -236,6 +236,10 @@ function setupDomEventHandlers() {
       closeImagePreview();
     }
   });
+
+  // Direct click listener for image lightbox backdrop
+  const imageLightboxBackdrop = document.querySelector('.image-lightbox-backdrop');
+  imageLightboxBackdrop?.addEventListener('click', closeImagePreview);
 }
 
 setupDomEventHandlers();

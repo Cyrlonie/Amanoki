@@ -181,6 +181,13 @@
   gap: 12px;
   border-top: 1px solid var(--border);
 }
+
+.sidebar-footer .user-avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+}
 .user-avatar,
 .member-avatar,
 .profile-preview-avatar,

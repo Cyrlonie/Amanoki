@@ -242,13 +242,6 @@
   margin-top: 0;
   display: block;
   background: #000;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: fadeIn 0.5s ease;
-}
-
-.msg-video:hover {
-  transform: scale(1.01);
-  box-shadow: var(--elevation-2);
 }
 
 /* === FILE ATTACHMENT === */

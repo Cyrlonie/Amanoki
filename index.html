@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/css/base.css" />
   <link rel="stylesheet" href="assets/css/layout.css" />
   <link rel="stylesheet" href="assets/css/components.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
   <script src="assets/js/state.js"></script>
@@ -14,13 +15,13 @@
 </head>
 <body>
   <!-- AUTH SCREEN -->
-  <div class="auth-overlay" id="authOverlay">
+  <div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-header">
-          <div class="auth-logo">💬</div>
-          <div class="auth-title">WhyBaby</div>
-          <div class="auth-subtitle">Oral cumshot chat</div>
+          <div class="auth-logo"><span class="material-icons-round" style="font-size: 48px;">chat_bubble</span></div>
+          <h1 class="auth-title" id="authTitle">WhyBaby</h1>
+          <p class="auth-subtitle">Oral cumshot chat</p>
         </div>
 
         <!-- Ручной ввод Supabase скрыт: ключи уже в коде -->
@@ -43,8 +44,14 @@
         <div id="loginPanel">
           <div class="auth-error" id="loginError"></div>
           <form class="auth-form" id="loginForm">
-            <input class="auth-input" id="loginEmail" type="email" placeholder="Электронная почта" required>
-            <input class="auth-input" id="loginPassword" type="password" placeholder="Пароль" required>
+            <div class="auth-field">
+              <label class="auth-label" for="loginEmail">Электронная почта</label>
+              <input class="auth-input" id="loginEmail" type="email" placeholder="Введите email" required autocomplete="email">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" for="loginPassword">Пароль</label>
+              <input class="auth-input" id="loginPassword" type="password" placeholder="Введите пароль" required autocomplete="current-password">
+            </div>
             <button type="submit" class="auth-btn">
               <span id="loginBtnText">Войти</span>
             </button>
@@ -58,10 +65,22 @@
         <div id="registerPanel" style="display:none;">
           <div class="auth-error" id="registerError"></div>
           <form class="auth-form" id="registerForm">
-            <input class="auth-input" id="registerUsername" type="text" placeholder="Имя в чате" maxlength="32" required>
-            <input class="auth-input" id="registerEmail" type="email" placeholder="Электронная почта" required>
-            <input class="auth-input" id="registerPassword" type="password" placeholder="Пароль (мин. 6 символов)" required>
-            <input class="auth-input" id="registerPassword2" type="password" placeholder="Повторите пароль" required>
+            <div class="auth-field">
+              <label class="auth-label" for="registerUsername">Имя в чате</label>
+              <input class="auth-input" id="registerUsername" type="text" placeholder="Введите имя" maxlength="32" required autocomplete="username">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" for="registerEmail">Электронная почта</label>
+              <input class="auth-input" id="registerEmail" type="email" placeholder="Введите email" required autocomplete="email">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" for="registerPassword">Пароль</label>
+              <input class="auth-input" id="registerPassword" type="password" placeholder="Минимум 6 символов" required autocomplete="new-password">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" for="registerPassword2">Повторите пароль</label>
+              <input class="auth-input" id="registerPassword2" type="password" placeholder="Повторите пароль" required autocomplete="new-password">
+            </div>
             <button type="submit" class="auth-btn">
               <span id="registerBtnText">Регистрация</span>
             </button>
@@ -77,7 +96,7 @@
   <!-- SETUP SCREEN (deprecated, leaving for compatibility) -->
   <div class="setup-overlay" id="setupOverlay">
     <div class="setup-card">
-      <div class="setup-title">💬 DevChat</div>
+      <div class="setup-title"><span class="material-icons-round" style="font-size: 24px; vertical-align: middle; margin-right: 8px;">chat</span>DevChat</div>
       <div class="setup-subtitle">Подключитесь к Supabase для начала общения</div>
       <button type="button" class="setup-btn" data-action="back-to-login">
         Вернуться к логину
@@ -86,42 +105,42 @@
   </div>
 
   <!-- MAIN APP -->
-  <div class="server-list">
-    <div class="server-icon home active" title="DevChat">💬</div>
+  <nav class="server-list" role="navigation" aria-label="Server navigation">
+    <div class="server-icon home active" title="DevChat" role="button" tabindex="0" aria-current="page"><span class="material-icons-round">chat</span></div>
     <div class="server-divider"></div>
     <div class="server-icon server-s1" title="Проект Alpha" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">A</div>
     <div class="server-icon server-s2" title="Backend Team" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">B</div>
     <div class="server-icon server-s3" title="Design" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">D</div>
     <div style="margin-top:auto;">
-      <div class="server-icon" style="background:var(--bg-secondary);color:var(--text-secondary);font-size:28px;font-weight:300;line-height:1;" title="Добавить сервер" data-action="notify" data-message="Создание серверов в альфа-версии недоступно">+</div>
+      <div class="server-icon" style="background:var(--bg-secondary);" title="Добавить сервер" data-action="notify" data-message="Создание серверов в альфа-версии недоступно" role="button" tabindex="0" aria-label="Добавить сервер"><span class="material-icons-round">add</span></div>
     </div>
-  </div>
+  </nav>
 
-  <div class="sidebar" id="channelSidebar">
-    <div class="sidebar-header">
+  <nav class="sidebar" id="channelSidebar" role="navigation" aria-label="Channel navigation">
+    <header class="sidebar-header">
       <span id="serverName">WhyBaby</span>
-      <span class="chevron">😎</span>
-    </div>
+      <span class="chevron"><span class="material-icons-round">expand_more</span></span>
+    </header>
 
     <div class="channel-section">
       <div class="channel-section-title">
         <span>Текстовые каналы</span>
         <span class="add-btn">+</span>
       </div>
-      <div class="channel-item active" data-channel="general">
+      <div class="channel-item active" data-channel="general" role="button" tabindex="0" aria-current="true">
         <span class="ch-icon">#</span>
         <span class="ch-name">general</span>
       </div>
-      <div class="channel-item" data-channel="random">
+      <div class="channel-item" data-channel="random" role="button" tabindex="0">
         <span class="ch-icon">#</span>
         <span class="ch-name">random</span>
       </div>
-      <div class="channel-item" data-channel="dev-talk">
+      <div class="channel-item" data-channel="dev-talk" role="button" tabindex="0">
         <span class="ch-icon">#</span>
         <span class="ch-name">dev-talk</span>
       </div>
-      <div class="channel-item" data-channel="announcements">
-        <span class="ch-icon">📢</span>
+      <div class="channel-item" data-channel="announcements" role="button" tabindex="0">
+        <span class="ch-icon"><span class="material-icons-round">campaign</span></span>
         <span class="ch-name">announcements</span>
       </div>
     </div>
@@ -132,16 +151,16 @@
         <span class="add-btn">+</span>
       </div>
       <div class="channel-item voice-channel-item" data-action="join-voice" data-voice-channel="general-voice">
-        <span class="ch-icon">🔊</span>
+        <span class="ch-icon"><span class="material-icons-round">volume_up</span></span>
         <span class="ch-name">General Voice</span>
       </div>
       <div class="channel-item voice-channel-item" data-action="join-voice" data-voice-channel="dev-room">
-        <span class="ch-icon">🔊</span>
+        <span class="ch-icon"><span class="material-icons-round">volume_up</span></span>
         <span class="ch-name">Dev Room</span>
       </div>
     </div>
 
-    <div class="sidebar-footer">
+    <footer class="sidebar-footer">
       <div class="user-avatar" id="myAvatar" style="background:var(--accent)">?
         <div class="status-dot"></div>
       </div>
@@ -150,30 +169,30 @@
         <div class="ustatus">В сети</div>
       </div>
       <div class="footer-icons">
-        <div class="footer-icon" title="Микрофон" data-action="toggle-voice-mute">🎤</div>
-        <div class="footer-icon" title="Выйти из войса" data-action="leave-voice">📴</div>
-        <div class="footer-icon" title="Профиль" data-action="open-profile">⚙️</div>
+        <div class="footer-icon" title="Микрофон" data-action="toggle-voice-mute" role="button" tabindex="0" aria-label="Переключить микрофон"><span class="material-icons-round">mic</span></div>
+        <div class="footer-icon" title="Выйти из войса" data-action="leave-voice" role="button" tabindex="0" aria-label="Выйти из голосового канала"><span class="material-icons-round">call_end</span></div>
+        <div class="footer-icon" title="Профиль" data-action="open-profile" role="button" tabindex="0" aria-label="Открыть профиль"><span class="material-icons-round">settings</span></div>
       </div>
-    </div>
-  </div>
+    </footer>
+  </nav>
 
-  <div class="chat-area">
-    <div class="chat-header">
-      <div class="header-btn mobile-only" title="Каналы" data-action="toggle-sidebar">☰</div>
-      <span class="ch-hash">#</span>
+  <main class="chat-area">
+    <header class="chat-header">
+      <div class="header-btn mobile-only" title="Каналы" data-action="toggle-sidebar" role="button" tabindex="0" aria-label="Открыть меню каналов"><span class="material-icons-round">menu</span></div>
+      <span class="ch-hash"><span class="material-icons-round">tag</span></span>
       <span class="ch-title" id="channelTitle">general</span>
       <span class="ch-desc" id="channelDesc">Добро пожаловать в #general — место для всех!</span>
       <div class="header-actions">
-        <div class="header-btn" title="Поиск" data-action="notify" data-message="Поиск в альфа-версии недоступен">🔍</div>
-        <div class="header-btn" title="Участники" data-action="toggle-members">👥</div>
-        <div class="header-btn" title="Уведомления">🔔</div>
-        <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin" style="display:none;color:var(--red);">⚙️</div>
+        <div class="header-btn" title="Поиск" data-action="notify" data-message="Поиск в альфа-версии недоступен" role="button" tabindex="0" aria-label="Поиск"><span class="material-icons-round">search</span></div>
+        <div class="header-btn" title="Участники" data-action="toggle-members" role="button" tabindex="0" aria-label="Показать участников"><span class="material-icons-round">people</span></div>
+        <div class="header-btn" title="Уведомления" role="button" tabindex="0" aria-label="Уведомления"><span class="material-icons-round">notifications</span></div>
+        <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin" style="display:none;color:var(--red);" role="button" tabindex="0" aria-label="Админ панель"><span class="material-icons-round">admin_panel_settings</span></div>
       </div>
-    </div>
+    </header>
 
     <div class="messages-area" id="messagesArea">
       <div class="channel-welcome">
-        <div class="welcome-icon">💬</div>
+        <div class="welcome-icon"><span class="material-icons-round">chat_bubble</span></div>
         <div class="welcome-title"># general</div>
         <div class="welcome-desc">Это начало канала <strong>#general</strong>. Добро пожаловать!</div>
       </div>
@@ -186,39 +205,58 @@
       <div class="reply-banner" id="replyBanner">
         <span class="label">Ответ</span>
         <span class="preview" id="replyBannerPreview"></span>
-        <button class="close" type="button" title="Отменить" data-action="cancel-reply">✕</button>
+        <button class="close" type="button" title="Отменить" data-action="cancel-reply"><span class="material-icons-round">close</span></button>
       </div>
       <div class="input-wrapper">
-        <div class="input-side-btn" title="Прикрепить файл" data-action="open-file-dialog">📎</div>
+        <div class="input-side-btn" title="Прикрепить файл" data-action="open-file-dialog" role="button" tabindex="0" aria-label="Прикрепить файл"><span class="material-icons-round">attach_file</span></div>
         <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,application/pdf,.zip,.txt,.json,.csv">
         <textarea id="message-input" rows="1" placeholder="Написать в #general"></textarea>
         <div class="input-right-btns">
-          <div class="input-icon" title="GIF" data-action="notify" data-message="GIF в альфа-версии недоступны">GIF</div>
-          <div class="input-icon" title="Стикер" data-action="notify" data-message="Стикеры в альфа-версии недоступны">🎭</div>
-          <div class="input-icon" title="Эмодзи" data-action="insert-emoji">😀</div>
-          <div class="send-btn" data-action="send-message" title="Отправить">▶</div>
+          <div class="input-icon" title="GIF" data-action="notify" data-message="GIF в альфа-версии недоступны" role="button" tabindex="0" aria-label="Отправить GIF">GIF</div>
+          <div class="input-icon" title="Стикер" data-action="notify" data-message="Стикеры в альфа-версии недоступны" role="button" tabindex="0" aria-label="Отправить стикер"><span class="material-icons-round">sentiment_satisfied</span></div>
+          <div class="input-icon" title="Эмодзи" data-action="insert-emoji" role="button" tabindex="0" aria-label="Вставить эмодзи"><span class="material-icons-round">emoji_emotions</span></div>
+          <div class="send-btn" data-action="send-message" title="Отправить" role="button" tabindex="0" aria-label="Отправить сообщение"><span class="material-icons-round">send</span></div>
         </div>
       </div>
     </div>
+  </main>
+
+  <!-- Floating Action Button for quick actions -->
+  <button class="fab" id="fabButton" title="Быстрые действия" data-action="toggle-fab-menu" aria-label="Быстрые действия">
+    <span class="material-icons-round">add</span>
+  </button>
+  <div class="fab-menu" id="fabMenu" aria-hidden="true">
+    <button class="fab-menu-item" data-action="create-channel" title="Создать канал">
+      <span class="material-icons-round">add_comment</span>
+      <span>Создать канал</span>
+    </button>
+    <button class="fab-menu-item" data-action="invite-user" title="Пригласить пользователя">
+      <span class="material-icons-round">person_add</span>
+      <span>Пригласить</span>
+    </button>
+    <button class="fab-menu-item" data-action="new-message" title="Новое сообщение">
+      <span class="material-icons-round">message</span>
+      <span>Сообщение</span>
+    </button>
   </div>
 
-  <div class="member-list" id="memberList">
+  <aside class="member-list" id="memberList" role="complementary" aria-label="Member list">
     <div class="member-section-title">Онлайн — <span id="onlineCount">1</span></div>
     <div id="onlineMembers"></div>
     <div class="member-section-title">Не в сети</div>
     <div id="offlineMembers"></div>
-  </div>
+  </aside>
 
-  <div class="voice-panel" id="voicePanel">
+  <div class="voice-panel" id="voicePanel" role="dialog" aria-modal="true" aria-labelledby="voicePanelTitle">
     <div class="voice-panel-header">
       <div>
-        <div class="voice-panel-title">Голосовой канал</div>
-        <div class="voice-panel-channel" id="voiceCurrentChannel">Не подключено</div>
+        <h3 id="voicePanelTitle" class="voice-panel-title">Голосовой канал</h3>
+        <p class="voice-panel-channel" id="voiceCurrentChannel">Не подключено</p>
       </div>
       <div class="voice-panel-actions">
-        <button type="button" class="voice-btn" id="voiceMuteBtn" data-action="toggle-voice-mute">🔇 Выключить микрофон</button>
-        <button type="button" class="voice-btn" id="voiceDeafenBtn" data-action="toggle-voice-deafen">🙉 Отключить звук</button>
-        <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice">Выйти</button>
+        <button type="button" class="voice-btn" id="voiceMuteBtn" data-action="toggle-voice-mute"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px;">mic_off</span>Выключить микрофон</button>
+        <button type="button" class="voice-btn" id="voiceDeafenBtn" data-action="toggle-voice-deafen"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px;">volume_off</span>Отключить звук</button>
+        <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px;">call_end</span>Выйти</button>
       </div>
     </div>
     <div class="voice-panel-status" id="voiceStatus">Голосовой канал не подключен</div>
@@ -235,35 +273,35 @@
   <div id="imageLightbox" class="image-lightbox" aria-hidden="true">
     <div class="image-lightbox-backdrop" data-action="close-image-preview"></div>
     <div class="image-lightbox-content">
-      <button type="button" class="image-lightbox-close" data-action="close-image-preview" aria-label="Закрыть">✕</button>
+      <button type="button" class="image-lightbox-close" data-action="close-image-preview" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
       <img id="imageLightboxPreview" class="image-lightbox-preview" src="" alt="Увеличенное изображение" />
     </div>
   </div>
 
   <!-- ADMIN PANEL -->
-  <div id="adminPanel">
+  <div id="adminPanel" role="dialog" aria-modal="true" aria-labelledby="adminPanelTitle">
     <div class="admin-header">
-      <span>⚙️ Админ панель</span>
-      <button class="admin-close-btn" type="button" data-action="toggle-admin">✕</button>
+      <h2 id="adminPanelTitle"><span class="material-icons-round" style="vertical-align: middle; margin-right: 8px;">admin_panel_settings</span>Админ панель</h2>
+      <button class="admin-close-btn" type="button" data-action="toggle-admin" aria-label="Закрыть админ панель"><span class="material-icons-round">close</span></button>
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title">💬 Статистика</div>
+      <div class="admin-section-title"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px; font-size: 16px;">analytics</span>Статистика</div>
       <div style="color: var(--text-secondary); font-size: 12px;">
-        Статус: <span id="adminStatus" style="color: var(--green);">✅ Онлайн</span><br>
+        Статус: <span id="adminStatus" style="color: var(--green);"><span class="material-icons-round" style="font-size: 14px; vertical-align: middle;">check_circle</span> Онлайн</span><br>
         Пользователей:<span id="adminUserCount"> 0</span><br>
         Сообщений: <span id="adminMessageCount">0</span>
       </div>
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title">👥 Управление пользователями</div>
+      <div class="admin-section-title"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px; font-size: 16px;">people</span>Управление пользователями</div>
       <div id="adminUsersList" style="max-height: 300px; overflow-y: auto;"></div>
-      <button class="admin-btn admin-btn-small" type="button" data-action="reload-admin-users" style="width: 100%; margin-top: 8px;">🔄 Обновить</button>
+      <button class="admin-btn admin-btn-small" type="button" data-action="reload-admin-users" style="width: 100%; margin-top: 8px;">🔄н
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title">📋 Недавние действия</div>
+      <div class="admin-section-title"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px; font-size: 16px;">history</span>Недавние действия</div>
       <div id="adminLog" style="max-height: 200px; overflow-y: auto; font-size: 11px; color: var(--text-muted);">
         <p>Ожидание...</p>
       </div>
@@ -271,34 +309,40 @@
   </div>
 
   <!-- PROFILE -->
-  <div id="profilePanel" class="profile-panel-overlay" aria-hidden="true">
+  <div id="profilePanel" class="profile-panel-overlay" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="profile-panel-backdrop" data-action="close-profile"></div>
-    <div class="profile-panel-card" role="dialog" aria-labelledby="profilePanelTitle">
+    <div class="profile-panel-card">
       <div class="profile-panel-header">
         <h2 id="profilePanelTitle">Профиль</h2>
-        <button type="button" class="profile-panel-close" data-action="close-profile" aria-label="Закрыть">✕</button>
+        <button type="button" class="profile-panel-close" data-action="close-profile" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
       </div>
       <form id="profileForm" class="profile-panel-body">
         <div class="profile-preview-row">
           <div id="profilePreviewAvatar" class="profile-preview-avatar">?</div>
           <div class="profile-preview-fields">
-            <label class="profile-label" for="profileDisplayName">Имя в чате</label>
-            <input
-              class="profile-input"
-              id="profileDisplayName"
-              type="text"
-              maxlength="32"
-              autocomplete="nickname"
-              required
-            />
+            <div class="profile-field">
+              <label class="profile-label" for="profileDisplayName">Имя в чате</label>
+              <input
+                class="profile-input"
+                id="profileDisplayName"
+                type="text"
+                maxlength="32"
+                autocomplete="nickname"
+                required
+              />
+            </div>
             <p class="profile-hint" id="profileEmailHint"></p>
           </div>
         </div>
-        <label class="profile-label" for="profileAvatarFile">Загрузить аватар</label>
-        <input class="profile-input" id="profileAvatarFile" type="file" accept="image/*" />
+        <div class="profile-field">
+          <label class="profile-label" for="profileAvatarFile">Загрузить аватар</label>
+          <input class="profile-input" id="profileAvatarFile" type="file" accept="image/*" />
+        </div>
         <p class="profile-hint">Выберите файл изображения для загрузки в хранилище.</p>
-        <label class="profile-label">Цвет аватара</label>
-        <div id="profileColorSwatches" class="profile-color-swatches"></div>
+        <div class="profile-field">
+          <label class="profile-label">Цвет аватара</label>
+          <div id="profileColorSwatches" class="profile-color-swatches"></div>
+        </div>
         <div class="profile-actions">
           <button id="profileLogoutBtn" type="button" class="profile-btn profile-btn-secondary" data-action="logout">Выйти из аккаунта</button>
           <button type="button" class="profile-btn profile-btn-secondary" data-action="close-profile">Отмена</button>

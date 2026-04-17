@@ -183,10 +183,13 @@
 }
 
 .sidebar-footer .user-avatar {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  background-size: contain !important;
 }
 .user-avatar,
 .member-avatar,

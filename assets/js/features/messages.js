@@ -878,6 +878,12 @@ function switchChannel(ch) {
   document.getElementById('channelTitle').textContent = ch;
   document.getElementById('channelDesc').textContent = CHANNEL_DESCS[ch] || `Канал #${ch}`;
   document.getElementById('message-input').placeholder = `Написать в #${ch}`;
+  
+  // Reset scroll on message input
+  const messageInput = document.getElementById('message-input');
+  if (messageInput) {
+    messageInput.scrollLeft = 0;
+  }
 
   const area = document.getElementById('messagesArea');
   area.innerHTML = `

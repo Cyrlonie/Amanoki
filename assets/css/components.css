@@ -454,8 +454,16 @@
   resize: none;
   max-height: 50vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
-#message-input::placeholder { color: var(--text-muted); }
+#message-input::placeholder { 
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .input-right-btns {
   display: flex;
   align-items: center;

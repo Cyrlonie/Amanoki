@@ -929,13 +929,19 @@
   color: var(--text-primary);
 }
 
+.voice-panel-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
 .voice-btn {
-  flex: 1;
   border: 1px solid var(--border);
   background: var(--bg-tertiary);
   color: var(--text-primary);
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: 12px 8px;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -944,6 +950,7 @@
   align-items: center;
   gap: 4px;
   font-weight: 500;
+  min-width: 0;
 }
 
 .voice-btn:disabled {

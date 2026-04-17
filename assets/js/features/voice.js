@@ -159,10 +159,13 @@ function renderVoiceParticipants() {
       const indicator = p.speaking ? '🔊' : '◦';
       const volumeValue = Math.round((p.volume ?? 1) * 100);
       const slider = p.isLocal
-        ? '<span class="voice-participant-local">Ваш уровень</span>'
+        ? ''
         : `<input type="range" min="0" max="100" value="${volumeValue}" class="voice-volume-slider" data-action="change-volume" data-participant-id="${escHtml(
             p.id
           )}" />`;
+
+      const muteState = p.muted ? '🔇' : '🎤';
+      const deafenState = p.deafened ? '🔈' : '';
 
       return `<div class="voice-participant${p.speaking ? ' speaking' : ''}" data-participant-id="${escHtml(
         p.id
@@ -170,9 +173,9 @@ function renderVoiceParticipants() {
         <div class="voice-participant-row">
           <span class="voice-participant-name">${escHtml(p.name)}${p.isLocal ? ' (вы)' : ''}</span>
           <span class="voice-participant-indicator">${indicator}</span>
-          <span class="voice-participant-state">${p.muted ? '🔇' : '🎤'}</span>
+          <span class="voice-participant-state">${muteState}${deafenState}</span>
         </div>
-        <div class="voice-participant-controls">${slider}</div>
+        ${slider ? `<div class="voice-participant-controls">${slider}</div>` : ''}
       </div>`;
     })
     .join('');

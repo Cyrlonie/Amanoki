@@ -217,7 +217,23 @@
 }
 .reaction-picker-btn:hover { background: var(--bg-hover); }
 
-.msg-image { width: 100%; max-width: 400px; max-height: 300px; border-radius: var(--radius-md); margin-top: 0; display: block; cursor: zoom-in; object-fit: cover; }
+.msg-image { 
+  width: 100%; 
+  max-width: 400px; 
+  max-height: 300px; 
+  border-radius: var(--radius-md); 
+  margin-top: 0; 
+  display: block; 
+  cursor: zoom-in; 
+  object-fit: cover;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 0.5s ease;
+}
+
+.msg-image:hover {
+  transform: scale(1.02);
+  box-shadow: var(--elevation-2);
+}
 .msg-video {
   max-width: 420px;
   max-height: 320px;
@@ -226,6 +242,13 @@
   margin-top: 0;
   display: block;
   background: #000;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 0.5s ease;
+}
+
+.msg-video:hover {
+  transform: scale(1.01);
+  box-shadow: var(--elevation-2);
 }
 
 /* === FILE ATTACHMENT === */
@@ -1174,8 +1197,7 @@
     opacity: 1;
     transform: translateX(0);
   }
-}}
-
+}
 
 @keyframes messageSlideIn {
   from {
@@ -1198,5 +1220,4 @@
   100% {
     transform: scale(1);
   }
-}
 }

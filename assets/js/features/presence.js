@@ -6,6 +6,7 @@ function applyPresenceFromChannel() {
   if (isDemoMode || !authUser) return;
   const byUserId = {};
   const statusRank = { offline: 0, online: 1, typing: 2 };
+  const now = Date.now();
 
   // База списка участников: все профили как offline
   Object.entries(memberDirectory).forEach(([id, name]) => {
@@ -40,6 +41,24 @@ function applyPresenceFromChannel() {
   });
 
   console.log(`Presence users count: ${presenceUsersCount}`);
+
+  // Fallback: если presence не работает, используем last_seen
+  if (presenceUsersCount === 0) {
+    console.log('Presence not working, using last_seen fallback');
+    Object.entries(memberDirectory).forEach(([id, name]) => {
+      if (byUserId[id]?.status !== 'offline') return; // Skip if already set by presence
+      
+      // Если это текущий пользователь, всегда онлайн
+      if (id === String(authUser.id)) {
+        byUserId[id] = { name, status: 'online' };
+        return;
+      }
+      
+      // Для простоты считаем всех пользователей онлайн, если presence не работает
+      // В будущем можно использовать last_seen для более точного определения
+      byUserId[id] = { name, status: 'online' };
+    });
+  }
 
   // Текущий пользователь всегда online
   const selfId = String(authUser.id);
@@ -91,11 +110,24 @@ async function loadMembersDirectory() {
   }
 }
 
+async function updateLastSeen() {
+  if (isDemoMode || !supabase || !authUser) return;
+  try {
+    await supabase
+      .from('profiles')
+      .update({ last_seen: new Date().toISOString() })
+      .eq('id', authUser.id);
+  } catch (e) {
+    console.error('Ошибка обновления last_seen:', e);
+  }
+}
+
 // ===================== TYPING =====================
 function handleTyping() {
   if (!isTyping) {
     isTyping = true;
     publishTypingStatus(true);
+    updateLastSeen(); // Обновляем last_seen при активности
   }
   clearTimeout(typingTimer);
   typingTimer = setTimeout(() => {

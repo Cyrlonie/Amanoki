@@ -826,6 +826,9 @@ async function sendMessage() {
       autoResize(input);
       return;
     }
+    if (typeof updateLastSeen === 'function') {
+      updateLastSeen();
+    }
   }
   cancelReply();
   scrollToBottom();

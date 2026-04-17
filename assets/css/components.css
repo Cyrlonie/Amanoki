@@ -356,6 +356,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
 }
 
 .image-lightbox-content {
@@ -375,6 +376,12 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-3);
   object-fit: contain;
+  animation: zoomIn 0.3s ease;
+  transition: transform 0.3s ease;
+}
+
+.image-lightbox-preview:hover {
+  transform: scale(1.01);
 }
 
 .image-lightbox-close {
@@ -383,18 +390,26 @@
   right: 20px;
   width: 44px;
   height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.35);
-  color: #fff;
-  font-size: 20px;
-  line-height: 1;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.3s ease;
 }
 
 .image-lightbox-close:hover {
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--bg-hover);
+  transform: scale(1.1);
+  color: var(--text-secondary);
+}
+
+.image-lightbox-close:active {
+  transform: scale(0.95);
 }
 
 .system-msg {
@@ -1199,6 +1214,39 @@
   }
 }
 
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 @keyframes messageSlideIn {
   from {
     opacity: 0;

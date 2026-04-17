@@ -111,9 +111,7 @@
     <div class="server-icon server-s1" title="Проект Alpha" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">A</div>
     <div class="server-icon server-s2" title="Backend Team" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">B</div>
     <div class="server-icon server-s3" title="Design" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">D</div>
-    <div style="margin-top:auto;">
-      <div class="server-icon" style="background:var(--bg-secondary);" title="Добавить сервер" data-action="notify" data-message="Создание серверов в альфа-версии недоступно" role="button" tabindex="0" aria-label="Добавить сервер"><span class="material-icons-round">add</span></div>
-    </div>
+    <div style="margin-top:auto;"></div>
   </nav>
 
   <nav class="sidebar" id="channelSidebar" role="navigation" aria-label="Channel navigation">
@@ -221,24 +219,7 @@
   </main>
 
   <!-- Floating Action Button for quick actions -->
-  <button class="fab" id="fabButton" title="Быстрые действия" data-action="toggle-fab-menu" aria-label="Быстрые действия">
-    <span class="material-icons-round">add</span>
-  </button>
-  <div class="fab-menu" id="fabMenu" aria-hidden="true">
-    <button class="fab-menu-item" data-action="create-channel" title="Создать канал">
-      <span class="material-icons-round">add_comment</span>
-      <span>Создать канал</span>
-    </button>
-    <button class="fab-menu-item" data-action="invite-user" title="Пригласить пользователя">
-      <span class="material-icons-round">person_add</span>
-      <span>Пригласить</span>
-    </button>
-    <button class="fab-menu-item" data-action="new-message" title="Новое сообщение">
-      <span class="material-icons-round">message</span>
-      <span>Сообщение</span>
-    </button>
-  </div>
-
+  
   <aside class="member-list" id="memberList" role="complementary" aria-label="Member list">
     <div class="member-section-title">Онлайн — <span id="onlineCount">1</span></div>
     <div id="onlineMembers"></div>

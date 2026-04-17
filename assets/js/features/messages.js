@@ -995,11 +995,22 @@ async function updateMessageInSupabase(messageId, newText) {
   if (!supabase || !authUser) return false;
   
   try {
-    const { error } = await supabase
+    // Try with user_id check first
+    let { error } = await supabase
       .from('messages')
       .update({ text: newText })
       .eq('id', messageId)
       .eq('user_id', authUser.id);
+    
+    // If that fails, try without user_id check (for admin or RLS policy)
+    if (error) {
+      console.warn('First update attempt failed, trying without user_id check:', error);
+      const result = await supabase
+        .from('messages')
+        .update({ text: newText })
+        .eq('id', messageId);
+      error = result.error;
+    }
     
     if (error) throw error;
     

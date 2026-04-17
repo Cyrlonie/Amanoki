@@ -511,7 +511,7 @@ function renderMessageMedia(url) {
   
   // Проверяем, является ли файл медиа
   if (isVideoMediaUrl(url)) {
-    return `<div class="msg-media"><video class="msg-video" controls preload="metadata" playsinline>
+    return `<div class="msg-media"><video class="msg-video" controls preload="metadata" playsinline volume="0.3">
       <source src="${safeUrl}">
       Ваш браузер не поддерживает воспроизведение видео.
     </video></div>`;

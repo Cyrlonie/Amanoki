@@ -1114,6 +1114,7 @@
     padding-left: 50px;
     min-width: 0;
     display: block;
+    position: relative;
   }
 
   .message-group .content-area .msg-stack {
@@ -1122,9 +1123,11 @@
   }
 
   .message-group .content-area .msg-aside {
-    position: static;
-    width: 100%;
-    margin-top: 6px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: auto;
+    margin-top: 0;
   }
 
   .msg-media {

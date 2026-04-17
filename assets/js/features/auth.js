@@ -110,7 +110,19 @@ async function handleRegister(e) {
       options: { data: { username } },
     });
 
-    if (signUpError) throw signUpError;
+    if (signUpError) {
+      // Если требуется подтверждение email, это не ошибка
+      if (signUpError.message?.includes('Email not confirmed') || signUpError.message?.includes('email confirmation')) {
+        document.getElementById('registerBtnText').textContent = 'Проверьте почту';
+        btnEl.disabled = false;
+        showError('registerPanel', 'Аккаунт создан. Подтвердите почту и затем войдите.');
+        switchToLogin();
+        document.getElementById('loginEmail').value = email;
+        document.getElementById('loginPassword').value = '';
+        return;
+      }
+      throw signUpError;
+    }
 
     const { error: profileError } = await supabase.from('profiles').insert({
       id: user.id,

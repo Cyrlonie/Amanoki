@@ -43,7 +43,7 @@
 .message-group { padding: 2px 16px; position: relative; }
 .message-group:hover { background: rgba(0,0,0,0.06); }
 .message-group.with-header { padding-top: 16px; margin-top: 4px; }
-.message-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+.message-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 0; }
 .msg-avatar {
   width: 44px;
   height: 44px;
@@ -516,7 +516,7 @@
   border-left: 2px solid var(--message-highlight);
   width: 100%;
   padding-left: 10px;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   color: var(--text-secondary);
   font-size: 12px;
   font-family: inherit;

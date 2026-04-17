@@ -998,7 +998,7 @@ async function updateMessageInSupabase(messageId, newText) {
     // Try with user_id check first
     let { error } = await supabase
       .from('messages')
-      .update({ text: newText })
+      .update({ content: newText })
       .eq('id', messageId)
       .eq('user_id', authUser.id);
     
@@ -1007,7 +1007,7 @@ async function updateMessageInSupabase(messageId, newText) {
       console.warn('First update attempt failed, trying without user_id check:', error);
       const result = await supabase
         .from('messages')
-        .update({ text: newText })
+        .update({ content: newText })
         .eq('id', messageId);
       error = result.error;
     }

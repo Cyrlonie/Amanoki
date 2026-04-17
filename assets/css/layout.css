@@ -153,7 +153,12 @@
   transition: all 0.2s ease;
   user-select: none;
 }
-.channel-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.channel-item:hover { 
+  background: var(--bg-hover); 
+  color: var(--text-primary);
+  transform: translateX(4px);
+  transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease;
+}
 .channel-item.active { background: var(--bg-active); color: var(--text-primary); }
 .channel-item .ch-icon { font-size: 18px; flex-shrink: 0; }
 .channel-item .ch-name { font-size: 14px; font-weight: 500; }
@@ -452,7 +457,7 @@
   font-size: 15px;
   outline: none;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .auth-input:focus {
   border-color: var(--accent);
@@ -483,9 +488,14 @@
 .auth-btn:hover:not(:disabled) {
   background: var(--accent-hover);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
 }
 .auth-btn:active:not(:disabled) {
   background: var(--accent-active);
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.1s ease;
 }
 .auth-btn:disabled {
   opacity: 0.5;

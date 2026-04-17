@@ -205,7 +205,13 @@ async function subscribeToMessages() {
       })
       .subscribe();
 
-    presenceChannel = supabase.channel(`presence:${currentChannel}`);
+    presenceChannel = supabase.channel(`presence:${currentChannel}`, {
+  config: {
+    presence: {
+      key: authUser.id,
+    },
+  },
+});
 
     presenceChannel
       .on('presence', { event: 'sync' }, () => {

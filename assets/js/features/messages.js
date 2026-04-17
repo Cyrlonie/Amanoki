@@ -474,16 +474,88 @@ function isVideoMediaUrl(url) {
   }
 }
 
+function isImageUrl(url) {
+  if (!url) return false;
+  try {
+    const noQuery = String(url).split('?')[0].toLowerCase();
+    return /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico)$/i.test(noQuery);
+  } catch (_) {
+    return false;
+  }
+}
+
+function isMediaUrl(url) {
+  return isImageUrl(url) || isVideoMediaUrl(url);
+}
+
+function getFileNameFromUrl(url) {
+  if (!url) return 'файл';
+  try {
+    const parts = String(url).split('/');
+    const fileName = parts[parts.length - 1].split('?')[0];
+    return fileName || 'файл';
+  } catch (_) {
+    return 'файл';
+  }
+}
+
+function getFileExtension(filename) {
+  if (!filename) return '';
+  const parts = filename.split('.');
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+}
+
 function renderMessageMedia(url) {
   if (!url) return '';
   const safeUrl = escHtml(String(url));
+  
+  // Проверяем, является ли файл медиа
   if (isVideoMediaUrl(url)) {
     return `<div class="msg-media"><video class="msg-video" controls preload="metadata" playsinline>
       <source src="${safeUrl}">
       Ваш браузер не поддерживает воспроизведение видео.
     </video></div>`;
   }
-  return `<div class="msg-media"><img class="msg-image" src="${safeUrl}" data-action="open-image-preview" alt="Изображение в сообщении"></div>`;
+  
+  if (isImageUrl(url)) {
+    return `<div class="msg-media"><img class="msg-image" src="${safeUrl}" data-action="open-image-preview" alt="Изображение в сообщении"></div>`;
+  }
+  
+  // Для не-медиа файлов показываем кнопку скачивания
+  const fileName = getFileNameFromUrl(url);
+  const ext = getFileExtension(fileName);
+  const fileIcon = getFileIconByExtension(ext);
+  
+  return `<div class="msg-file-attachment">
+    <div class="file-icon">${fileIcon}</div>
+    <div class="file-info">
+      <div class="file-name">${escHtml(fileName)}</div>
+      <div class="file-type">${ext.toUpperCase()}</div>
+    </div>
+    <a href="${safeUrl}" download="${escHtml(fileName)}" class="file-download-btn" title="Скачать файл">
+      <span class="material-icons-round">download</span>
+    </a>
+  </div>`;
+}
+
+function getFileIconByExtension(ext) {
+  const iconMap = {
+    'pdf': 'picture_as_pdf',
+    'doc': 'description',
+    'docx': 'description',
+    'txt': 'description',
+    'zip': 'folder_zip',
+    'rar': 'folder_zip',
+    '7z': 'folder_zip',
+    'json': 'code',
+    'csv': 'table_chart',
+    'xls': 'table_chart',
+    'xlsx': 'table_chart',
+    'mp3': 'music_note',
+    'wav': 'music_note',
+    'ogg': 'music_note',
+  };
+  return `<span class="material-icons-round">${iconMap[ext] || 'insert_drive_file'}</span>`;
 }
 
 // ===================== MESSAGE RENDERING =====================

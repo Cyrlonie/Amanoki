@@ -253,13 +253,29 @@
         <h3 id="voicePanelTitle" class="voice-panel-title">Голосовой канал</h3>
         <p class="voice-panel-channel" id="voiceCurrentChannel">Не подключено</p>
       </div>
-      <div class="voice-panel-actions">
-        <button type="button" class="voice-btn" id="voiceMuteBtn" data-action="toggle-voice-mute"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px;">mic_off</span>Выключить микрофон</button>
-        <button type="button" class="voice-btn" id="voiceDeafenBtn" data-action="toggle-voice-deafen"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px;">volume_off</span>Отключить звук</button>
-        <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px;">call_end</span>Выйти</button>
-      </div>
+      <button class="voice-panel-close" type="button" data-action="close-voice-panel" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
     </div>
-    <div class="voice-panel-status" id="voiceStatus">Голосовой канал не подключен</div>
+    
+    <div class="voice-panel-status" id="voiceStatus">
+      <div class="voice-status-text" id="voiceStatusText">Голосовой канал не подключен</div>
+      <progress class="voice-connection-progress" id="voiceConnectionProgress" value="0" max="100" aria-label="Прогресс подключения"></progress>
+    </div>
+    
+    <div class="voice-panel-actions">
+      <button type="button" class="voice-btn" id="voiceMuteBtn" data-action="toggle-voice-mute" aria-label="Переключить микрофон">
+        <span class="material-icons-round">mic</span>
+        <span class="voice-btn-text">Микрофон</span>
+      </button>
+      <button type="button" class="voice-btn" id="voiceDeafenBtn" data-action="toggle-voice-deafen" aria-label="Отключить звук">
+        <span class="material-icons-round">volume_up</span>
+        <span class="voice-btn-text">Звук</span>
+      </button>
+      <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice" aria-label="Выйти из канала">
+        <span class="material-icons-round">call_end</span>
+        <span class="voice-btn-text">Выйти</span>
+      </button>
+    </div>
+    
     <div class="voice-participants-block">
       <div class="voice-participants-title">Участники: <span id="voiceParticipantCount">0</span></div>
       <div class="voice-participants" id="voiceParticipants">

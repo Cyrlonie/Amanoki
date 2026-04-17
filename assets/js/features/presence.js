@@ -6,7 +6,6 @@ function applyPresenceFromChannel() {
   if (isDemoMode || !authUser) return;
   const byUserId = {};
   const statusRank = { offline: 0, online: 1, typing: 2 };
-  const now = Date.now();
 
   // База списка участников: все профили как offline
   Object.entries(memberDirectory).forEach(([id, name]) => {
@@ -15,7 +14,6 @@ function applyPresenceFromChannel() {
 
   // Накладываем presence-состояние для активных пользователей
   const state = presenceChannel ? presenceChannel.presenceState() : {};
-  console.log('Presence state:', state);
   
   let presenceUsersCount = 0;
   Object.keys(state).forEach((key) => {
@@ -23,10 +21,7 @@ function applyPresenceFromChannel() {
     if (!presences || !presences.length) return;
 
     presences.forEach((p) => {
-      // Проверяем канал - если не указан, считаем что это текущий канал
-      const userChannel = p.channel || currentChannel;
-      if (userChannel !== currentChannel) return;
-      
+      // Для глобального presence не проверяем канал
       const id = String(p.user_id || key);
       const name = p.username || memberDirectory[id] || byUserId[id]?.name || 'Unknown';
       const status = p.typing ? 'typing' : 'online';
@@ -36,15 +31,11 @@ function applyPresenceFromChannel() {
         status: statusRank[status] >= statusRank[prev] ? status : prev,
       };
       presenceUsersCount++;
-      console.log(`User ${name} (${id}) is ${status} in channel ${userChannel}`);
     });
   });
 
-  console.log(`Presence users count: ${presenceUsersCount}`);
-
   // Fallback: если presence не работает, используем last_seen
   if (presenceUsersCount === 0) {
-    console.log('Presence not working, using last_seen fallback');
     Object.entries(memberDirectory).forEach(([id, name]) => {
       if (byUserId[id]?.status !== 'offline') return; // Skip if already set by presence
       
@@ -55,7 +46,6 @@ function applyPresenceFromChannel() {
       }
       
       // Для простоты считаем всех пользователей онлайн, если presence не работает
-      // В будущем можно использовать last_seen для более точного определения
       byUserId[id] = { name, status: 'online' };
     });
   }
@@ -73,8 +63,6 @@ function applyPresenceFromChannel() {
     const prev = members[entry.name] || 'offline';
     members[entry.name] = statusRank[entry.status] >= statusRank[prev] ? entry.status : prev;
   });
-  
-  console.log('Members after presence:', members);
 
   updateMemberList();
   updateOnlineCount();

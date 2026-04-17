@@ -158,7 +158,7 @@
   white-space: pre-wrap;
 }
 .msg-media {
-  margin-top: 4px;
+  margin-top: 2px;
   max-width: min(420px, 100%);
 }
 .msg-text.compact { padding-left: 0; }

@@ -34,21 +34,8 @@ function applyPresenceFromChannel() {
     });
   });
 
-  // Fallback: если presence не работает, используем last_seen
-  if (presenceUsersCount === 0) {
-    Object.entries(memberDirectory).forEach(([id, name]) => {
-      if (byUserId[id]?.status !== 'offline') return; // Skip if already set by presence
-      
-      // Если это текущий пользователь, всегда онлайн
-      if (id === String(authUser.id)) {
-        byUserId[id] = { name, status: 'online' };
-        return;
-      }
-      
-      // Для простоты считаем всех пользователей онлайн, если presence не работает
-      byUserId[id] = { name, status: 'online' };
-    });
-  }
+  // Fallback: если presence не работает, НЕ помечаем всех онлайн —
+  // только текущий пользователь будет помечен ниже.
 
   // Текущий пользователь всегда online
   const selfId = String(authUser.id);
@@ -308,8 +295,7 @@ function updateOnlineCount() {
         const presences = state[key];
         if (!presences || !presences.length) return;
         presences.forEach((p) => {
-          // Считаем онлайн только участников текущего канала.
-          if (p.channel && p.channel !== currentChannel) return;
+          // Presence глобальный — считаем всех подключённых пользователей.
           onlineUserIds.add(String(p.user_id || key));
         });
       });

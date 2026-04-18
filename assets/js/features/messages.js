@@ -1,4 +1,4 @@
-﻿// Messages: Supabase realtime, rendering, reactions, replies, send, upload, channel switch.
+// Messages: Supabase realtime, rendering, reactions, replies, send, upload, channel switch.
 // Classic script. Uses globals from state/config/auth/presence and main.js (notify, escHtml, escapeJsString, formatTime, scrollToBottom, autoResize, playNotificationSound, getUserColor, deleteMessage, isAdmin).
 
 let messageSubscriptionGeneration = 0;
@@ -141,6 +141,14 @@ async function subscribeToMessages() {
           reply_to: r.reply_to,
         })
       );
+      // Заполняем memberLastSeen из загруженных сообщений для fallback онлайн-счётчика
+      data.forEach((r) => {
+        if (r.user_id && r.created_at) {
+          const ts = new Date(r.created_at).getTime();
+          const prev = memberLastSeen[String(r.user_id)] || 0;
+          if (ts > prev) memberLastSeen[String(r.user_id)] = ts;
+        }
+      });
       await loadReactionsForMessages(data.map((r) => r.id));
     }
 
@@ -159,6 +167,11 @@ async function subscribeToMessages() {
         const row = payload.new;
         const ch = row.channel;
         if (!TEXT_CHANNELS.includes(ch)) return;
+
+        // Трекаем активность пользователя для fallback онлайн-счётчика
+        if (row.user_id) {
+          memberLastSeen[String(row.user_id)] = Date.now();
+        }
 
         if (ch === currentChannel) {
           const isOwnMessage = row.user_id === authUser.id;

@@ -2,7 +2,7 @@
 const typingBroadcastState = {};
 const TYPING_BROADCAST_TTL_MS = 4500;
 const LAST_SEEN_ONLINE_TTL_MS = 5 * 60 * 1000; // 5 минут
-const memberLastSeen = {}; // id -> ISO timestamp
+const memberLastSeen = {}; // id -> timestamp (ms)
 
 function applyPresenceFromChannel() {
   if (isDemoMode || !authUser) return;
@@ -36,13 +36,13 @@ function applyPresenceFromChannel() {
     });
   });
 
-  // Fallback: если presence не работает, используем last_seen
+  // Fallback: если presence не работает, используем активность по сообщениям
   if (presenceUsersCount === 0) {
     const now = Date.now();
     Object.entries(memberDirectory).forEach(([id, name]) => {
       if (byUserId[id]?.status !== 'offline') return;
       const lastSeen = memberLastSeen[id];
-      if (lastSeen && (now - new Date(lastSeen).getTime()) < LAST_SEEN_ONLINE_TTL_MS) {
+      if (lastSeen && (now - lastSeen) < LAST_SEEN_ONLINE_TTL_MS) {
         byUserId[id] = { name, status: 'online' };
       }
     });
@@ -70,7 +70,7 @@ function applyPresenceFromChannel() {
 async function loadMembersDirectory() {
   if (isDemoMode || !supabase) return;
   try {
-    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url, last_seen');
+    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url');
     if (error) throw error;
 
     const previousNames = new Set(Object.values(memberDirectory));
@@ -79,7 +79,7 @@ async function loadMembersDirectory() {
       if (row.is_banned) return;
       if (!row.username) return;
       memberDirectory[row.id] = row.username;
-      if (row.last_seen) memberLastSeen[row.id] = row.last_seen;
+
       previousNames.delete(row.username);
       if (row.avatar_color) {
         userColors[row.username] = row.avatar_color;

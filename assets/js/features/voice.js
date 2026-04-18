@@ -636,5 +636,191 @@ async function toggleVoiceMute() {
   }
 }
 
+// ===================== SCREEN SHARE =====================
+let isScreenSharing = false;
+let screenShareTrack = null;
+let remoteScreenShareTrack = null;
+
+async function toggleScreenShare() {
+  if (!voiceRoom) {
+    notify('Сначала подключитесь к голосовому каналу', 'error');
+    return;
+  }
+
+  if (isScreenSharing) {
+    await stopScreenShare();
+  } else {
+    await startScreenShare();
+  }
+}
+
+async function startScreenShare() {
+  if (!voiceRoom) return;
+
+  try {
+    const lk = await loadLivekitSdk();
+    const tracks = await lk.createLocalScreenTracks({ audio: false });
+    const track = tracks[0];
+    if (!track) {
+      notify('Не удалось получить доступ к экрану', 'error');
+      return;
+    }
+
+    // Publish the screen share track
+    await voiceRoom.localParticipant.publishTrack(track, {
+      name: 'screen-share',
+      source: 'screen_share',
+    });
+
+    screenShareTrack = track;
+    isScreenSharing = true;
+
+    // Show local preview
+    showScreenSharePreview(track, currentUser + ' (вы)');
+
+    // Listen for track ended (user clicks "Stop sharing" in browser UI)
+    const mediaTrack = track.mediaStreamTrack;
+    if (mediaTrack) {
+      mediaTrack.addEventListener('ended', () => {
+        stopScreenShare();
+      });
+    }
+
+    updateScreenShareButton();
+    notify('📺 Демонстрация экрана запущена', 'success');
+  } catch (error) {
+    if (error.name === 'NotAllowedError') {
+      // User cancelled the screen share picker
+      return;
+    }
+    notify('Ошибка демонстрации экрана: ' + error.message, 'error');
+  }
+}
+
+async function stopScreenShare() {
+  if (screenShareTrack) {
+    try {
+      await voiceRoom?.localParticipant?.unpublishTrack(screenShareTrack);
+      screenShareTrack.stop();
+    } catch (_) {}
+    screenShareTrack = null;
+  }
+
+  isScreenSharing = false;
+  hideScreenSharePreview();
+  updateScreenShareButton();
+  notify('Демонстрация экрана остановлена', 'info');
+}
+
+function showScreenSharePreview(track, label) {
+  const container = document.getElementById('voiceScreenShareContainer');
+  const video = document.getElementById('voiceScreenShareVideo');
+  const labelEl = document.getElementById('voiceScreenShareLabel');
+  if (!container || !video) return;
+
+  // Attach video track to the video element
+  const mediaStream = new MediaStream();
+  const mediaTrack = track.mediaStreamTrack || track;
+  if (mediaTrack instanceof MediaStreamTrack) {
+    mediaStream.addTrack(mediaTrack);
+  }
+  video.srcObject = mediaStream;
+  video.play().catch(() => {});
+
+  if (labelEl) labelEl.textContent = label || 'Демонстрация экрана';
+  container.style.display = '';
+
+  // Click to open fullscreen
+  video.onclick = () => {
+    if (video.requestFullscreen) video.requestFullscreen();
+    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+  };
+}
+
+function hideScreenSharePreview() {
+  const container = document.getElementById('voiceScreenShareContainer');
+  const video = document.getElementById('voiceScreenShareVideo');
+  if (video) {
+    video.srcObject = null;
+    video.onclick = null;
+  }
+  if (container) container.style.display = 'none';
+}
+
+function updateScreenShareButton() {
+  const btn = document.getElementById('voiceScreenShareBtn');
+  if (!btn) return;
+  btn.classList.toggle('active', isScreenSharing);
+  const icon = btn.querySelector('.material-icons-round');
+  if (icon) icon.textContent = isScreenSharing ? 'stop_screen_share' : 'screen_share';
+  const text = btn.querySelector('.voice-btn-text');
+  if (text) text.textContent = isScreenSharing ? 'Остановить' : 'Экран';
+  btn.disabled = !currentVoiceChannel;
+}
+
+// Handle remote screen shares via existing room events
+function handleRemoteScreenTrack(track, participant) {
+  if (!track || track.kind !== 'video') return;
+  const source = String(track.source || track.name || '').toLowerCase();
+  if (!source.includes('screen')) return;
+
+  remoteScreenShareTrack = track;
+  const name = participant?.name || participant?.identity || 'Участник';
+
+  // Attach remote screen share
+  const mediaTrack = track.mediaStreamTrack;
+  if (mediaTrack) {
+    showScreenSharePreview(track, name);
+  }
+}
+
+function handleRemoteScreenTrackRemoved(track) {
+  if (!track || track.kind !== 'video') return;
+  const source = String(track.source || track.name || '').toLowerCase();
+  if (!source.includes('screen')) return;
+
+  remoteScreenShareTrack = null;
+  if (!isScreenSharing) {
+    hideScreenSharePreview();
+  }
+}
+
+// Patch bindRoomEvents to also handle screen share tracks
+const _originalBindRoomEvents = bindRoomEvents;
+bindRoomEvents = function(room, RoomEvent, generation) {
+  _originalBindRoomEvents(room, RoomEvent, generation);
+
+  room
+    .on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      if (generation !== voiceConnectionGeneration) return;
+      handleRemoteScreenTrack(track, participant);
+    })
+    .on(RoomEvent.TrackUnsubscribed, (track) => {
+      if (generation !== voiceConnectionGeneration) return;
+      handleRemoteScreenTrackRemoved(track);
+    });
+};
+
+// Extend resetVoiceState to clean up screen share
+const _originalResetVoiceState = resetVoiceState;
+resetVoiceState = function() {
+  if (screenShareTrack) {
+    try { screenShareTrack.stop(); } catch(_) {}
+    screenShareTrack = null;
+  }
+  isScreenSharing = false;
+  remoteScreenShareTrack = null;
+  hideScreenSharePreview();
+  updateScreenShareButton();
+  _originalResetVoiceState();
+};
+
+// Extend updateVoiceUiState to also update screen share button
+const _originalUpdateVoiceUiState = updateVoiceUiState;
+updateVoiceUiState = function() {
+  _originalUpdateVoiceUiState();
+  updateScreenShareButton();
+};
+
 updateVoiceUiState();
 renderVoiceParticipants();

@@ -260,10 +260,22 @@
         <span class="material-icons-round">volume_up</span>
         <span class="voice-btn-text">Звук</span>
       </button>
+      <button type="button" class="voice-btn" id="voiceScreenShareBtn" data-action="toggle-screen-share" aria-label="Демонстрация экрана">
+        <span class="material-icons-round">screen_share</span>
+        <span class="voice-btn-text">Экран</span>
+      </button>
       <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice" aria-label="Выйти из канала">
         <span class="material-icons-round">call_end</span>
         <span class="voice-btn-text">Выйти</span>
       </button>
+    </div>
+
+    <div class="voice-screen-share-container" id="voiceScreenShareContainer" style="display:none;">
+      <div class="voice-screen-share-header">
+        <span class="material-icons-round" style="font-size:16px;">screen_share</span>
+        <span id="voiceScreenShareLabel">Демонстрация экрана</span>
+      </div>
+      <video id="voiceScreenShareVideo" class="voice-screen-share-video" autoplay playsinline></video>
     </div>
     
     <div class="voice-participants-block">

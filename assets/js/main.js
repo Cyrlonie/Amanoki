@@ -201,6 +201,9 @@ function setupDomEventHandlers() {
       case 'toggle-voice-deafen':
         await toggleVoiceDeafen();
         break;
+      case 'toggle-screen-share':
+        await toggleScreenShare();
+        break;
       case 'reload-admin-users':
         await loadAdminUsers();
         break;

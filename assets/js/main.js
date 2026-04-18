@@ -398,7 +398,8 @@ window.onload = async () => {
 
     if (session && session.user) {
       authUser = session.user;
-      await loadUserProfile(); // Загружаем данные профиля и проверяем админку
+      const profileResult = await loadUserProfile();
+      if (profileResult === false) return; // Забанен — не продолжаем
       await loadMembersDirectory();
 
       // Скрываем экран входа

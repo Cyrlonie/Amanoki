@@ -51,11 +51,12 @@ async function loadUserProfile() {
 
     // Проверка бана — если забанен, выкидываем из аккаунта
     if (data.is_banned) {
+      authUser = null;
+      currentUserProfile = null;
       await supabase.auth.signOut();
       document.getElementById('authOverlay').style.display = 'flex';
       showError('loginPanel', '❌ Ваш аккаунт заблокирован администратором');
-      setTimeout(() => window.location.reload(), 2500);
-      return;
+      return false; // сигнал вызывающему коду — не продолжать
     }
 
     currentUserProfile = data;
@@ -216,7 +217,13 @@ async function handleLogin(e) {
     if (error) throw error;
 
     authUser = user;
-    await loadUserProfile();
+    const profileResult = await loadUserProfile();
+    if (profileResult === false) {
+      // Пользователь забанен — loadUserProfile уже показал ошибку
+      document.getElementById('loginBtnText').textContent = 'Войти';
+      document.querySelector('#loginPanel .auth-btn').disabled = false;
+      return;
+    }
     document.getElementById('loginBtnText').textContent = 'Добро пожаловать!';
 
     setTimeout(() => {

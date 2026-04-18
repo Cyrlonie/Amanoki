@@ -1,4 +1,4 @@
-﻿/* === SERVER LIST === */
+/* === SERVER LIST === */
 .server-list {
   width: 80px;
   background: var(--bg-tertiary);
@@ -1328,5 +1328,14 @@
 
   .voice-participants {
     max-height: 140px;
+  }
+
+  .emoji-picker-panel {
+    bottom: 60px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-width: none;
+    max-height: 50vh;
   }
 }

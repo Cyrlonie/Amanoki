@@ -1599,9 +1599,9 @@
 
 /* === EMOJI PICKER === */
 .emoji-picker-panel {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 4px;
+  position: fixed;
+  bottom: 85px;
+  right: 24px;
   width: 352px;
   max-height: 420px;
   background: var(--bg-secondary);

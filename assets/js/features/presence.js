@@ -38,6 +38,7 @@ function applyPresenceFromChannel() {
         if (!voiceUsersByChannel[p.voice_channel]) voiceUsersByChannel[p.voice_channel] = [];
         if (!voiceUsersByChannel[p.voice_channel].some(u => u.id === id)) {
           voiceUsersByChannel[p.voice_channel].push({ id, name });
+          console.log(`[Presence] Добавлен пользователь ${name} в канал ${p.voice_channel}`);
         }
       }
 

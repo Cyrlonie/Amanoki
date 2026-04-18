@@ -285,7 +285,7 @@ function updateMemberList() {
         </div>
         <div class="member-info">
           <div class="mname">${escHtml(name)}</div>
-          ${status === 'typing' ? '<div class="mstatus">Печатывает...</div>' : ''}
+          ${status === 'typing' ? '<div class="mstatus">Печатает...</div>' : ''}
           ${status === 'idle' ? '<div class="mstatus">Не активен</div>' : ''}
           ${status === 'dnd' ? '<div class="mstatus">Не беспокоить</div>' : ''}
         </div>

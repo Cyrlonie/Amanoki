@@ -1,4 +1,4 @@
-﻿// Extracted from index.html inline script (no bundler).
+// Extracted from index.html inline script (no bundler).
 // Kept as classic script for compatibility with inline handlers.
 
 // State/config moved to assets/js/state.js + assets/js/config.js
@@ -68,11 +68,16 @@ function openEditMessagePanel(messageId) {
   const input = document.getElementById('editMessageInput');
   if (!panel || !input) return;
   
-  const messageGroup = document.querySelector(`.message-group[data-id="${messageId}"]`);
-  const textElement = messageGroup?.querySelector('.msg-text');
-  if (!textElement) return;
-  
-  input.value = textElement.textContent;
+  // Use original text from messageStore (preserves Markdown), fallback to DOM textContent
+  const storedMessage = messageStore[messageId];
+  if (storedMessage) {
+    input.value = storedMessage.text;
+  } else {
+    const messageGroup = document.querySelector(`.message-group[data-id="${messageId}"]`);
+    const textElement = messageGroup?.querySelector('.msg-text');
+    if (!textElement) return;
+    input.value = textElement.textContent;
+  }
   currentEditingMessageId = messageId;
   
   panel.classList.add('show');
@@ -368,14 +373,10 @@ window.onload = async () => {
       subscribeToMessages();
     } else {
       // Если сессии нет, сразу показываем авторизацию
-      const authSubEl = document.getElementById('authSub');
-      if (authSubEl) authSubEl.textContent = 'Пожалуйста, войдите в аккаунт';
       showLoginPanel();
     }
   } catch (e) {
     console.error(e);
-    const authSubEl = document.getElementById('authSub');
-    if (authSubEl) authSubEl.textContent = 'Ошибка инициализации системы';
     showLoginPanel();
   }
 };
@@ -411,21 +412,27 @@ function initApp() {
     document.getElementById('adminBtn').style.display = '';
   }
 
-  // Отслеживание фокуса окна браузера
-  window.addEventListener('focus', () => {
-    windowHasFocus = true;
-  });
-  window.addEventListener('blur', () => {
-    windowHasFocus = false;
-  });
+  // Отслеживание фокуса окна браузера (guard against duplicate handlers)
+  if (!window._amanokiFocusHandlersSet) {
+    window._amanokiFocusHandlersSet = true;
+    window.addEventListener('focus', () => {
+      windowHasFocus = true;
+    });
+    window.addEventListener('blur', () => {
+      windowHasFocus = false;
+    });
+  }
 
-  // Горячая клавиша Ctrl+Shift+A для открытия админ панели
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-      e.preventDefault();
-      toggleAdminPanel();
-    }
-  });
+  // Горячая клавиша Ctrl+Shift+A для открытия админ панели (guard against duplicate)
+  if (!window._amanokiAdminKeySet) {
+    window._amanokiAdminKeySet = true;
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        toggleAdminPanel();
+      }
+    });
+  }
 
   if (typeof updateChannelUnreadUI === 'function') {
     updateChannelUnreadUI();

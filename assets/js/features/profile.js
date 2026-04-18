@@ -261,7 +261,6 @@ async function saveProfileSettings(e) {
     currentUser = username;
 
     await loadUserProfile();
-    refreshSidebarUserChip();
     await loadMembersDirectory();
     applyPresenceFromChannel();
 

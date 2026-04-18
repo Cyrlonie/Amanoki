@@ -532,7 +532,7 @@ function renderMessageMedia(url) {
   
   // Проверяем, является ли файл медиа
   if (isVideoMediaUrl(url)) {
-    return `<div class="msg-media"><video class="msg-video" controls preload="metadata" playsinline volume="0.3">
+    return `<div class="msg-media"><video class="msg-video" controls preload="metadata" playsinline>
       <source src="${safeUrl}">
       Ваш браузер не поддерживает воспроизведение видео.
     </video></div>`;
@@ -788,7 +788,7 @@ async function handleFileSelect(event) {
     input.value = '';
     autoResize(input);
 
-    if (isDemoMode) {
+    if (false /* isDemoMode — unreachable: early return on line 749 */) {
       renderMessage({
         author: currentUser,
         text: messageText,
@@ -910,8 +910,8 @@ function switchChannel(ch) {
   area.innerHTML = `
       <div class="channel-welcome">
         <div class="welcome-icon">💬</div>
-        <div class="welcome-title"># ${ch}</div>
-        <div class="welcome-desc">${CHANNEL_DESCS[ch] || 'Начало канала #' + ch}</div>
+        <div class="welcome-title"># ${escHtml(ch)}</div>
+        <div class="welcome-desc">${escHtml(CHANNEL_DESCS[ch] || 'Начало канала #' + ch)}</div>
       </div>
       <div class="divider-date">Сегодня</div>
     `;
@@ -971,10 +971,10 @@ function handleSearch(event) {
   resultsContainer.innerHTML = results.map(result => {
     const highlightedText = highlightText(result.text, query);
     return `
-      <div class="search-result-item" data-message-id="${result.element.id}">
-        <div class="result-author">${escapeHtml(result.author)}</div>
+      <div class="search-result-item" data-message-id="${escHtml(result.element.dataset.id || '')}">
+        <div class="result-author">${escHtml(result.author)}</div>
         <div class="result-text">${highlightedText}</div>
-        <div class="result-time">${escapeHtml(result.timestamp)}</div>
+        <div class="result-time">${escHtml(result.timestamp)}</div>
       </div>
     `;
   }).join('');
@@ -983,7 +983,7 @@ function handleSearch(event) {
   resultsContainer.querySelectorAll('.search-result-item').forEach(item => {
     item.addEventListener('click', () => {
       const messageId = item.dataset.messageId;
-      const messageElement = document.getElementById(messageId);
+      const messageElement = document.querySelector(`.message-group[data-id="${messageId}"]`);
       if (messageElement) {
         messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         messageElement.style.animation = 'none';
@@ -997,7 +997,7 @@ function handleSearch(event) {
 
 function highlightText(text, query) {
   const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-  return escapeHtml(text).replace(regex, '<span class="search-result-highlight">$1</span>');
+  return escHtml(text).replace(regex, '<span class="search-result-highlight">$1</span>');
 }
 
 function escapeRegex(string) {
@@ -1031,7 +1031,8 @@ async function updateMessageInSupabase(messageId, newText) {
     const messageGroup = document.querySelector(`.message-group[data-id="${messageId}"]`);
     const textElement = messageGroup?.querySelector('.msg-text');
     if (textElement) {
-      textElement.textContent = newText;
+      marked.setOptions({ breaks: true });
+      textElement.innerHTML = DOMPurify.sanitize(marked.parse(newText));
     }
     
     // Update in message store

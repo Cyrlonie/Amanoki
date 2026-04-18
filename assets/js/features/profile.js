@@ -105,7 +105,6 @@ function handleProfileAvatarFileSelect(event) {
 }
 
 function openProfilePanel() {
-  closeSetupOverlay();
   closeMobilePanels();
   const panel = document.getElementById('profilePanel');
   if (!panel) return;

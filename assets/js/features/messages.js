@@ -601,7 +601,17 @@ function renderMessage(record) {
 
   // --- ОБРАБОТКА MARKDOWN ---
   marked.setOptions({ breaks: true });
-  const cleanHtml = hasVisibleText ? DOMPurify.sanitize(marked.parse(text)) : '';
+  let cleanHtml = hasVisibleText ? DOMPurify.sanitize(marked.parse(text)) : '';
+
+  // --- ПОДСВЕТКА @УПОМИНАНИЙ ---
+  if (cleanHtml) {
+    const allNames = Object.values(memberDirectory);
+    allNames.forEach(name => {
+      const regex = new RegExp(`@${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+      const selfClass = name === currentUser ? ' mention-self' : '';
+      cleanHtml = cleanHtml.replace(regex, `<span class="mention-highlight${selfClass}">@${escHtml(name)}</span>`);
+    });
+  }
 
   // cache для ответов
   messageStore[record.id] = {

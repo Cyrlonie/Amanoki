@@ -210,8 +210,8 @@ function setupDomEventHandlers() {
       case 'open-file-dialog':
         document.getElementById('fileInput')?.click();
         break;
-      case 'insert-emoji':
-        insertEmoji();
+      case 'toggle-emoji-picker':
+        toggleEmojiPicker();
         break;
       case 'send-message':
         await sendMessage();
@@ -291,11 +291,47 @@ function setupDomEventHandlers() {
   fileInput?.addEventListener('change', handleFileSelect);
 
   const messageInput = document.getElementById('message-input');
-  messageInput?.addEventListener('keydown', handleKey);
+  messageInput?.addEventListener('keydown', (event) => {
+    if (handleMentionKeydown(event)) return;
+    handleKey(event);
+  });
   messageInput?.addEventListener('input', (event) => {
     autoResize(event.target);
     handleTyping();
+    handleMentionInput(event.target);
   });
+
+  // Drag & Drop on chat area
+  const chatArea = document.querySelector('.chat-area');
+  if (chatArea) {
+    let dragCounter = 0;
+    chatArea.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      dragCounter++;
+      document.getElementById('dragDropOverlay')?.classList.add('show');
+    });
+    chatArea.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dragCounter--;
+      if (dragCounter <= 0) {
+        dragCounter = 0;
+        document.getElementById('dragDropOverlay')?.classList.remove('show');
+      }
+    });
+    chatArea.addEventListener('dragover', (e) => e.preventDefault());
+    chatArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dragCounter = 0;
+      document.getElementById('dragDropOverlay')?.classList.remove('show');
+      const file = e.dataTransfer?.files?.[0];
+      if (!file) return;
+      const fileInput = document.getElementById('fileInput');
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      fileInput.dispatchEvent(new Event('change'));
+    });
+  }
 
   const profileNameInput = document.getElementById('profileDisplayName');
   profileNameInput?.addEventListener('input', () => {
@@ -481,20 +517,24 @@ async function deleteMessage(messageId) {
 
 async function banUser(userId, username) {
   if (!isAdmin || !supabase) return;
-
   if (!confirm(`🚫 Забанить пользователя ${username}?`)) return;
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update({ is_banned: true })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select();
 
     if (error) throw error;
+    if (!data || data.length === 0) {
+      notify('❌ Не удалось забанить — проверьте RLS-политики в Supabase (нужно разрешить админам UPDATE на profiles)', 'error');
+      return;
+    }
 
     notify(`✅ Пользователь ${username} заблокирован`, 'success');
-    // Обновить список участников
-    location.reload();
+    await loadAdminUsers();
+    await loadMembersDirectory();
   } catch (e) {
     notify('❌ Ошибка бана: ' + e.message, 'error');
   }
@@ -502,19 +542,24 @@ async function banUser(userId, username) {
 
 async function unbanUser(userId, username) {
   if (!isAdmin || !supabase) return;
-
   if (!confirm(`✅ Разбанить пользователя ${username}?`)) return;
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update({ is_banned: false })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select();
 
     if (error) throw error;
+    if (!data || data.length === 0) {
+      notify('❌ Не удалось разбанить — проверьте RLS-политики в Supabase', 'error');
+      return;
+    }
 
     notify(`✅ Пользователь ${username} разблокирован`, 'success');
-    location.reload();
+    await loadAdminUsers();
+    await loadMembersDirectory();
   } catch (e) {
     notify('❌ Ошибка разбана: ' + e.message, 'error');
   }
@@ -703,12 +748,201 @@ document.addEventListener('click', (event) => {
 
 window.addEventListener('resize', closeReactionPicker);
 
-function insertEmoji() {
-  const emojis = ['😀', '😂', '🔥', '❤️', '👍', '🎉', '😎', '🤔', '💯', '🚀', '✅', '💬'];
-  const e = emojis[Math.floor(Math.random() * emojis.length)];
+// ===================== EMOJI PICKER =====================
+const EMOJI_DATA = [
+  { id:'frequent', icon:'🕑', label:'Часто используемые', emojis:[] },
+  { id:'smileys', icon:'😀', label:'Смайлы', emojis:'😀😃😄😁😆😅🤣😂🙂😉😊😇🥰😍🤩😘😗😚😙😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬😌😔😪😴😷🤒🤕🤢🤮🥵🥶🥴😵🤯🤠🥳😎🤓🧐😕😟🙁😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀💩🤡👻👽👾🤖'.match(/./gu) },
+  { id:'gestures', icon:'👋', label:'Жесты', emojis:'👋🤚🖐️✋🖖👌🤌🤏✌️🤞🤟🤘🤙👈👉👆🖕👇☝️👍👎✊👊🤛🤜👏🙌👐🤲🤝🙏✍️💅🤳💪🦾👀👁️👅👄🫶'.match(/./gu) },
+  { id:'hearts', icon:'❤️', label:'Сердечки', emojis:'❤️🧡💛💚💙💜🖤🤍🤎💔❣️💕💞💓💗💖💘💝💟♥️'.match(/./gu) },
+  { id:'nature', icon:'🌿', label:'Природа', emojis:'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐔🐧🐦🦆🦅🦉🐺🐴🦄🐝🦋🐌🐞🌸🌺🌻🌹🌷🌱🌲🌳🌴🍀🍁🍂🍃🌿💐🌈☀️⭐🌟💫✨🌙'.match(/./gu) },
+  { id:'food', icon:'🍕', label:'Еда', emojis:'🍏🍎🍐🍊🍋🍌🍉🍇🍓🍈🍒🍑🥭🍍🥥🥝🍅🍆🥑🥦🥒🌶️🌽🥕🥔🍞🧀🥚🍳🥓🥩🍗🍖🌭🍔🍟🍕🥪🌮🌯🍝🍜🍲🍛🍣🍱🍤🍙🍚🍘🍥🍡🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪☕🍵🥤🍺🍻🥂🍷'.match(/./gu) },
+  { id:'objects', icon:'💡', label:'Объекты', emojis:'⌚📱💻⌨️🖥️🖨️🕹️💾📷📹🎥📞📺📻🎙️⏰💡🔦🔧🔨🛠️⚙️🔬🔭💉💊🚪🛏️🚽🧹🧼🛒🔑🗝️🔒🔓'.match(/./gu) },
+  { id:'symbols', icon:'🔣', label:'Символы', emojis:'⭐🌟💫✨⚡🔥💥🎵🎶💤💬💭🕳️❤️‍🔥♻️⚜️🔱⭕✅☑️✔️❌❎➕➖✖️💲™️©️®️‼️⁉️❓❗⚠️🚩🏳️🏴🇷🇺'.match(/./gu) },
+];
+
+const FREQUENT_EMOJI_KEY = 'amanoki_freq_emoji';
+
+function getFrequentEmojis() {
+  try { return JSON.parse(localStorage.getItem(FREQUENT_EMOJI_KEY) || '[]'); } catch(_) { return []; }
+}
+function addFrequentEmoji(emoji) {
+  let freq = getFrequentEmojis().filter(e => e !== emoji);
+  freq.unshift(emoji);
+  freq = freq.slice(0, 24);
+  localStorage.setItem(FREQUENT_EMOJI_KEY, JSON.stringify(freq));
+  EMOJI_DATA[0].emojis = freq;
+}
+
+function buildEmojiPickerContent() {
+  const panel = document.getElementById('emojiPickerPanel');
+  if (!panel) return;
+  EMOJI_DATA[0].emojis = getFrequentEmojis();
+
+  const tabs = EMOJI_DATA.filter(c => c.emojis && c.emojis.length > 0)
+    .map(c => `<button class="emoji-tab" type="button" data-cat="${c.id}">${c.icon}</button>`).join('');
+
+  const body = EMOJI_DATA.filter(c => c.emojis && c.emojis.length > 0)
+    .map(c => `<div class="emoji-category-label" data-cat-label="${c.id}">${c.label}</div>
+      <div class="emoji-grid">${c.emojis.map(e => `<button class="emoji-btn" type="button" data-emoji="${e}">${e}</button>`).join('')}</div>`).join('');
+
+  panel.innerHTML = `<div class="emoji-picker-search"><input type="text" placeholder="Поиск эмодзи..." id="emojiSearchInput"></div>
+    <div class="emoji-picker-tabs">${tabs}</div>
+    <div class="emoji-picker-body">${body}</div>`;
+
+  panel.querySelector('.emoji-picker-body')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-emoji]');
+    if (!btn) return;
+    const emoji = btn.dataset.emoji;
+    const input = document.getElementById('message-input');
+    if (input) { input.value += emoji; input.focus(); }
+    addFrequentEmoji(emoji);
+    closeEmojiPicker();
+  });
+
+  panel.querySelectorAll('.emoji-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const label = panel.querySelector(`[data-cat-label="${tab.dataset.cat}"]`);
+      if (label) label.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      panel.querySelectorAll('.emoji-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  const searchInput = document.getElementById('emojiSearchInput');
+  searchInput?.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase();
+    panel.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.style.display = !q || btn.dataset.emoji.includes(q) ? '' : 'none';
+    });
+  });
+}
+
+let emojiPickerBuilt = false;
+function toggleEmojiPicker() {
+  const panel = document.getElementById('emojiPickerPanel');
+  if (!panel) return;
+  if (panel.classList.contains('show')) { closeEmojiPicker(); return; }
+  if (!emojiPickerBuilt) { buildEmojiPickerContent(); emojiPickerBuilt = true; }
+  else { EMOJI_DATA[0].emojis = getFrequentEmojis(); }
+  panel.classList.add('show');
+  panel.setAttribute('aria-hidden', 'false');
+  document.getElementById('emojiSearchInput')?.focus();
+}
+function closeEmojiPicker() {
+  const panel = document.getElementById('emojiPickerPanel');
+  if (!panel) return;
+  panel.classList.remove('show');
+  panel.setAttribute('aria-hidden', 'true');
+}
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('emojiPickerPanel');
+  if (!panel || !panel.classList.contains('show')) return;
+  const t = e.target instanceof Element ? e.target : null;
+  if (!t) return;
+  if (panel.contains(t) || t.closest('#emojiPickerBtn')) return;
+  closeEmojiPicker();
+});
+
+// ===================== @MENTIONS =====================
+let mentionActive = false;
+let mentionQuery = '';
+let mentionStartPos = -1;
+let mentionSelectedIdx = 0;
+
+function getMentionCandidates(query) {
+  const names = Object.values(memberDirectory);
+  if (!query) return names.slice(0, 8);
+  const q = query.toLowerCase();
+  return names.filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+}
+
+function handleMentionInput(textarea) {
+  const val = textarea.value;
+  const cursor = textarea.selectionStart;
+  const before = val.substring(0, cursor);
+  const match = before.match(/@(\S*)$/);
+
+  if (match) {
+    mentionActive = true;
+    mentionQuery = match[1];
+    mentionStartPos = cursor - match[0].length;
+    mentionSelectedIdx = 0;
+    renderMentionAutocomplete();
+  } else {
+    closeMentionAutocomplete();
+  }
+}
+
+function renderMentionAutocomplete() {
+  const ac = document.getElementById('mentionAutocomplete');
+  if (!ac) return;
+  const candidates = getMentionCandidates(mentionQuery);
+  if (!candidates.length) { closeMentionAutocomplete(); return; }
+
+  ac.innerHTML = candidates.map((name, i) => {
+    const color = getUserColor(name);
+    const avatarUrl = userAvatars[name];
+    const style = avatarUrl ? `background-image:url('${escapeJsString(avatarUrl)}')` : `background:${color}`;
+    const content = avatarUrl ? '' : name[0].toUpperCase();
+    return `<div class="mention-item${i === mentionSelectedIdx ? ' active' : ''}" data-mention-name="${escHtml(name)}">
+      <div class="mention-item-avatar" style="${style}">${content}</div>
+      <div class="mention-item-name">${escHtml(name)}</div>
+    </div>`;
+  }).join('');
+  ac.classList.add('show');
+
+  ac.querySelectorAll('.mention-item').forEach(item => {
+    item.addEventListener('click', () => applyMention(item.dataset.mentionName));
+  });
+}
+
+function applyMention(name) {
   const input = document.getElementById('message-input');
-  input.value += e;
+  if (!input) return;
+  const val = input.value;
+  const after = val.substring(input.selectionStart);
+  input.value = val.substring(0, mentionStartPos) + '@' + name + ' ' + after;
+  const newPos = mentionStartPos + name.length + 2;
+  input.setSelectionRange(newPos, newPos);
   input.focus();
+  closeMentionAutocomplete();
+}
+
+function handleMentionKeydown(e) {
+  if (!mentionActive) return false;
+  const candidates = getMentionCandidates(mentionQuery);
+  if (!candidates.length) return false;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    mentionSelectedIdx = (mentionSelectedIdx + 1) % candidates.length;
+    renderMentionAutocomplete();
+    return true;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    mentionSelectedIdx = (mentionSelectedIdx - 1 + candidates.length) % candidates.length;
+    renderMentionAutocomplete();
+    return true;
+  }
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    e.preventDefault();
+    applyMention(candidates[mentionSelectedIdx]);
+    return true;
+  }
+  if (e.key === 'Escape') {
+    closeMentionAutocomplete();
+    return true;
+  }
+  return false;
+}
+
+function closeMentionAutocomplete() {
+  mentionActive = false;
+  mentionQuery = '';
+  mentionStartPos = -1;
+  const ac = document.getElementById('mentionAutocomplete');
+  if (ac) { ac.classList.remove('show'); ac.innerHTML = ''; }
 }
 
 let notifTimeout;

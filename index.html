@@ -175,7 +175,13 @@
     </footer>
   </nav>
 
-  <main class="chat-area">
+  <main class="chat-area" style="position:relative;">
+    <div class="drag-drop-overlay" id="dragDropOverlay">
+      <div class="drag-drop-overlay-content">
+        <span class="material-icons-round">cloud_upload</span>
+        <span>Отпустите файл для загрузки</span>
+      </div>
+    </div>
     <header class="chat-header">
       <div class="header-btn mobile-only" title="Каналы" data-action="toggle-sidebar" role="button" tabindex="0" aria-label="Открыть меню каналов"><span class="material-icons-round">menu</span></div>
       <span class="ch-hash"><span class="material-icons-round">tag</span></span>
@@ -200,22 +206,24 @@
 
     <div class="typing-indicator" id="typingIndicator"></div>
 
-    <div class="chat-input-area">
+    <div class="chat-input-area" style="position:relative;">
+      <div class="mention-autocomplete" id="mentionAutocomplete"></div>
       <div class="reply-banner" id="replyBanner">
         <span class="label">Ответ</span>
         <span class="preview" id="replyBannerPreview"></span>
         <button class="close" type="button" title="Отменить" data-action="cancel-reply"><span class="material-icons-round">close</span></button>
       </div>
-      <div class="input-wrapper">
+      <div class="input-wrapper" style="position:relative;">
         <div class="input-side-btn" title="Прикрепить файл" data-action="open-file-dialog" role="button" tabindex="0" aria-label="Прикрепить файл"><span class="material-icons-round">attach_file</span></div>
         <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,application/pdf,.zip,.txt,.json,.csv">
         <textarea id="message-input" rows="1" placeholder="Написать в #general"></textarea>
         <div class="input-right-btns">
           <div class="input-icon" title="GIF" data-action="notify" data-message="GIF в альфа-версии недоступны" role="button" tabindex="0" aria-label="Отправить GIF">GIF</div>
           <div class="input-icon" title="Стикер" data-action="notify" data-message="Стикеры в альфа-версии недоступны" role="button" tabindex="0" aria-label="Отправить стикер"><span class="material-icons-round">sentiment_satisfied</span></div>
-          <div class="input-icon" title="Эмодзи" data-action="insert-emoji" role="button" tabindex="0" aria-label="Вставить эмодзи"><span class="material-icons-round">emoji_emotions</span></div>
+          <div class="input-icon" title="Эмодзи" data-action="toggle-emoji-picker" role="button" tabindex="0" aria-label="Вставить эмодзи" id="emojiPickerBtn"><span class="material-icons-round">emoji_emotions</span></div>
           <div class="send-btn" data-action="send-message" title="Отправить" role="button" tabindex="0" aria-label="Отправить сообщение"><span class="material-icons-round">send</span></div>
         </div>
+        <div class="emoji-picker-panel" id="emojiPickerPanel" aria-hidden="true"></div>
       </div>
     </div>
   </main>

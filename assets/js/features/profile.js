@@ -266,12 +266,9 @@ async function saveProfileSettings(e) {
 
     if (presenceChannel) {
       try {
-        await presenceChannel.track({
-          user_id: authUser.id,
-          username: currentUser,
-          channel: currentChannel,
-          typing: false,
-        });
+        if (typeof updateMyPresence === 'function') {
+          await updateMyPresence(false);
+        }
       } catch (trackErr) {
         console.warn('Presence track after profile:', trackErr);
       }

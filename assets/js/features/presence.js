@@ -153,6 +153,7 @@ async function updateMyPresence(isTyping2 = isTyping) {
       typing: !!isTyping2,
       voice_channel: voiceCh,
     });
+    applyPresenceFromChannel();
   } catch (e) {
     console.error('Presence track error:', e);
   }
@@ -173,8 +174,7 @@ async function publishTypingStatus(isTyping2) {
         ts: Date.now(),
       },
     });
-    // Refresh local UI immediately; remote clients receive sync separately.
-    applyPresenceFromChannel();
+    // Refresh local UI immediately is now handled inside updateMyPresence
   } catch (e) {
     console.error('Presence typing error:', e);
   }

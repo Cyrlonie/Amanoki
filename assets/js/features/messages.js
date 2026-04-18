@@ -264,13 +264,9 @@ async function subscribeToMessages() {
               updateMemberList();
               updateOnlineCount();
             }
-            await presenceChannel.track({
-              user_id: authUser.id,
-              username: currentUser,
-              channel: currentChannel,
-              typing: false,
-            });
-            applyPresenceFromChannel();
+            if (typeof updateMyPresence === 'function') {
+              await updateMyPresence(false);
+            }
             // На некоторых сетапах sync приходит чуть позже
             setTimeout(() => {
               if (generation !== messageSubscriptionGeneration) return;

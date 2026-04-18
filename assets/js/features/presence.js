@@ -16,6 +16,7 @@ function applyPresenceFromChannel() {
 
   // Накладываем presence-состояние для активных пользователей
   const state = presenceChannel ? presenceChannel.presenceState() : {};
+  const voiceUsersByChannel = {};
   
   let presenceUsersCount = 0;
   Object.keys(state).forEach((key) => {
@@ -32,6 +33,14 @@ function applyPresenceFromChannel() {
         name,
         status: statusRank[status] >= statusRank[prev] ? status : prev,
       };
+
+      if (p.voice_channel) {
+        if (!voiceUsersByChannel[p.voice_channel]) voiceUsersByChannel[p.voice_channel] = [];
+        if (!voiceUsersByChannel[p.voice_channel].some(u => u.id === id)) {
+          voiceUsersByChannel[p.voice_channel].push({ id, name });
+        }
+      }
+
       presenceUsersCount++;
     });
   });
@@ -54,6 +63,13 @@ function applyPresenceFromChannel() {
   byUserId[selfId] = { name: selfName, status: 'online' };
   currentUser = selfName;
 
+  if (typeof currentVoiceChannel !== 'undefined' && currentVoiceChannel) {
+    if (!voiceUsersByChannel[currentVoiceChannel]) voiceUsersByChannel[currentVoiceChannel] = [];
+    if (!voiceUsersByChannel[currentVoiceChannel].some(u => u.id === selfId)) {
+      voiceUsersByChannel[currentVoiceChannel].push({ id: selfId, name: selfName });
+    }
+  }
+
   // Для UI сворачиваем в объект name -> status
   members = {};
   Object.values(byUserId).forEach((entry) => {
@@ -65,6 +81,9 @@ function applyPresenceFromChannel() {
   updateMemberList();
   updateOnlineCount();
   updateTypingIndicator();
+  if (typeof renderVoiceChannelUsers === 'function') {
+    renderVoiceChannelUsers(voiceUsersByChannel);
+  }
 }
 
 async function loadMembersDirectory() {
@@ -123,15 +142,26 @@ function handleTyping() {
   }, 3000);
 }
 
-async function publishTypingStatus(isTyping2) {
+async function updateMyPresence(isTyping2 = isTyping) {
   if (isDemoMode || !supabase || !authUser || !presenceChannel) return;
   try {
+    const voiceCh = typeof currentVoiceChannel !== 'undefined' ? currentVoiceChannel : null;
     await presenceChannel.track({
       user_id: authUser.id,
       username: currentUser,
       channel: currentChannel,
       typing: !!isTyping2,
+      voice_channel: voiceCh,
     });
+  } catch (e) {
+    console.error('Presence track error:', e);
+  }
+}
+
+async function publishTypingStatus(isTyping2) {
+  if (isDemoMode || !supabase || !authUser || !presenceChannel) return;
+  try {
+    await updateMyPresence(isTyping2);
     await presenceChannel.send({
       type: 'broadcast',
       event: 'typing',

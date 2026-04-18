@@ -1,8 +1,5 @@
 // Auth / profile related logic (classic script).
 
-function closeSetupOverlay() {
-  document.getElementById('setupOverlay')?.classList.remove('is-open');
-}
 
 function showError(panelId, message) {
   const errorEl =

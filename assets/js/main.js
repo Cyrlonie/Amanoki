@@ -152,22 +152,14 @@ function setupDomEventHandlers() {
     }
 
     switch (action) {
-      case 'init-supabase':
-        await initSupabase();
-        break;
-      case 'demo-mode':
-        demoMode();
-        break;
+
       case 'switch-to-register':
         switchToRegister();
         break;
       case 'switch-to-login':
         switchToLogin();
         break;
-      case 'back-to-login':
-        document.getElementById('authOverlay').style.display = 'flex';
-        closeSetupOverlay();
-        break;
+
       case 'notify':
         notify(actionEl.dataset.message || '');
         break;
@@ -410,7 +402,6 @@ window.onload = async () => {
 
       // Скрываем экран входа
       document.getElementById('authOverlay').style.display = 'none';
-      closeSetupOverlay();
 
       initApp();
       subscribeToMessages();

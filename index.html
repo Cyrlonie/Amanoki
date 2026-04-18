@@ -24,21 +24,7 @@
           <p class="auth-subtitle">Oral cumshot chat</p>
         </div>
 
-        <!-- Ручной ввод Supabase скрыт: ключи уже в коде -->
-        <div id="setupPanel" style="display:none;">
-          <div class="auth-subtitle" style="text-align:left;margin-bottom:16px;font-size:12px;">
-            Укажите ваш проект Supabase:
-          </div>
-          <div class="auth-form">
-            <input class="auth-input" id="supabaseUrl" type="text" placeholder="Supabase URL (https://xxxxx.supabase.co)">
-            <input class="auth-input" id="supabaseKey" type="password" placeholder="Anon Key">
-            <input class="auth-input" id="adminUserId" type="text" placeholder="[Опционально] Ваш User ID для админ панели" style="font-size:11px;color:var(--text-muted);">
-            <button class="auth-btn" type="button" data-action="init-supabase" style="background:var(--bg-hover);color:var(--text-primary);margin-bottom:8px;">
-              ✓ Готово
-            </button>
-            <button class="demo-mode-btn" type="button" data-action="demo-mode">Демо-режим (без сервера)</button>
-          </div>
-        </div>
+
 
         <!-- Окно Логина -->
         <div id="loginPanel">
@@ -93,16 +79,6 @@
     </div>
   </div>
 
-  <!-- SETUP SCREEN (deprecated, leaving for compatibility) -->
-  <div class="setup-overlay" id="setupOverlay">
-    <div class="setup-card">
-      <div class="setup-title"><span class="material-icons-round" style="font-size: 24px; vertical-align: middle; margin-right: 8px;">chat</span>DevChat</div>
-      <div class="setup-subtitle">Подключитесь к Supabase для начала общения</div>
-      <button type="button" class="setup-btn" data-action="back-to-login">
-        Вернуться к логину
-      </button>
-    </div>
-  </div>
 
   <!-- MAIN APP -->
   <nav class="server-list" role="navigation" aria-label="Server navigation">
@@ -162,10 +138,12 @@
         <span class="ch-icon"><span class="material-icons-round">volume_up</span></span>
         <span class="ch-name">General Voice</span>
       </div>
+      <div class="voice-channel-users" id="voiceUsers-general-voice"></div>
       <div class="channel-item voice-channel-item" data-action="join-voice" data-voice-channel="dev-room">
         <span class="ch-icon"><span class="material-icons-round">volume_up</span></span>
         <span class="ch-name">Dev Room</span>
       </div>
+      <div class="voice-channel-users" id="voiceUsers-dev-room"></div>
     </div>
 
     <footer class="sidebar-footer">

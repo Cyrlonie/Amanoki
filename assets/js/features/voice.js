@@ -590,6 +590,7 @@ async function joinVoiceChannel(channelId) {
 
     syncVoiceParticipants(room);
     updateVoiceUiState();
+    if (typeof updateMyPresence === 'function') updateMyPresence();
     notify(`Вы подключились к ${getVoiceChannelName(channelId)}`, 'success');
   } catch (error) {
     if (generation === voiceConnectionGeneration) {
@@ -608,6 +609,7 @@ async function leaveVoiceChannel(silent = false) {
   } catch (_) {}
 
   resetVoiceState();
+  if (typeof updateMyPresence === 'function') updateMyPresence();
 
   if (!silent) {
     notify('Вы вышли из голосового канала', 'info');
@@ -822,5 +824,37 @@ updateVoiceUiState = function() {
   updateScreenShareButton();
 };
 
+// ... existing updateVoiceUiState call ...
 updateVoiceUiState();
 renderVoiceParticipants();
+
+function renderVoiceChannelUsers(voiceUsersByChannel) {
+  // Clear all voice channel containers first
+  document.querySelectorAll('.voice-channel-users').forEach(el => {
+    el.innerHTML = '';
+  });
+
+  if (!voiceUsersByChannel) return;
+
+  // Render users for each channel
+  Object.entries(voiceUsersByChannel).forEach(([channelId, users]) => {
+    const container = document.getElementById(`voiceUsers-${channelId}`);
+    if (!container) return;
+
+    container.innerHTML = users.map(u => {
+      const color = typeof getUserColor === 'function' ? getUserColor(u.name) : '#888';
+      const avatarUrl = userAvatars && userAvatars[u.name];
+      const avatarStyle = avatarUrl 
+        ? `background-image:url('${escapeJsString(avatarUrl)}')` 
+        : `background:${color}`;
+      const avatarContent = avatarUrl ? '' : (u.name[0] || '?').toUpperCase();
+      
+      return `
+        <div class="voice-channel-user">
+          <div class="voice-channel-user-avatar" style="${avatarStyle}">${avatarContent}</div>
+          <div class="voice-channel-user-name">${escHtml(u.name)}</div>
+        </div>
+      `;
+    }).join('');
+  });
+}

@@ -19,6 +19,7 @@ function applyPresenceFromChannel() {
   const voiceUsersByChannel = {};
   
   let presenceUsersCount = 0;
+  console.log('[Presence] Полное состояние:', state);
   Object.keys(state).forEach((key) => {
     const presences = state[key];
     if (!presences || !presences.length) return;

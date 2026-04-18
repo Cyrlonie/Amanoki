@@ -166,11 +166,20 @@ async function subscribeToMessages() {
         if (generation !== messageSubscriptionGeneration) return;
         const row = payload.new;
         const ch = row.channel;
-        if (!TEXT_CHANNELS.includes(ch)) return;
+        const isDM = typeof isDMChannel === 'function' && isDMChannel(ch);
+
+        // Allow text channels and DM channels involving current user
+        if (!isDM && !TEXT_CHANNELS.includes(ch)) return;
+        if (isDM && !ch.includes(authUser?.id)) return;
 
         // Трекаем активность пользователя для fallback онлайн-счётчика
         if (row.user_id) {
           memberLastSeen[String(row.user_id)] = Date.now();
+        }
+
+        // Update DM conversation list
+        if (isDM && typeof updateDMConversation === 'function') {
+          updateDMConversation(ch, row.content, row.author);
         }
 
         if (ch === currentChannel) {
@@ -186,13 +195,13 @@ async function subscribeToMessages() {
             reply_to: row.reply_to,
           });
           scrollToBottom();
-          markChannelReadTimestamp(ch, row.created_at);
+          if (!isDM) markChannelReadTimestamp(ch, row.created_at);
 
           if (!windowHasFocus && !isOwnMessage) {
             playNotificationSound();
           }
         } else if (row.user_id !== authUser.id) {
-          bumpUnread(ch);
+          if (!isDM) bumpUnread(ch);
           if (!windowHasFocus) {
             playNotificationSound();
           }
@@ -907,6 +916,11 @@ function handleKey(e) {
 
 function switchChannel(ch) {
   currentChannel = ch;
+
+  // Clear DM state when switching to a regular channel
+  if (typeof currentDMTarget !== 'undefined') currentDMTarget = null;
+  document.querySelectorAll('.dm-item').forEach(el => el.classList.remove('active'));
+
   document.querySelectorAll('.channel-item[data-channel]').forEach((el) => {
     el.classList.toggle('active', el.dataset.channel === ch);
   });

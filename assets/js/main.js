@@ -210,6 +210,9 @@ function setupDomEventHandlers() {
       case 'cancel-reply':
         cancelReply();
         break;
+      case 'open-dm':
+        await openDM(actionEl.dataset.dmUserId, actionEl.dataset.dmUsername);
+        break;
       case 'open-file-dialog':
         document.getElementById('fileInput')?.click();
         break;
@@ -411,6 +414,7 @@ window.onload = async () => {
 
       initApp();
       subscribeToMessages();
+      if (typeof loadDMConversations === 'function') loadDMConversations();
     } else {
       // Если сессии нет, сразу показываем авторизацию
       showLoginPanel();

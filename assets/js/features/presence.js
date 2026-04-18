@@ -278,6 +278,10 @@ function updateMemberList() {
       : `background:${color};`;
     const avatarContent = avatarUrl ? '' : name[0].toUpperCase();
 
+    // Find userId for this member
+    const userId = Object.entries(memberDirectory).find(([, n]) => n === name)?.[0] || '';
+    const showDmBtn = userId && authUser && userId !== authUser.id;
+
     el.innerHTML = `
         <div class="member-avatar" style="${avatarStyle}">
           ${avatarContent}
@@ -289,6 +293,7 @@ function updateMemberList() {
           ${status === 'idle' ? '<div class="mstatus">Не активен</div>' : ''}
           ${status === 'dnd' ? '<div class="mstatus">Не беспокоить</div>' : ''}
         </div>
+        ${showDmBtn ? `<button class="member-dm-btn" type="button" data-action="open-dm" data-dm-user-id="${escHtml(userId)}" data-dm-username="${escHtml(name)}" title="Написать"><span class="material-icons-round" style="font-size:16px;">chat</span></button>` : ''}
       `;
     (status === 'offline' ? offline : online).appendChild(el);
   });

@@ -49,6 +49,15 @@ async function loadUserProfile() {
       .single();
     if (error) throw error;
 
+    // Проверка бана — если забанен, выкидываем из аккаунта
+    if (data.is_banned) {
+      await supabase.auth.signOut();
+      document.getElementById('authOverlay').style.display = 'flex';
+      showError('loginPanel', '❌ Ваш аккаунт заблокирован администратором');
+      setTimeout(() => window.location.reload(), 2500);
+      return;
+    }
+
     currentUserProfile = data;
     currentUser = data.username;
     isAdmin = data.is_admin === true;
@@ -69,6 +78,9 @@ async function loadUserProfile() {
 
     const adminBtn = document.getElementById('adminBtn');
     if (adminBtn) adminBtn.style.display = isAdmin ? 'flex' : 'none';
+
+    // Подписка на изменения собственного профиля (обнаружение бана в реальном времени)
+    subscribeToBanCheck();
   } catch (_) {
     currentUserProfile = null;
     isAdmin = false;
@@ -76,6 +88,26 @@ async function loadUserProfile() {
     const adminBtn = document.getElementById('adminBtn');
     if (adminBtn) adminBtn.style.display = 'none';
   }
+}
+
+let banCheckSubscription = null;
+function subscribeToBanCheck() {
+  if (banCheckSubscription || !supabase || !authUser) return;
+  banCheckSubscription = supabase
+    .channel('ban-check')
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'profiles',
+      filter: `id=eq.${authUser.id}`,
+    }, async (payload) => {
+      if (payload.new && payload.new.is_banned === true) {
+        notify('❌ Ваш аккаунт был заблокирован администратором', 'error');
+        await supabase.auth.signOut();
+        setTimeout(() => window.location.reload(), 2000);
+      }
+    })
+    .subscribe();
 }
 
 async function handleRegister(e) {

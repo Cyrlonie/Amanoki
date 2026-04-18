@@ -416,6 +416,10 @@ async function sendToSupabase(text, imageUrl = null) {
     notify('Требуется авторизация', 'error');
     return false;
   }
+  if (currentUserProfile?.is_banned) {
+    notify('❌ Ваш аккаунт заблокирован. Отправка сообщений невозможна.', 'error');
+    return false;
+  }
 
   try {
     const payload = {

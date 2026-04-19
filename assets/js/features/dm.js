@@ -55,10 +55,10 @@ async function openDM(targetUserId, targetUsername) {
       <div class="welcome-title">${escHtml(targetUsername)}</div>
       <div class="welcome-desc">Начало переписки с ${escHtml(targetUsername)}</div>
     </div>
-    <div class="divider-date">Сегодня</div>
   `;
   lastMessageAuthor = null;
   lastMessageTime = null;
+  lastMessageDate = null;
   clearReactionStore();
   cancelReply();
 

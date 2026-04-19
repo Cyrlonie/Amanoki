@@ -596,6 +596,21 @@ function renderMessage(record) {
   const hasVisibleText = text.trim().length > 0;
   const time = new Date(record.created);
 
+  // Insert date divider when the date changes
+  const msgDateStr = time.toDateString();
+  if (lastMessageDate !== msgDateStr) {
+    const divider = document.createElement('div');
+    divider.className = 'divider-date';
+    divider.textContent = typeof formatDateDivider === 'function'
+      ? formatDateDivider(time)
+      : msgDateStr;
+    area.appendChild(divider);
+    lastMessageDate = msgDateStr;
+    // Break message grouping across date boundaries
+    lastMessageAuthor = null;
+    lastMessageTime = null;
+  }
+
   // Проверяем, нужно ли группировать сообщения (если автор тот же и прошло меньше 5 минут)
   const isConsecutive =
     lastMessageAuthor === author &&
@@ -937,10 +952,10 @@ function switchChannel(ch) {
         <div class="welcome-title"># ${escHtml(ch)}</div>
         <div class="welcome-desc">${escHtml(CHANNEL_DESCS[ch] || 'Начало канала #' + ch)}</div>
       </div>
-      <div class="divider-date">Сегодня</div>
     `;
   lastMessageAuthor = null;
   lastMessageTime = null;
+  lastMessageDate = null;
   clearReactionStore();
   cancelReply();
   updateTypingIndicator();

@@ -723,6 +723,17 @@ function formatTime(date) {
   return date.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
 }
 
+function formatDateDivider(date) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round((today - msgDay) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Сегодня';
+  if (diffDays === 1) return 'Вчера';
+  return date.toLocaleDateString('ru', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 function escHtml(s) {
   return s
     .replace(/&/g, '&amp;')

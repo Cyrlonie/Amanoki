@@ -34,6 +34,7 @@ let memberDirectory = {};
 let messageIdCounter = 1;
 let lastMessageAuthor = null;
 let lastMessageTime = null;
+let lastMessageDate = null;
 let memberListVisible = true;
 let isUploadingFile = false;
 let windowHasFocus = true;

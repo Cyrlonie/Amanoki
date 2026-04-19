@@ -70,6 +70,14 @@ function applyPresenceFromChannel() {
     if (!voiceUsersByChannel[currentVoiceChannel].some(u => u.id === selfId)) {
       voiceUsersByChannel[currentVoiceChannel].push({ id: selfId, name: selfName });
     }
+    // Merge local LiveKit room participants (available before presence syncs)
+    if (typeof voiceParticipants !== 'undefined' && voiceParticipants) {
+      Object.values(voiceParticipants).forEach(p => {
+        if (!voiceUsersByChannel[currentVoiceChannel].some(u => u.id === p.id)) {
+          voiceUsersByChannel[currentVoiceChannel].push({ id: p.id, name: p.name });
+        }
+      });
+    }
   }
 
   // Для UI сворачиваем в объект name -> status

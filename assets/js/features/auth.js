@@ -25,7 +25,8 @@ function switchToRegister() {
 }
 
 function showLoginPanel() {
-  document.getElementById('setupPanel').style.display = 'none';
+  const setupPanel = document.getElementById('setupPanel');
+  if (setupPanel) setupPanel.style.display = 'none';
   document.getElementById('loginPanel').style.display = 'block';
   document.getElementById('registerPanel').style.display = 'none';
   if (authUser) {
@@ -180,7 +181,7 @@ async function handleRegister(e) {
 
     setTimeout(() => {
       document.getElementById('authOverlay').style.display = 'none';
-      closeSetupOverlay();
+
       initApp();
       loadMembersDirectory();
       subscribeToMessages();
@@ -225,7 +226,7 @@ async function handleLogin(e) {
 
     setTimeout(() => {
       document.getElementById('authOverlay').style.display = 'none';
-      closeSetupOverlay();
+
       initApp();
       loadMembersDirectory();
       subscribeToMessages();

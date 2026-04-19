@@ -69,6 +69,7 @@ function syncVoiceParticipants(room) {
   if (!room) {
     voiceParticipants = {};
     renderVoiceParticipants();
+    updateSidebarVoiceUsers();
     return;
   }
 
@@ -103,6 +104,20 @@ function syncVoiceParticipants(room) {
 
   voiceParticipants = next;
   renderVoiceParticipants();
+  updateSidebarVoiceUsers();
+}
+
+/** Build sidebar voice user list directly from voiceParticipants + currentVoiceChannel. */
+function updateSidebarVoiceUsers() {
+  if (typeof renderVoiceChannelUsers !== 'function') return;
+  const voiceUsersByChannel = {};
+  if (currentVoiceChannel && voiceParticipants) {
+    const users = Object.values(voiceParticipants).map(p => ({ id: p.id, name: p.name }));
+    if (users.length > 0) {
+      voiceUsersByChannel[currentVoiceChannel] = users;
+    }
+  }
+  renderVoiceChannelUsers(voiceUsersByChannel);
 }
 
 function updateVoiceUiState() {
@@ -538,6 +553,9 @@ function resetVoiceState() {
   voiceParticipants = {};
   renderVoiceParticipants();
   updateVoiceUiState();
+  if (typeof renderVoiceChannelUsers === 'function') {
+    renderVoiceChannelUsers({});
+  }
 }
 
 async function joinVoiceChannel(channelId) {
@@ -832,6 +850,7 @@ function renderVoiceChannelUsers(voiceUsersByChannel) {
   // Clear all voice channel containers first
   document.querySelectorAll('.voice-channel-users').forEach(el => {
     el.innerHTML = '';
+    el.style.display = 'none';
   });
 
   if (!voiceUsersByChannel) return;
@@ -839,8 +858,9 @@ function renderVoiceChannelUsers(voiceUsersByChannel) {
   // Render users for each channel
   Object.entries(voiceUsersByChannel).forEach(([channelId, users]) => {
     const container = document.getElementById(`voiceUsers-${channelId}`);
-    if (!container) return;
+    if (!container || !users || !users.length) return;
 
+    container.style.display = '';
     container.innerHTML = users.map(u => {
       const color = typeof getUserColor === 'function' ? getUserColor(u.name) : '#888';
       const avatarUrl = userAvatars && userAvatars[u.name];

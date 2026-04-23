@@ -460,14 +460,14 @@ function initApp() {
     document.getElementById('myAvatar').style.background = color;
     document.getElementById('myAvatar').innerHTML += '<div class="status-dot"></div>';
   }
-  document.getElementById('message-input').placeholder = `Написать в #${currentChannel}`;
+  const initChObj = channelsList.find(c => c.slug === currentChannel);
+  document.getElementById('message-input').placeholder = `Написать в #${initChObj ? initChObj.name : currentChannel}`;
 
   if (!userColors[currentUser]) {
     userColors[currentUser] = getUserColor(currentUser);
   }
   if (isDemoMode) {
     addMember(currentUser, 'online');
-    loadChannels(); // Demo mode channel load
   } else {
     members = {};
     updateMemberList();

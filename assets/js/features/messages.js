@@ -1205,6 +1205,17 @@ async function togglePinMessage(messageId) {
       
     if (error) throw error;
     
+    // Update local store so repeated toggles work correctly
+    if (messageStore[messageId]) {
+      messageStore[messageId].is_pinned = isPinned;
+    }
+    
+    // Update DOM: toggle pinned-message class
+    const msgEl = document.querySelector(`.message-group[data-id="${messageId}"]`);
+    if (msgEl) {
+      msgEl.classList.toggle('pinned-message', isPinned);
+    }
+    
     if (isPinned) {
       notify('Сообщение закреплено', 'success');
     } else {

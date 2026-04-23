@@ -139,6 +139,7 @@ async function subscribeToMessages() {
           user_id: r.user_id,
           image_url: r.image_url,
           reply_to: r.reply_to,
+          is_pinned: r.is_pinned,
         })
       );
       // Заполняем memberLastSeen из загруженных сообщений для fallback онлайн-счётчика
@@ -193,6 +194,7 @@ async function subscribeToMessages() {
             user_id: row.user_id,
             image_url: row.image_url,
             reply_to: row.reply_to,
+            is_pinned: row.is_pinned,
           });
           scrollToBottom();
           if (!isDM) markChannelReadTimestamp(ch, row.created_at);
@@ -214,6 +216,24 @@ async function subscribeToMessages() {
         delete messageStore[messageId];
         delete reactionStore[messageId];
         document.querySelector(`.message-group[data-id="${messageId}"]`)?.remove();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
+        if (generation !== messageSubscriptionGeneration) return;
+        const row = payload.new;
+        const messageGroup = document.querySelector(`.message-group[data-id="${row.id}"]`);
+        if (messageGroup) {
+          messageGroup.classList.toggle('pinned-message', !!row.is_pinned);
+          const textElement = messageGroup.querySelector('.msg-text');
+          if (textElement && messageStore[row.id] && messageStore[row.id].text !== row.content) {
+            marked.setOptions({ breaks: true });
+            textElement.innerHTML = DOMPurify.sanitize(marked.parse(row.content));
+          }
+          if (messageStore[row.id]) {
+            messageStore[row.id].text = row.content;
+            messageStore[row.id].is_pinned = row.is_pinned;
+          }
+          renderReactionBar(row.id);
+        }
       })
       .subscribe();
 
@@ -340,8 +360,16 @@ function renderReactionBar(messageId) {
         messageId
       )}">✏️</button>`
     : '';
+
+  const canPin = isAdmin || (messageData && messageData.user_id === (authUser?.id || 'demo-user'));
+  const isPinned = messageData?.is_pinned;
+  const pinBtn = canPin
+    ? `<button class="hover-btn" type="button" title="${isPinned ? 'Открепить' : 'Закрепить'}" data-action="toggle-pin" data-message-id="${escapeJsString(
+        messageId
+      )}" style="${isPinned ? 'color: var(--accent);' : ''}">📌</button>`
+    : '';
   
-  quickEl.innerHTML = `${editBtn}${deleteBtn}
+  quickEl.innerHTML = `${pinBtn}${editBtn}${deleteBtn}
       <button class="reaction msg-quick-btn" type="button" title="Добавить реакцию" data-action="open-reaction-picker" data-message-id="${safeMessageId}">❤️</button>
       <button class="reaction msg-quick-btn" type="button" title="Ответить" data-action="start-reply" data-message-id="${safeMessageId}">↩</button>`;
 }
@@ -618,7 +646,7 @@ function renderMessage(record) {
     time - lastMessageTime < 5 * 60 * 1000;
 
   const group = document.createElement('div');
-  group.className = 'message-group' + (isConsecutive ? '' : ' with-header');
+  group.className = 'message-group' + (isConsecutive ? '' : ' with-header') + (record.is_pinned ? ' pinned-message' : '');
   group.dataset.id = record.id; // Важно для реакций и удаления
 
   const color = getUserColor(author);
@@ -645,6 +673,7 @@ function renderMessage(record) {
     created: record.created,
     user_id: record.user_id,
     reply_to: record.reply_to || null,
+    is_pinned: record.is_pinned || false,
   };
 
   const replyTo = record.reply_to ? messageStore[record.reply_to] : null;
@@ -1087,3 +1116,121 @@ async function updateMessageInSupabase(messageId, newText) {
 }
 
 // ===================== SUBSCRIPTION =====================
+
+// ===================== PINNED MESSAGES =====================
+function openPinnedPanel() {
+  const panel = document.getElementById('pinnedPanel');
+  if (!panel) return;
+  panel.classList.add('show');
+  panel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  loadPinnedMessages();
+}
+
+function closePinnedPanel() {
+  const panel = document.getElementById('pinnedPanel');
+  if (!panel) return;
+  panel.classList.remove('show');
+  panel.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+async function loadPinnedMessages() {
+  const container = document.getElementById('pinnedResults');
+  if (!container) return;
+  
+  if (isDemoMode) {
+    container.innerHTML = '<div class="search-no-results">В демо-режиме нет закрепленных сообщений</div>';
+    return;
+  }
+  
+  if (!supabase) return;
+  
+  container.innerHTML = '<div class="search-no-results">Загрузка...</div>';
+  
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('channel', currentChannel)
+      .eq('is_pinned', true)
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="search-no-results">В этом канале нет закрепленных сообщений</div>';
+      return;
+    }
+    
+    container.innerHTML = data.map(msg => {
+      const cleanHtml = DOMPurify.sanitize(marked.parse(msg.content));
+      const canPin = isAdmin || (msg.user_id === authUser?.id);
+      const unpinHtml = canPin 
+        ? `<button type="button" class="pinned-btn pinned-btn-unpin" data-action="unpin-message" data-message-id="${msg.id}">Открепить</button>`
+        : '';
+        
+      return `
+        <div class="pinned-result-item" data-message-id="${msg.id}">
+          <div class="pinned-author">${escHtml(msg.author)} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted); margin-left: 6px;">${formatTime(new Date(msg.created_at))}</span></div>
+          <div class="pinned-text">${cleanHtml}</div>
+          <div class="pinned-actions">
+            ${unpinHtml}
+            <button type="button" class="pinned-btn" data-action="scroll-to-message" data-message-id="${msg.id}">Перейти</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = '<div class="search-no-results">Ошибка при загрузке</div>';
+    console.error(err);
+  }
+}
+
+async function togglePinMessage(messageId) {
+  if (!supabase || !authUser) return;
+  
+  const msgData = messageStore[messageId];
+  if (!msgData) return;
+  
+  const isPinned = !msgData.is_pinned; // Toggle current state
+  
+  try {
+    const { error } = await supabase
+      .from('messages')
+      .update({ is_pinned: isPinned })
+      .eq('id', messageId);
+      
+    if (error) throw error;
+    
+    if (isPinned) {
+      notify('Сообщение закреплено', 'success');
+    } else {
+      notify('Сообщение откреплено', 'success');
+    }
+  } catch (err) {
+    notify('Ошибка: ' + err.message, 'error');
+  }
+}
+
+async function unpinMessage(messageId) {
+  if (!supabase || !authUser) return;
+  
+  try {
+    const { error } = await supabase
+      .from('messages')
+      .update({ is_pinned: false })
+      .eq('id', messageId);
+      
+    if (error) throw error;
+    notify('Сообщение откреплено', 'success');
+    
+    // Refresh the panel if it's open
+    const panel = document.getElementById('pinnedPanel');
+    if (panel && panel.classList.contains('show')) {
+      loadPinnedMessages();
+    }
+  } catch (err) {
+    notify('Ошибка: ' + err.message, 'error');
+  }
+}

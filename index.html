@@ -176,6 +176,7 @@
       <span class="ch-desc" id="channelDesc">Добро пожаловать в #general — место для всех!</span>
       <div class="header-actions">
         <div class="header-btn" title="Поиск" data-action="open-search" role="button" tabindex="0" aria-label="Поиск"><span class="material-icons-round">search</span></div>
+        <div class="header-btn" title="Закрепленные сообщения" data-action="open-pinned" role="button" tabindex="0" aria-label="Закрепленные сообщения"><span class="material-icons-round" style="transform: rotate(45deg);">push_pin</span></div>
         <div class="header-btn" title="Участники" data-action="toggle-members" role="button" tabindex="0" aria-label="Показать участников"><span class="material-icons-round">people</span></div>
         <div class="header-btn" title="Уведомления" role="button" tabindex="0" aria-label="Уведомления"><span class="material-icons-round">notifications</span></div>
         <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin" style="display:none;color:var(--red);" role="button" tabindex="0" aria-label="Админ панель"><span class="material-icons-round">admin_panel_settings</span></div>
@@ -296,6 +297,22 @@
     </div>
   </div>
 
+  <!-- PINNED MESSAGES PANEL -->
+  <div id="pinnedPanel" class="search-panel" aria-hidden="true">
+    <div class="search-panel-backdrop" data-action="close-pinned"></div>
+    <div class="search-panel-content">
+      <div class="search-panel-header">
+        <h3>Закрепленные сообщения</h3>
+        <button type="button" class="search-panel-close" data-action="close-pinned" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="search-panel-body">
+        <div id="pinnedResults" class="search-results">
+          <!-- Pinned items will be injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- EDIT MESSAGE PANEL -->
   <div id="editMessagePanel" class="edit-message-panel" aria-hidden="true">
     <div class="edit-message-backdrop" data-action="close-edit-message"></div>
@@ -378,6 +395,13 @@
         <div class="profile-field">
           <label class="profile-label">Цвет аватара</label>
           <div id="profileColorSwatches" class="profile-color-swatches"></div>
+        </div>
+        <div class="profile-field" style="margin-top: 16px; display: flex; align-items: center; justify-content: space-between;">
+          <label class="profile-label" style="margin-bottom: 0; cursor: pointer;" for="themeToggle">Светлая тема</label>
+          <label class="theme-switch" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+            <input type="checkbox" id="themeToggle" data-action="toggle-theme" style="opacity: 0; width: 0; height: 0;">
+            <span class="theme-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-active); transition: .4s; border-radius: 22px;"></span>
+          </label>
         </div>
         <div class="profile-actions">
           <button id="profileLogoutBtn" type="button" class="profile-btn profile-btn-secondary" data-action="logout">Выйти из аккаунта</button>

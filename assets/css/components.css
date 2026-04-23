@@ -1845,3 +1845,71 @@
   background: var(--accent);
   color: #fff;
 }
+
+/* === THEME SWITCHER === */
+.theme-switch input:checked + .theme-slider {
+  background-color: var(--accent);
+}
+.theme-switch input:checked + .theme-slider:before {
+  transform: translateX(18px);
+}
+.theme-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+/* === PINNED MESSAGES === */
+.message-group.pinned-message {
+  background-color: rgba(124, 58, 237, 0.05);
+}
+.pinned-result-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: default;
+}
+.pinned-result-item:hover {
+  background: var(--bg-hover);
+}
+.pinned-author {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+.pinned-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  max-height: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+.pinned-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.pinned-btn {
+  background: var(--bg-active);
+  color: var(--text-primary);
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pinned-btn:hover { background: var(--accent); color: #fff; }
+.pinned-btn-unpin { color: var(--red); background: transparent; }
+.pinned-btn-unpin:hover { background: rgba(239, 68, 68, 0.1); color: var(--red); }

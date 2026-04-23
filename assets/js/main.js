@@ -3,6 +3,14 @@
 
 // State/config moved to assets/js/state.js + assets/js/config.js
 
+// Initialize theme early to avoid flashing
+(function() {
+  const savedTheme = localStorage.getItem('amanoki_theme');
+  if (savedTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+
 function isMobileLayout() {
   return window.matchMedia('(max-width: 768px)').matches;
 }
@@ -229,6 +237,18 @@ function setupDomEventHandlers() {
       case 'close-search':
         closeSearchPanel();
         break;
+      case 'open-pinned':
+        if (typeof openPinnedPanel === 'function') openPinnedPanel();
+        break;
+      case 'close-pinned':
+        if (typeof closePinnedPanel === 'function') closePinnedPanel();
+        break;
+      case 'unpin-message':
+        if (typeof unpinMessage === 'function') unpinMessage(actionEl.dataset.messageId);
+        break;
+      case 'toggle-pin':
+        if (typeof togglePinMessage === 'function') togglePinMessage(actionEl.dataset.messageId);
+        break;
       case 'edit-message':
         openEditMessagePanel(actionEl.dataset.messageId);
         break;
@@ -240,6 +260,16 @@ function setupDomEventHandlers() {
         break;
       case 'toggle-reaction':
         await toggleReaction(actionEl.dataset.messageId, actionEl.dataset.emoji);
+        break;
+      case 'toggle-theme':
+        const isLight = document.getElementById('themeToggle').checked;
+        if (isLight) {
+          document.documentElement.setAttribute('data-theme', 'light');
+          localStorage.setItem('amanoki_theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('amanoki_theme', 'dark');
+        }
         break;
       case 'open-reaction-picker':
         event.stopPropagation();

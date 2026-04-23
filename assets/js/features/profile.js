@@ -136,6 +136,11 @@ function openProfilePanel() {
     emailHint.textContent = '';
   }
 
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.checked = document.documentElement.getAttribute('data-theme') === 'light';
+  }
+
   buildProfileColorSwatches();
   updateProfilePreview();
 

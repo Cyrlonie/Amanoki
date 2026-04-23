@@ -1905,6 +1905,201 @@
   color: var(--text-primary);
   border: none;
   padding: 4px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-3);
+  overflow-y: auto;
+  z-index: 350;
+  display: none;
+  animation: fadeInUp 0.15s ease;
+}
+.mention-autocomplete.show { display: block; }
+.mention-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.mention-item:hover,
+.mention-item.active {
+  background: var(--bg-hover);
+}
+.mention-item-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+}
+.mention-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* === MENTION HIGHLIGHT IN MESSAGES === */
+.mention-highlight {
+  background: var(--mention-bg);
+  color: var(--text-link);
+  padding: 0 3px;
+  border-radius: 3px;
+  font-weight: 600;
+  cursor: default;
+}
+.mention-highlight.mention-self {
+  background: rgba(124, 58, 237, 0.25);
+}
+
+/* === DIRECT MESSAGES === */
+.dm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  margin: 1px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.dm-item:hover { background: var(--bg-hover); }
+.dm-item.active { background: var(--bg-active); }
+.dm-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+}
+.dm-info {
+  flex: 1;
+  min-width: 0;
+}
+.dm-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dm-preview {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.dm-empty {
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Write DM button on member hover */
+.member-item {
+  position: relative;
+}
+.member-dm-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-size: 16px;
+}
+.member-item:hover .member-dm-btn { display: flex; }
+.member-dm-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* === THEME SWITCHER === */
+.theme-switch input:checked + .theme-slider {
+  background-color: var(--accent);
+}
+.theme-switch input:checked + .theme-slider:before {
+  transform: translateX(18px);
+}
+.theme-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+/* === PINNED MESSAGES === */
+.message-group.pinned-message {
+  background-color: rgba(124, 58, 237, 0.05);
+}
+.pinned-result-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: default;
+}
+.pinned-result-item:hover {
+  background: var(--bg-hover);
+}
+.pinned-author {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+.pinned-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  max-height: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+.pinned-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.pinned-btn {
+  background: var(--bg-active);
+  color: var(--text-primary);
+  border: none;
+  padding: 4px 10px;
   border-radius: 4px;
   font-size: 12px;
   cursor: pointer;
@@ -1913,3 +2108,42 @@
 .pinned-btn:hover { background: var(--accent); color: #fff; }
 .pinned-btn-unpin { color: var(--red); background: transparent; }
 .pinned-btn-unpin:hover { background: rgba(239, 68, 68, 0.1); color: var(--red); }
+
+/* === MEDIA PICKER (GIF/Stickers) === */
+.media-picker-panel {
+  width: 320px;
+  height: 400px;
+}
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 8px;
+  overflow-y: auto;
+  height: calc(100% - 100px);
+}
+.media-item {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.media-item:hover {
+  transform: scale(1.05);
+}
+.media-picker-search {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.media-picker-search input {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 6px 10px;
+  outline: none;
+}
+.media-picker-search input:focus { border-color: var(--accent); }

@@ -964,9 +964,11 @@ function switchChannel(ch) {
   document.querySelectorAll('.channel-item[data-channel]').forEach((el) => {
     el.classList.toggle('active', el.dataset.channel === ch);
   });
-  document.getElementById('channelTitle').textContent = ch;
-  document.getElementById('channelDesc').textContent = CHANNEL_DESCS[ch] || `Канал #${ch}`;
-  document.getElementById('message-input').placeholder = `Написать в #${ch}`;
+  const chObj = typeof channelsList !== 'undefined' ? channelsList.find(c => c.slug === ch) : null;
+  const chName = chObj ? chObj.name : ch;
+  document.getElementById('channelTitle').textContent = chName;
+  document.getElementById('channelDesc').textContent = CHANNEL_DESCS[ch] || `Канал #${chName}`;
+  document.getElementById('message-input').placeholder = `Написать в #${chName}`;
   
   // Reset scroll on message input
   const messageInput = document.getElementById('message-input');
@@ -978,8 +980,8 @@ function switchChannel(ch) {
   area.innerHTML = `
       <div class="channel-welcome">
         <div class="welcome-icon">💬</div>
-        <div class="welcome-title"># ${escHtml(ch)}</div>
-        <div class="welcome-desc">${escHtml(CHANNEL_DESCS[ch] || 'Начало канала #' + ch)}</div>
+        <div class="welcome-title"># ${escHtml(chName)}</div>
+        <div class="welcome-desc">${escHtml(CHANNEL_DESCS[ch] || 'Начало канала #' + chName)}</div>
       </div>
     `;
   lastMessageAuthor = null;

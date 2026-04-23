@@ -64,20 +64,9 @@ const COLORS = [
   '#f472b6',
 ];
 
-const CHANNEL_DESCS = {
-  general: 'Добро пожаловать в #general — место для всех!',
-  random: 'Всё что угодно, кроме работы 🎲',
-  'dev-talk': 'Обсуждаем код, архитектуру и технологии',
-  announcements: '📢 Важные объявления команды',
-};
-
-const VOICE_CHANNELS = [
-  { id: 'general-voice', name: 'General Voice' },
-  { id: 'dev-room', name: 'Dev Room' },
-];
-
-/** Каналы с текстовым чатом (для бейджей непрочитанного). */
-const TEXT_CHANNELS = Object.keys(CHANNEL_DESCS);
+let channelsList = []; // Array of channel objects from DB
+let TEXT_CHANNELS = []; // Array of text channel slugs
+let CHANNEL_DESCS = {}; // Map of slug -> description
 
 /** Счётчики непрочитанных по каналу (в памяти; «прочитано» — в localStorage). */
 let unreadCounts = {};

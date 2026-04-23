@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +14,7 @@
   <script src="assets/js/state.js"></script>
   <script src="assets/js/config.js"></script>
 </head>
+
 <body>
   <!-- AUTH SCREEN -->
   <div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
@@ -24,19 +26,19 @@
           <p class="auth-subtitle">Oral cumshot chat</p>
         </div>
 
-
-
         <!-- Окно Логина -->
         <div id="loginPanel">
           <div class="auth-error" id="loginError"></div>
           <form class="auth-form" id="loginForm">
             <div class="auth-field">
               <label class="auth-label" for="loginEmail">Электронная почта</label>
-              <input class="auth-input" id="loginEmail" type="email" placeholder="Введите email" required autocomplete="email">
+              <input class="auth-input" id="loginEmail" type="email" placeholder="Введите email" required
+                autocomplete="email">
             </div>
             <div class="auth-field">
               <label class="auth-label" for="loginPassword">Пароль</label>
-              <input class="auth-input" id="loginPassword" type="password" placeholder="Введите пароль" required autocomplete="current-password">
+              <input class="auth-input" id="loginPassword" type="password" placeholder="Введите пароль" required
+                autocomplete="current-password">
             </div>
             <button type="submit" class="auth-btn">
               <span id="loginBtnText">Войти</span>
@@ -53,19 +55,23 @@
           <form class="auth-form" id="registerForm">
             <div class="auth-field">
               <label class="auth-label" for="registerUsername">Имя в чате</label>
-              <input class="auth-input" id="registerUsername" type="text" placeholder="Введите имя" maxlength="32" required autocomplete="username">
+              <input class="auth-input" id="registerUsername" type="text" placeholder="Введите имя" maxlength="32"
+                required autocomplete="username">
             </div>
             <div class="auth-field">
               <label class="auth-label" for="registerEmail">Электронная почта</label>
-              <input class="auth-input" id="registerEmail" type="email" placeholder="Введите email" required autocomplete="email">
+              <input class="auth-input" id="registerEmail" type="email" placeholder="Введите email" required
+                autocomplete="email">
             </div>
             <div class="auth-field">
               <label class="auth-label" for="registerPassword">Пароль</label>
-              <input class="auth-input" id="registerPassword" type="password" placeholder="Минимум 6 символов" required autocomplete="new-password">
+              <input class="auth-input" id="registerPassword" type="password" placeholder="Минимум 6 символов" required
+                autocomplete="new-password">
             </div>
             <div class="auth-field">
               <label class="auth-label" for="registerPassword2">Повторите пароль</label>
-              <input class="auth-input" id="registerPassword2" type="password" placeholder="Повторите пароль" required autocomplete="new-password">
+              <input class="auth-input" id="registerPassword2" type="password" placeholder="Повторите пароль" required
+                autocomplete="new-password">
             </div>
             <button type="submit" class="auth-btn">
               <span id="registerBtnText">Регистрация</span>
@@ -82,13 +88,19 @@
 
   <!-- MAIN APP -->
   <nav class="server-list" role="navigation" aria-label="Server navigation">
-    <div class="server-icon home active" title="DevChat" role="button" tabindex="0" aria-current="page"><span class="material-icons-round">chat</span></div>
+    <div class="server-icon home active" title="DevChat" role="button" tabindex="0" aria-current="page"><span
+        class="material-icons-round">chat</span></div>
     <div class="server-divider"></div>
-    <div class="server-icon server-s1" title="Проект Alpha" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">A</div>
-    <div class="server-icon server-s2" title="Backend Team" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">B</div>
-    <div class="server-icon server-s3" title="Design" data-action="notify" data-message="Переключение серверов в альфа-версии недоступно">D</div>
+    <div class="server-icon server-s1" title="Проект Alpha" data-action="notify"
+      data-message="Переключение серверов в альфа-версии недоступно">A</div>
+    <div class="server-icon server-s2" title="Backend Team" data-action="notify"
+      data-message="Переключение серверов в альфа-версии недоступно">B</div>
+    <div class="server-icon server-s3" title="Design" data-action="notify"
+      data-message="Переключение серверов в альфа-версии недоступно">D</div>
     <div style="margin-top:auto;">
-      <div class="server-icon" style="background:var(--bg-secondary);" title="Добавить сервер" data-action="notify" data-message="Создание серверов в альфа-версии недоступно" role="button" tabindex="0" aria-label="Добавить сервер"><span class="material-icons-round">add</span></div>
+      <div class="server-icon" style="background:var(--bg-secondary);" title="Добавить сервер" data-action="notify"
+        data-message="Создание серверов в альфа-версии недоступно" role="button" tabindex="0"
+        aria-label="Добавить сервер"><span class="material-icons-round">add</span></div>
     </div>
   </nav>
 
@@ -98,27 +110,8 @@
       <span class="chevron"><span class="material-icons-round">expand_more</span></span>
     </header>
 
-    <div class="channel-section">
-      <div class="channel-section-title">
-        <span>Текстовые каналы</span>
-        <span class="add-btn">+</span>
-      </div>
-      <div class="channel-item active" data-channel="general" role="button" tabindex="0" aria-current="true">
-        <span class="ch-icon">#</span>
-        <span class="ch-name">general</span>
-      </div>
-      <div class="channel-item" data-channel="random" role="button" tabindex="0">
-        <span class="ch-icon">#</span>
-        <span class="ch-name">random</span>
-      </div>
-      <div class="channel-item" data-channel="dev-talk" role="button" tabindex="0">
-        <span class="ch-icon">#</span>
-        <span class="ch-name">dev-talk</span>
-      </div>
-      <div class="channel-item" data-channel="announcements" role="button" tabindex="0">
-        <span class="ch-icon"><span class="material-icons-round">campaign</span></span>
-        <span class="ch-name">announcements</span>
-      </div>
+    <div id="channelsContainer">
+      <!-- Каналы будут загружаться сюда из БД -->
     </div>
 
     <div class="channel-section">
@@ -129,23 +122,6 @@
         <div class="dm-empty">Нет сообщений</div>
       </div>
     </div>
-
-    <div class="channel-section">
-      <div class="channel-section-title">
-        <span>Голосовые каналы</span>
-      </div>
-      <div class="channel-item voice-channel-item" data-action="join-voice" data-voice-channel="general-voice">
-        <span class="ch-icon"><span class="material-icons-round">volume_up</span></span>
-        <span class="ch-name">General Voice</span>
-      </div>
-      <div class="voice-channel-users" id="voiceUsers-general-voice"></div>
-      <div class="channel-item voice-channel-item" data-action="join-voice" data-voice-channel="dev-room">
-        <span class="ch-icon"><span class="material-icons-round">volume_up</span></span>
-        <span class="ch-name">Dev Room</span>
-      </div>
-      <div class="voice-channel-users" id="voiceUsers-dev-room"></div>
-    </div>
-
     <footer class="sidebar-footer">
       <div class="user-avatar" id="myAvatar" style="background:var(--accent)">?
         <div class="status-dot"></div>
@@ -155,9 +131,12 @@
         <div class="ustatus">В сети</div>
       </div>
       <div class="footer-icons">
-        <div class="footer-icon" title="Микрофон" data-action="toggle-voice-mute" role="button" tabindex="0" aria-label="Переключить микрофон"><span class="material-icons-round">mic</span></div>
-        <div class="footer-icon" title="Выйти из войса" data-action="leave-voice" role="button" tabindex="0" aria-label="Выйти из голосового канала"><span class="material-icons-round">call_end</span></div>
-        <div class="footer-icon" title="Профиль" data-action="open-profile" role="button" tabindex="0" aria-label="Открыть профиль"><span class="material-icons-round">settings</span></div>
+        <div class="footer-icon" title="Микрофон" data-action="toggle-voice-mute" role="button" tabindex="0"
+          aria-label="Переключить микрофон"><span class="material-icons-round">mic</span></div>
+        <div class="footer-icon" title="Выйти из войса" data-action="leave-voice" role="button" tabindex="0"
+          aria-label="Выйти из голосового канала"><span class="material-icons-round">call_end</span></div>
+        <div class="footer-icon" title="Профиль" data-action="open-profile" role="button" tabindex="0"
+          aria-label="Открыть профиль"><span class="material-icons-round">settings</span></div>
       </div>
     </footer>
   </nav>
@@ -170,16 +149,22 @@
       </div>
     </div>
     <header class="chat-header">
-      <div class="header-btn mobile-only" title="Каналы" data-action="toggle-sidebar" role="button" tabindex="0" aria-label="Открыть меню каналов"><span class="material-icons-round">menu</span></div>
+      <div class="header-btn mobile-only" title="Каналы" data-action="toggle-sidebar" role="button" tabindex="0"
+        aria-label="Открыть меню каналов"><span class="material-icons-round">menu</span></div>
       <span class="ch-hash"><span class="material-icons-round">tag</span></span>
       <span class="ch-title" id="channelTitle">general</span>
       <span class="ch-desc" id="channelDesc">Добро пожаловать в #general — место для всех!</span>
       <div class="header-actions">
-        <div class="header-btn" title="Поиск" data-action="open-search" role="button" tabindex="0" aria-label="Поиск"><span class="material-icons-round">search</span></div>
-        <div class="header-btn" title="Закрепленные сообщения" data-action="open-pinned" role="button" tabindex="0" aria-label="Закрепленные сообщения"><span class="material-icons-round" style="transform: rotate(45deg);">push_pin</span></div>
-        <div class="header-btn" title="Участники" data-action="toggle-members" role="button" tabindex="0" aria-label="Показать участников"><span class="material-icons-round">people</span></div>
-        <div class="header-btn" title="Уведомления" role="button" tabindex="0" aria-label="Уведомления"><span class="material-icons-round">notifications</span></div>
-        <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin" style="display:none;color:var(--red);" role="button" tabindex="0" aria-label="Админ панель"><span class="material-icons-round">admin_panel_settings</span></div>
+        <div class="header-btn" title="Поиск" data-action="open-search" role="button" tabindex="0" aria-label="Поиск">
+          <span class="material-icons-round">search</span>
+        </div>
+        <div class="header-btn" title="Участники" data-action="toggle-members" role="button" tabindex="0"
+          aria-label="Показать участников"><span class="material-icons-round">people</span></div>
+        <div class="header-btn" title="Уведомления" role="button" tabindex="0" aria-label="Уведомления"><span
+            class="material-icons-round">notifications</span></div>
+        <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin"
+          style="display:none;color:var(--red);" role="button" tabindex="0" aria-label="Админ панель"><span
+            class="material-icons-round">admin_panel_settings</span></div>
       </div>
     </header>
 
@@ -198,24 +183,33 @@
       <div class="reply-banner" id="replyBanner">
         <span class="label">Ответ</span>
         <span class="preview" id="replyBannerPreview"></span>
-        <button class="close" type="button" title="Отменить" data-action="cancel-reply"><span class="material-icons-round">close</span></button>
+        <button class="close" type="button" title="Отменить" data-action="cancel-reply"><span
+            class="material-icons-round">close</span></button>
       </div>
       <div class="input-wrapper">
-        <div class="input-side-btn" title="Прикрепить файл" data-action="open-file-dialog" role="button" tabindex="0" aria-label="Прикрепить файл"><span class="material-icons-round">attach_file</span></div>
-        <input type="file" id="fileInput" style="display:none;" accept="image/*,video/*,application/pdf,.zip,.txt,.json,.csv">
+        <div class="input-side-btn" title="Прикрепить файл" data-action="open-file-dialog" role="button" tabindex="0"
+          aria-label="Прикрепить файл"><span class="material-icons-round">attach_file</span></div>
+        <input type="file" id="fileInput" style="display:none;"
+          accept="image/*,video/*,application/pdf,.zip,.txt,.json,.csv">
         <textarea id="message-input" rows="1" placeholder="Написать в #general"></textarea>
         <div class="input-right-btns">
-          <div class="input-icon" title="GIF" data-action="notify" data-message="GIF в альфа-версии недоступны" role="button" tabindex="0" aria-label="Отправить GIF">GIF</div>
-          <div class="input-icon" title="Стикер" data-action="notify" data-message="Стикеры в альфа-версии недоступны" role="button" tabindex="0" aria-label="Отправить стикер"><span class="material-icons-round">sentiment_satisfied</span></div>
-          <div class="input-icon" title="Эмодзи" data-action="toggle-emoji-picker" role="button" tabindex="0" aria-label="Вставить эмодзи" id="emojiPickerBtn"><span class="material-icons-round">emoji_emotions</span></div>
-          <div class="send-btn" data-action="send-message" title="Отправить" role="button" tabindex="0" aria-label="Отправить сообщение"><span class="material-icons-round">send</span></div>
+          <div class="input-icon" title="GIF" data-action="toggle-media-picker" data-media-type="gif"
+            role="button" tabindex="0" aria-label="Отправить GIF">GIF</div>
+          <div class="input-icon" title="Стикер" data-action="toggle-media-picker" data-media-type="sticker"
+            role="button" tabindex="0" aria-label="Отправить стикер"><span
+              class="material-icons-round">sentiment_satisfied</span></div>
+          <div class="input-icon" title="Эмодзи" data-action="toggle-emoji-picker" role="button" tabindex="0"
+            aria-label="Вставить эмодзи" id="emojiPickerBtn"><span class="material-icons-round">emoji_emotions</span>
+          </div>
+          <div class="send-btn" data-action="send-message" title="Отправить" role="button" tabindex="0"
+            aria-label="Отправить сообщение"><span class="material-icons-round">send</span></div>
         </div>
       </div>
     </div>
   </main>
 
   <!-- Floating Action Button for quick actions -->
-  
+
   <aside class="member-list" id="memberList" role="complementary" aria-label="Member list">
     <div class="member-section-title">Онлайн — <span id="onlineCount">1</span></div>
     <div id="onlineMembers"></div>
@@ -229,28 +223,34 @@
         <h3 id="voicePanelTitle" class="voice-panel-title">Голосовой канал</h3>
         <p class="voice-panel-channel" id="voiceCurrentChannel">Не подключено</p>
       </div>
-      <button class="voice-panel-close" type="button" data-action="close-voice-panel" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      <button class="voice-panel-close" type="button" data-action="close-voice-panel" aria-label="Закрыть"><span
+          class="material-icons-round">close</span></button>
     </div>
-    
+
     <div class="voice-panel-status" id="voiceStatus">
       <div class="voice-status-text" id="voiceStatusText">Голосовой канал не подключен</div>
-      <progress class="voice-connection-progress" id="voiceConnectionProgress" value="0" max="100" aria-label="Прогресс подключения"></progress>
+      <progress class="voice-connection-progress" id="voiceConnectionProgress" value="0" max="100"
+        aria-label="Прогресс подключения"></progress>
     </div>
-    
+
     <div class="voice-panel-actions">
-      <button type="button" class="voice-btn" id="voiceMuteBtn" data-action="toggle-voice-mute" aria-label="Переключить микрофон">
+      <button type="button" class="voice-btn" id="voiceMuteBtn" data-action="toggle-voice-mute"
+        aria-label="Переключить микрофон">
         <span class="material-icons-round">mic</span>
         <span class="voice-btn-text">Микрофон</span>
       </button>
-      <button type="button" class="voice-btn" id="voiceDeafenBtn" data-action="toggle-voice-deafen" aria-label="Отключить звук">
+      <button type="button" class="voice-btn" id="voiceDeafenBtn" data-action="toggle-voice-deafen"
+        aria-label="Отключить звук">
         <span class="material-icons-round">volume_up</span>
         <span class="voice-btn-text">Звук</span>
       </button>
-      <button type="button" class="voice-btn" id="voiceScreenShareBtn" data-action="toggle-screen-share" aria-label="Демонстрация экрана">
+      <button type="button" class="voice-btn" id="voiceScreenShareBtn" data-action="toggle-screen-share"
+        aria-label="Демонстрация экрана">
         <span class="material-icons-round">screen_share</span>
         <span class="voice-btn-text">Экран</span>
       </button>
-      <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice" aria-label="Выйти из канала">
+      <button type="button" class="voice-btn voice-btn-danger" id="voiceLeaveBtn" data-action="leave-voice"
+        aria-label="Выйти из канала">
         <span class="material-icons-round">call_end</span>
         <span class="voice-btn-text">Выйти</span>
       </button>
@@ -263,7 +263,7 @@
       </div>
       <video id="voiceScreenShareVideo" class="voice-screen-share-video" autoplay playsinline></video>
     </div>
-    
+
     <div class="voice-participants-block">
       <div class="voice-participants-title">Участники: <span id="voiceParticipantCount">0</span></div>
       <div class="voice-participants" id="voiceParticipants">
@@ -277,7 +277,8 @@
   <div id="imageLightbox" class="image-lightbox" aria-hidden="true">
     <div class="image-lightbox-backdrop" data-action="close-image-preview"></div>
     <div class="image-lightbox-content">
-      <button type="button" class="image-lightbox-close" data-action="close-image-preview" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      <button type="button" class="image-lightbox-close" data-action="close-image-preview" aria-label="Закрыть"><span
+          class="material-icons-round">close</span></button>
       <img id="imageLightboxPreview" class="image-lightbox-preview" src="" alt="Увеличенное изображение" />
     </div>
   </div>
@@ -288,27 +289,13 @@
     <div class="search-panel-content">
       <div class="search-panel-header">
         <h3>Поиск сообщений</h3>
-        <button type="button" class="search-panel-close" data-action="close-search" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+        <button type="button" class="search-panel-close" data-action="close-search" aria-label="Закрыть"><span
+            class="material-icons-round">close</span></button>
       </div>
       <div class="search-panel-body">
-        <input type="text" id="searchInput" class="search-input" placeholder="Поиск по сообщениям..." autocomplete="off">
+        <input type="text" id="searchInput" class="search-input" placeholder="Поиск по сообщениям..."
+          autocomplete="off">
         <div id="searchResults" class="search-results"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PINNED MESSAGES PANEL -->
-  <div id="pinnedPanel" class="search-panel" aria-hidden="true">
-    <div class="search-panel-backdrop" data-action="close-pinned"></div>
-    <div class="search-panel-content">
-      <div class="search-panel-header">
-        <h3>Закрепленные сообщения</h3>
-        <button type="button" class="search-panel-close" data-action="close-pinned" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
-      </div>
-      <div class="search-panel-body">
-        <div id="pinnedResults" class="search-results">
-          <!-- Pinned items will be injected here -->
-        </div>
       </div>
     </div>
   </div>
@@ -319,7 +306,8 @@
     <div class="edit-message-content">
       <div class="edit-message-header">
         <h3>Редактировать сообщение</h3>
-        <button type="button" class="edit-message-close" data-action="close-edit-message" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+        <button type="button" class="edit-message-close" data-action="close-edit-message" aria-label="Закрыть"><span
+            class="material-icons-round">close</span></button>
       </div>
       <div class="edit-message-body">
         <textarea id="editMessageInput" class="edit-message-input" placeholder="Введите текст сообщения..."></textarea>
@@ -334,27 +322,35 @@
   <!-- ADMIN PANEL -->
   <div id="adminPanel" role="dialog" aria-modal="true" aria-labelledby="adminPanelTitle">
     <div class="admin-header">
-      <h2 id="adminPanelTitle"><span class="material-icons-round" style="vertical-align: middle; margin-right: 8px;">admin_panel_settings</span>Админ панель</h2>
-      <button class="admin-close-btn" type="button" data-action="toggle-admin" aria-label="Закрыть админ панель"><span class="material-icons-round">close</span></button>
+      <h2 id="adminPanelTitle"><span class="material-icons-round"
+          style="vertical-align: middle; margin-right: 8px;">admin_panel_settings</span>Админ панель</h2>
+      <button class="admin-close-btn" type="button" data-action="toggle-admin" aria-label="Закрыть админ панель"><span
+          class="material-icons-round">close</span></button>
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px; font-size: 16px;">analytics</span>Статистика</div>
+      <div class="admin-section-title"><span class="material-icons-round"
+          style="vertical-align: middle; margin-right: 6px; font-size: 16px;">analytics</span>Статистика</div>
       <div style="color: var(--text-secondary); font-size: 12px;">
-        Статус: <span id="adminStatus" style="color: var(--green);"><span class="material-icons-round" style="font-size: 14px; vertical-align: middle;">check_circle</span> Онлайн</span><br>
+        Статус: <span id="adminStatus" style="color: var(--green);"><span class="material-icons-round"
+            style="font-size: 14px; vertical-align: middle;">check_circle</span> Онлайн</span><br>
         Пользователей:<span id="adminUserCount"> 0</span><br>
         Сообщений: <span id="adminMessageCount">0</span>
       </div>
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px; font-size: 16px;">people</span>Управление пользователями</div>
+      <div class="admin-section-title"><span class="material-icons-round"
+          style="vertical-align: middle; margin-right: 6px; font-size: 16px;">people</span>Управление пользователями
+      </div>
       <div id="adminUsersList" style="max-height: 300px; overflow-y: auto;"></div>
-      <button class="admin-btn admin-btn-small" type="button" data-action="reload-admin-users" style="width: 100%; margin-top: 8px;">🔄 Обновить</button>
+      <button class="admin-btn admin-btn-small" type="button" data-action="reload-admin-users"
+        style="width: 100%; margin-top: 8px;">🔄 Обновить</button>
     </div>
 
     <div class="admin-section">
-      <div class="admin-section-title"><span class="material-icons-round" style="vertical-align: middle; margin-right: 6px; font-size: 16px;">history</span>Недавние действия</div>
+      <div class="admin-section-title"><span class="material-icons-round"
+          style="vertical-align: middle; margin-right: 6px; font-size: 16px;">history</span>Недавние действия</div>
       <div id="adminLog" style="max-height: 200px; overflow-y: auto; font-size: 11px; color: var(--text-muted);">
         <p>Ожидание...</p>
       </div>
@@ -367,7 +363,8 @@
     <div class="profile-panel-card">
       <div class="profile-panel-header">
         <h2 id="profilePanelTitle">Профиль</h2>
-        <button type="button" class="profile-panel-close" data-action="close-profile" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+        <button type="button" class="profile-panel-close" data-action="close-profile" aria-label="Закрыть"><span
+            class="material-icons-round">close</span></button>
       </div>
       <form id="profileForm" class="profile-panel-body">
         <div class="profile-preview-row">
@@ -375,14 +372,8 @@
           <div class="profile-preview-fields">
             <div class="profile-field">
               <label class="profile-label" for="profileDisplayName">Имя в чате</label>
-              <input
-                class="profile-input"
-                id="profileDisplayName"
-                type="text"
-                maxlength="32"
-                autocomplete="nickname"
-                required
-              />
+              <input class="profile-input" id="profileDisplayName" type="text" maxlength="32" autocomplete="nickname"
+                required />
             </div>
             <p class="profile-hint" id="profileEmailHint"></p>
           </div>
@@ -396,15 +387,9 @@
           <label class="profile-label">Цвет аватара</label>
           <div id="profileColorSwatches" class="profile-color-swatches"></div>
         </div>
-        <div class="profile-field" style="margin-top: 16px; display: flex; align-items: center; justify-content: space-between;">
-          <label class="profile-label" style="margin-bottom: 0; cursor: pointer;" for="themeToggle">Светлая тема</label>
-          <label class="theme-switch" style="position: relative; display: inline-block; width: 40px; height: 22px;">
-            <input type="checkbox" id="themeToggle" data-action="toggle-theme" style="opacity: 0; width: 0; height: 0;">
-            <span class="theme-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-active); transition: .4s; border-radius: 22px;"></span>
-          </label>
-        </div>
         <div class="profile-actions">
-          <button id="profileLogoutBtn" type="button" class="profile-btn profile-btn-secondary" data-action="logout">Выйти из аккаунта</button>
+          <button id="profileLogoutBtn" type="button" class="profile-btn profile-btn-secondary"
+            data-action="logout">Выйти из аккаунта</button>
           <button type="button" class="profile-btn profile-btn-secondary" data-action="close-profile">Отмена</button>
           <button type="submit" class="profile-btn profile-btn-primary" id="profileSaveBtn">Сохранить</button>
         </div>
@@ -413,6 +398,45 @@
   </div>
 
   <div class="emoji-picker-panel" id="emojiPickerPanel" aria-hidden="true"></div>
+  <div class="emoji-picker-panel media-picker-panel" id="mediaPickerPanel" aria-hidden="true"></div>
+
+  <!-- CHANNEL ADMIN MODAL -->
+  <div id="channelAdminModal" class="profile-panel-overlay" aria-hidden="true" role="dialog" aria-modal="true" style="z-index: 3000;">
+    <div class="profile-panel-backdrop" data-action="close-channel-admin"></div>
+    <div class="profile-panel-card" style="width: 400px;">
+      <div class="profile-panel-header">
+        <h2 id="channelAdminTitle">Создать канал</h2>
+        <button type="button" class="profile-panel-close" data-action="close-channel-admin" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      </div>
+      <form id="channelAdminForm" class="profile-panel-body">
+        <input type="hidden" id="channelAdminSlug" />
+        <div class="profile-field">
+          <label class="profile-label" for="channelAdminName">Название канала</label>
+          <input class="profile-input" id="channelAdminName" type="text" required />
+        </div>
+        <div class="profile-field">
+          <label class="profile-label" for="channelAdminCategory">Категория</label>
+          <input class="profile-input" id="channelAdminCategory" type="text" required placeholder="Например: Текстовые каналы" />
+        </div>
+        <div class="profile-field">
+          <label class="profile-label" for="channelAdminType">Тип</label>
+          <select class="profile-input" id="channelAdminType">
+            <option value="text">Текстовый (Чат)</option>
+            <option value="voice">Голосовой (Аудио)</option>
+          </select>
+        </div>
+        <div class="profile-field">
+          <label class="profile-label" for="channelAdminDesc">Описание (опционально)</label>
+          <input class="profile-input" id="channelAdminDesc" type="text" />
+        </div>
+        <div class="profile-actions">
+          <button type="button" class="profile-btn profile-btn-secondary" id="channelAdminDeleteBtn" style="color: var(--red); display: none;" data-action="delete-channel">Удалить</button>
+          <button type="button" class="profile-btn profile-btn-secondary" data-action="close-channel-admin">Отмена</button>
+          <button type="submit" class="profile-btn profile-btn-primary" id="channelAdminSaveBtn">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="assets/js/features/auth.js"></script>
   <script src="assets/js/features/presence.js"></script>
@@ -422,4 +446,5 @@
   <script src="assets/js/features/dm.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
+
 </html>

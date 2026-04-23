@@ -434,6 +434,7 @@ window.onload = async () => {
       document.getElementById('authOverlay').style.display = 'none';
 
       initApp();
+      await loadChannels();
       subscribeToMessages();
       if (typeof loadDMConversations === 'function') loadDMConversations();
     } else {
@@ -466,6 +467,7 @@ function initApp() {
   }
   if (isDemoMode) {
     addMember(currentUser, 'online');
+    loadChannels(); // Demo mode channel load
   } else {
     members = {};
     updateMemberList();
@@ -996,3 +998,340 @@ function notify(msg, type = 'info') {
   document.body.appendChild(n);
   notifTimeout = setTimeout(() => n.remove(), 3000);
 }
+
+// ===================== CHANNEL MANAGEMENT =====================
+async function loadChannels() {
+  if (isDemoMode) {
+    channelsList = [
+      { slug: 'general', name: 'general', type: 'text', category: 'Текстовые каналы' },
+      { slug: 'random', name: 'random', type: 'text', category: 'Текстовые каналы' },
+      { slug: 'general-voice', name: 'General Voice', type: 'voice', category: 'Голосовые каналы' },
+    ];
+    TEXT_CHANNELS = channelsList.filter(c => c.type === 'text').map(c => c.slug);
+    renderSidebarChannels();
+    return;
+  }
+
+  if (!supabase) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('channels')
+      .select('*')
+      .order('order_index', { ascending: true })
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    
+    channelsList = data || [];
+    TEXT_CHANNELS = channelsList.filter(c => c.type === 'text').map(c => c.slug);
+    channelsList.forEach(c => CHANNEL_DESCS[c.slug] = c.description);
+    
+    renderSidebarChannels();
+  } catch (err) {
+    console.error('Ошибка загрузки каналов:', err);
+  }
+}
+
+function renderSidebarChannels() {
+  const container = document.getElementById('channelsContainer');
+  if (!container) return;
+
+  // Группировка по категориями
+  const categories = {};
+  channelsList.forEach(ch => {
+    const cat = ch.category || 'Без категории';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(ch);
+  });
+
+  let html = '';
+  Object.keys(categories).forEach(cat => {
+    html += `
+      <div class="channel-section">
+        <div class="channel-section-title">
+          <span>${escHtml(cat)}</span>
+          ${isAdmin ? `<span class="add-btn" data-action="open-channel-admin" data-category="${escHtml(cat)}">+</span>` : ''}
+        </div>
+    `;
+
+    categories[cat].forEach(ch => {
+      const isVoice = ch.type === 'voice';
+      const icon = isVoice ? 'volume_up' : 'tag'; // using # for text, but material icon tag is also good. We use # text for general
+      const iconHtml = isVoice ? `<span class="material-icons-round">${icon}</span>` : '#';
+      const activeClass = (ch.slug === currentChannel && !isVoice) ? ' active' : '';
+      const voiceClass = isVoice ? ' voice-channel-item' : '';
+      const action = isVoice ? `data-action="join-voice" data-voice-channel="${ch.slug}"` : `data-action="switch-channel" data-channel="${ch.slug}"`;
+      
+      const adminEditBtn = isAdmin ? `<button class="ch-edit-btn" data-action="open-channel-admin" data-slug="${ch.slug}">✏️</button>` : '';
+
+      html += `
+        <div class="channel-item${activeClass}${voiceClass}" ${action} role="button" tabindex="0">
+          <span class="ch-icon">${iconHtml}</span>
+          <span class="ch-name">${escHtml(ch.name)}</span>
+          ${adminEditBtn}
+        </div>
+      `;
+      
+      if (isVoice) {
+        html += `<div class="voice-channel-users" id="voiceUsers-${ch.slug}"></div>`;
+      }
+    });
+
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+  
+  // Добавляем обработчики кликов
+  container.querySelectorAll('[data-action="switch-channel"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.ch-edit-btn')) return;
+      switchChannel(el.dataset.channel);
+    });
+  });
+  
+  // Обновляем текущее название и описание
+  const currentChObj = channelsList.find(c => c.slug === currentChannel);
+  if (currentChObj) {
+    document.getElementById('channelTitle').textContent = currentChObj.name;
+    document.getElementById('channelDesc').textContent = currentChObj.description || '';
+  }
+}
+
+function openChannelAdmin(slug, category) {
+  if (!isAdmin) return;
+  const modal = document.getElementById('channelAdminModal');
+  const form = document.getElementById('channelAdminForm');
+  const slugInput = document.getElementById('channelAdminSlug');
+  const nameInput = document.getElementById('channelAdminName');
+  const catInput = document.getElementById('channelAdminCategory');
+  const typeInput = document.getElementById('channelAdminType');
+  const descInput = document.getElementById('channelAdminDesc');
+  const deleteBtn = document.getElementById('channelAdminDeleteBtn');
+  const title = document.getElementById('channelAdminTitle');
+
+  if (slug) {
+    const ch = channelsList.find(c => c.slug === slug);
+    if (ch) {
+      title.textContent = 'Редактировать канал';
+      slugInput.value = ch.slug;
+      nameInput.value = ch.name;
+      catInput.value = ch.category;
+      typeInput.value = ch.type;
+      descInput.value = ch.description || '';
+      deleteBtn.style.display = 'block';
+    }
+  } else {
+    title.textContent = 'Создать канал';
+    form.reset();
+    slugInput.value = '';
+    catInput.value = category || 'Текстовые каналы';
+    typeInput.value = 'text';
+    deleteBtn.style.display = 'none';
+  }
+
+  modal.classList.add('show');
+}
+
+function closeChannelAdmin() {
+  document.getElementById('channelAdminModal').classList.remove('show');
+}
+
+document.getElementById('channelAdminForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!isAdmin || !supabase) return;
+
+  const slugInput = document.getElementById('channelAdminSlug').value;
+  const name = document.getElementById('channelAdminName').value.trim();
+  const category = document.getElementById('channelAdminCategory').value.trim();
+  const type = document.getElementById('channelAdminType').value;
+  const description = document.getElementById('channelAdminDesc').value.trim();
+  
+  const slug = slugInput || name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+
+  try {
+    const payload = { slug, name, category, type, description };
+    let error;
+    if (slugInput) {
+      ({ error } = await supabase.from('channels').update(payload).eq('slug', slug));
+    } else {
+      ({ error } = await supabase.from('channels').insert([payload]));
+    }
+    if (error) throw error;
+    notify('Канал сохранен', 'success');
+    closeChannelAdmin();
+    loadChannels();
+  } catch (err) {
+    notify('Ошибка сохранения: ' + err.message, 'error');
+  }
+});
+
+document.addEventListener('click', async (e) => {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+  const action = target.dataset.action;
+
+  if (action === 'open-channel-admin') {
+    openChannelAdmin(target.dataset.slug, target.dataset.category);
+  } else if (action === 'close-channel-admin') {
+    closeChannelAdmin();
+  } else if (action === 'delete-channel') {
+    const slug = document.getElementById('channelAdminSlug').value;
+    if (!slug || !confirm('Удалить этот канал навсегда?')) return;
+    try {
+      const { error } = await supabase.from('channels').delete().eq('slug', slug);
+      if (error) throw error;
+      notify('Канал удален', 'success');
+      closeChannelAdmin();
+      loadChannels();
+    } catch (err) {
+      notify('Ошибка удаления: ' + err.message, 'error');
+    }
+  }
+});
+// ===================== MEDIA PICKER (GIFs / Stickers) =====================
+const MEDIA_PRESETS = {
+  gif: [
+    'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif',
+    'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
+    'https://media.giphy.com/media/l41lFptE0ls3KnjyG/giphy.gif',
+    'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
+    'https://media.giphy.com/media/5wWf7GMbT1ZUGlBViQw/giphy.gif',
+    'https://media.giphy.com/media/VbnUQpnihPSIgIXuZv/giphy.gif',
+  ],
+  sticker: [
+    'https://media.giphy.com/media/j45X4Jq8I1H7BvFf1p/giphy.gif',
+    'https://media.giphy.com/media/IdaNInM2s356P7Z1Z9/giphy.gif',
+    'https://media.giphy.com/media/ZdgZc3h5T6E2jZfB9I/giphy.gif',
+    'https://media.giphy.com/media/lMls8iYq5hYlYQfXzD/giphy.gif',
+    'https://media.giphy.com/media/Q8OQx9YgW4wY52I9XG/giphy.gif',
+    'https://media.giphy.com/media/S6Z8Rz1XFf56zQxOey/giphy.gif',
+  ]
+};
+
+let currentMediaType = 'gif';
+
+function buildMediaPickerContent() {
+  const panel = document.getElementById('mediaPickerPanel');
+  if (!panel) return;
+  
+  const items = MEDIA_PRESETS[currentMediaType] || [];
+  
+  const html = `
+    <div class="emoji-picker-search media-picker-search">
+      <input type="text" placeholder="Поиск ${currentMediaType === 'gif' ? 'GIF' : 'Стикеров'}..." id="mediaSearchInput">
+    </div>
+    <div class="emoji-picker-tabs">
+      <button class="emoji-tab ${currentMediaType === 'gif' ? 'active' : ''}" type="button" data-media-tab="gif">GIF</button>
+      <button class="emoji-tab ${currentMediaType === 'sticker' ? 'active' : ''}" type="button" data-media-tab="sticker">Стикеры</button>
+    </div>
+    <div class="emoji-picker-body">
+      <div class="media-grid">
+        ${items.map(url => `<img src="${url}" class="media-item" data-media-url="${url}" alt="media" loading="lazy">`).join('')}
+      </div>
+    </div>
+  `;
+  
+  panel.innerHTML = html;
+  
+  // Add listeners
+  panel.querySelectorAll('[data-media-tab]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      currentMediaType = e.target.dataset.mediaTab;
+      buildMediaPickerContent();
+    });
+  });
+  
+  panel.querySelectorAll('.media-item').forEach(img => {
+    img.addEventListener('click', async (e) => {
+      const url = e.target.dataset.mediaUrl;
+      if (url) {
+        await sendMediaMessage(url);
+        closeMediaPicker();
+      }
+    });
+  });
+}
+
+async function sendMediaMessage(url) {
+  if (isDemoMode) {
+    renderMessage({
+      id: String(Date.now()),
+      author: currentUser,
+      text: '',
+      created: new Date().toISOString(),
+      user_id: 'demo-user',
+      image_url: url
+    });
+    return;
+  }
+  
+  if (!supabase || !authUser) return;
+  
+  try {
+    const { error } = await supabase.from('messages').insert([{
+      channel: currentChannel,
+      content: '',
+      image_url: url,
+      author: currentUser,
+      user_id: authUser.id
+    }]);
+    if (error) throw error;
+  } catch (err) {
+    notify('Ошибка отправки: ' + err.message, 'error');
+  }
+}
+
+function toggleMediaPicker(type, anchorEl) {
+  const panel = document.getElementById('mediaPickerPanel');
+  if (!panel) return;
+  
+  if (panel.classList.contains('show') && currentMediaType === type) {
+    closeMediaPicker();
+    return;
+  }
+  
+  currentMediaType = type || 'gif';
+  buildMediaPickerContent();
+  
+  const rect = anchorEl.getBoundingClientRect();
+  let left = rect.left - 320 + rect.width;
+  if (left < 10) left = 10;
+  
+  panel.style.left = left + 'px';
+  panel.style.top = (rect.top - 410) + 'px'; // 400 height + gap
+  
+  panel.classList.add('show');
+  panel.setAttribute('aria-hidden', 'false');
+  
+  document.getElementById('emojiPickerPanel')?.classList.remove('show');
+  document.getElementById('reactionPicker')?.classList.remove('show');
+}
+
+function closeMediaPicker() {
+  const panel = document.getElementById('mediaPickerPanel');
+  if (panel) {
+    panel.classList.remove('show');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Global click to close media picker
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  const panel = document.getElementById('mediaPickerPanel');
+  if (!panel || !panel.classList.contains('show')) return;
+  
+  if (!panel.contains(target) && !target.closest('[data-action="toggle-media-picker"]')) {
+    closeMediaPicker();
+  }
+});
+
+// Добавляем обработчик в общий делегат click (найти action)
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('[data-action="toggle-media-picker"]');
+  if (target) {
+    toggleMediaPicker(target.dataset.mediaType, target);
+  }
+});

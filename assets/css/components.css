@@ -54,8 +54,12 @@
 .message-group.with-header { padding-top: 16px; margin-top: 12px; }
 .message-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
 .msg-avatar {
-  width: 42px;
-  height: 42px;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  max-width: 42px !important;
+  max-height: 42px !important;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -63,13 +67,16 @@
   font-weight: 700;
   font-size: 15px;
   color: #fff;
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
   position: absolute;
   left: 16px;
   top: 16px;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 .msg-avatar:hover { transform: scale(1.1) rotate(-5deg); }
 .msg-avatar.compact { top: 2px; }

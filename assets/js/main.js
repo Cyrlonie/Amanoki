@@ -1037,6 +1037,8 @@ function renderSidebarChannels() {
   const container = document.getElementById('channelsContainer');
   if (!container) return;
 
+  console.log('Rendering sidebar, isAdmin:', isAdmin);
+
   // Группировка по категориями
   const categories = {};
   channelsList.forEach(ch => {

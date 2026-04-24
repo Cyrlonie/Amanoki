@@ -1275,20 +1275,23 @@
   }
 }
 
-/* === SEARCH PANEL === */
-.search-panel {
+/* === SEARCH & PINNED PANELS === */
+.search-panel,
+.pinned-panel {
   position: fixed;
   inset: 0;
   z-index: 2200;
   display: none;
 }
 
-.search-panel.show {
+.search-panel.show,
+.pinned-panel.show {
   display: block;
   animation: fadeIn 0.2s ease;
 }
 
-.search-panel-backdrop {
+.search-panel-backdrop,
+.pinned-panel-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
@@ -1296,7 +1299,8 @@
   animation: fadeIn 0.2s ease;
 }
 
-.search-panel-content {
+.search-panel-content,
+.pinned-panel-content {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1312,7 +1316,8 @@
   animation: slideDown 0.3s ease;
 }
 
-.search-panel-header {
+.search-panel-header,
+.pinned-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1320,14 +1325,16 @@
   border-bottom: 1px solid var(--border);
 }
 
-.search-panel-header h3 {
+.search-panel-header h3,
+.pinned-panel-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.search-panel-close {
+.search-panel-close,
+.pinned-panel-close {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -1341,12 +1348,14 @@
   transition: all 0.2s ease;
 }
 
-.search-panel-close:hover {
+.search-panel-close:hover,
+.pinned-panel-close:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
 
-.search-panel-body {
+.search-panel-body,
+.pinned-panel-body {
   padding: 20px;
   overflow-y: auto;
   flex: 1;

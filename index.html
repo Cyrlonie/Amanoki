@@ -158,6 +158,10 @@
         <div class="header-btn" title="Поиск" data-action="open-search" role="button" tabindex="0" aria-label="Поиск">
           <span class="material-icons-round">search</span>
         </div>
+        <div class="header-btn" title="Закрепленные сообщения" data-action="open-pinned" role="button" tabindex="0"
+          aria-label="Закрепленные сообщения">
+          <span class="material-icons-round">push_pin</span>
+        </div>
         <div class="header-btn" title="Участники" data-action="toggle-members" role="button" tabindex="0"
           aria-label="Показать участников"><span class="material-icons-round">people</span></div>
         <div class="header-btn" title="Уведомления" role="button" tabindex="0" aria-label="Уведомления"><span
@@ -296,6 +300,21 @@
         <input type="text" id="searchInput" class="search-input" placeholder="Поиск по сообщениям..."
           autocomplete="off">
         <div id="searchResults" class="search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PINNED MESSAGES PANEL -->
+  <div id="pinnedPanel" class="pinned-panel" aria-hidden="true">
+    <div class="pinned-panel-backdrop" data-action="close-pinned"></div>
+    <div class="pinned-panel-content">
+      <div class="pinned-panel-header">
+        <h3>Закрепленные сообщения</h3>
+        <button type="button" class="pinned-panel-close" data-action="close-pinned" aria-label="Закрыть"><span
+            class="material-icons-round">close</span></button>
+      </div>
+      <div class="pinned-panel-body">
+        <div id="pinnedResults" class="pinned-results"></div>
       </div>
     </div>
   </div>

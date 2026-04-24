@@ -513,6 +513,11 @@ function cancelReply() {
 function scrollToMessage(messageId) {
   const el = document.querySelector(`.message-group[data-id="${messageId}"]`);
   if (!el) return;
+
+  // Close panels if open
+  if (typeof closeSearchPanel === 'function') closeSearchPanel();
+  if (typeof closePinnedPanel === 'function') closePinnedPanel();
+
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   el.style.outline = '2px solid rgba(192, 132, 252, 0.55)';
   el.style.outlineOffset = '4px';

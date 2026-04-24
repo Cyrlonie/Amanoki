@@ -27,13 +27,14 @@ function saveLastReadMap(map) {
 function markChannelReadTimestamp(ch, iso) {
   if (!TEXT_CHANNELS.includes(ch)) return;
   const map = loadLastReadMap();
+  const storageKey = getScopedChannelKey(ch);
   const t = iso || new Date().toISOString();
-  if (map[ch] && new Date(t) <= new Date(map[ch])) {
+  if (map[storageKey] && new Date(t) <= new Date(map[storageKey])) {
     unreadCounts[ch] = 0;
     updateChannelUnreadUI();
     return;
   }
-  map[ch] = t;
+  map[storageKey] = t;
   saveLastReadMap(map);
   unreadCounts[ch] = 0;
   updateChannelUnreadUI();
@@ -53,7 +54,7 @@ async function refreshUnreadCountsFromServer() {
       unreadCounts[ch] = 0;
       continue;
     }
-    const since = map[ch];
+    const since = map[getScopedChannelKey(ch)];
     if (!since) {
       if (unreadCounts[ch] === undefined) unreadCounts[ch] = 0;
       continue;
@@ -61,7 +62,7 @@ async function refreshUnreadCountsFromServer() {
     const { count, error } = await supabase
       .from('messages')
       .select('*', { count: 'exact', head: true })
-      .eq('channel', ch)
+      .eq('channel', getScopedChannelKey(ch))
       .gt('created_at', since);
     if (error) {
       console.warn('Unread count', ch, error);
@@ -118,7 +119,7 @@ async function subscribeToMessages() {
     const { data, error } = await supabase
       .from('messages')
       .select('*')
-      .eq('channel', currentChannel)
+      .eq('channel', getScopedChannelKey())
       .order('created_at', { ascending: true })
       .limit(50);
 
@@ -166,12 +167,16 @@ async function subscribeToMessages() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
         if (generation !== messageSubscriptionGeneration) return;
         const row = payload.new;
-        const ch = row.channel;
-        const isDM = typeof isDMChannel === 'function' && isDMChannel(ch);
+        const rawChannel = row.channel;
+        const isDM = typeof isDMChannel === 'function' && isDMChannel(rawChannel);
+        const ch = isDM ? rawChannel : unwrapScopedChannelKey(rawChannel);
 
         // Allow text channels and DM channels involving current user
-        if (!isDM && !TEXT_CHANNELS.includes(ch)) return;
-        if (isDM && !ch.includes(authUser?.id)) return;
+        if (!isDM) {
+          const expectedPrefix = currentServerId ? `${currentServerId}:` : '';
+          if (!expectedPrefix || !rawChannel.startsWith(expectedPrefix) || !TEXT_CHANNELS.includes(ch)) return;
+        }
+        if (isDM && !rawChannel.includes(authUser?.id)) return;
 
         // Трекаем активность пользователя для fallback онлайн-счётчика
         if (row.user_id) {
@@ -180,7 +185,7 @@ async function subscribeToMessages() {
 
         // Update DM conversation list
         if (isDM && typeof updateDMConversation === 'function') {
-          updateDMConversation(ch, row.content, row.author);
+          updateDMConversation(rawChannel, row.content, row.author);
         }
 
         if (ch === currentChannel) {
@@ -458,7 +463,7 @@ async function sendToSupabase(text, imageUrl = null) {
     const payload = {
       author: currentUser,
       content: text,
-      channel: currentChannel,
+      channel: getScopedChannelKey(),
       user_id: authUser.id,
       created_at: new Date().toISOString(),
     };
@@ -833,7 +838,7 @@ async function handleFileSelect(event) {
     const randomStr = Math.random().toString(36).substring(2, 8);
     const fileExt = file.name.split('.').pop();
     const fileName = `${timestamp}-${randomStr}.${fileExt}`;
-    const filePath = `${currentChannel}/${fileName}`;
+    const filePath = `${getScopedStoragePath()}/${fileName}`;
 
     // Загружаем файл в Storage
     const { error } = await supabase.storage.from('chat-media').upload(filePath, file);
@@ -1164,7 +1169,7 @@ async function loadPinnedMessages() {
     const { data, error } = await supabase
       .from('messages')
       .select('*')
-      .eq('channel', currentChannel)
+      .eq('channel', getScopedChannelKey())
       .eq('is_pinned', true)
       .order('created_at', { ascending: false });
       

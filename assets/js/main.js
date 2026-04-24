@@ -308,6 +308,16 @@ function setupDomEventHandlers() {
     }
   });
 
+  document.getElementById('serversContainer')?.addEventListener('contextmenu', async (event) => {
+    const targetEl = event.target instanceof Element ? event.target : null;
+    const serverEl = targetEl?.closest('[data-action="switch-server"]');
+    if (!serverEl || !isAdmin) return;
+
+    event.preventDefault();
+    await switchServer(serverEl.dataset.serverId);
+    openChannelAdmin('', 'Текстовые каналы');
+  });
+
   document.addEventListener('submit', async (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement)) return;
@@ -1125,19 +1135,22 @@ document.getElementById('serverAdminForm')?.addEventListener('submit', async (e)
   if (!name) return;
 
   try {
+    const serverId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
     // 1. Create server
-    const { data: server, error: serverError } = await supabase
+    const { error: serverError } = await supabase
       .from('servers')
-      .insert([{ name: name, owner_id: authUser.id }])
-      .select()
-      .single();
+      .insert([{ id: serverId, name: name, owner_id: authUser.id }]);
 
     if (serverError) throw serverError;
 
     // 2. Add creator as owner member
     const { error: memberError } = await supabase
       .from('server_members')
-      .insert([{ server_id: server.id, user_id: authUser.id, role: 'owner' }]);
+      .insert([{ server_id: serverId, user_id: authUser.id, role: 'owner' }]);
 
     if (memberError) throw memberError;
 
@@ -1148,14 +1161,14 @@ document.getElementById('serverAdminForm')?.addEventListener('submit', async (e)
       type: 'text',
       category: 'Текстовые каналы',
       description: 'Общий чат сервера',
-      server_id: server.id
+      server_id: serverId
     }]);
 
     notify('Сервер успешно создан!', 'success');
     closeServerAdmin();
     
     await loadServers();
-    switchServer(server.id);
+    switchServer(serverId);
 
   } catch (err) {
     notify('Ошибка создания сервера: ' + err.message, 'error');
@@ -1198,6 +1211,18 @@ async function loadChannels() {
     }
     
     renderSidebarChannels();
+
+    if (currentChannel && TEXT_CHANNELS.includes(currentChannel)) {
+      switchChannel(currentChannel);
+    } else {
+      document.getElementById('messagesArea').innerHTML = `
+        <div class="channel-welcome">
+          <div class="welcome-icon"><span class="material-icons-round">forum</span></div>
+          <div class="welcome-title">Нет каналов</div>
+          <div class="welcome-desc">Создайте канал для этого сервера.</div>
+        </div>
+      `;
+    }
 
     if (typeof updateChannelUnreadUI === 'function') {
       updateChannelUnreadUI();
@@ -1334,14 +1359,14 @@ document.getElementById('channelAdminForm')?.addEventListener('submit', async (e
     let error;
     if (slugInput) {
       const payload = { name, category, type, description };
-      ({ error } = await supabase.from('channels').update(payload).eq('slug', slugInput));
+      ({ error } = await supabase.from('channels').update(payload).eq('slug', slugInput).eq('server_id', currentServerId));
     } else {
       // Generate unique slug for new channel
       let counter = 1;
       while (channelsList.some(c => c.slug === slug)) {
         slug = `${slugBase}-${counter++}`;
       }
-      const payload = { slug, name, category, type, description };
+      const payload = { slug, name, category, type, description, server_id: currentServerId };
       ({ error } = await supabase.from('channels').insert([payload]));
     }
     if (error) {
@@ -1371,7 +1396,7 @@ document.addEventListener('click', async (e) => {
     const slug = document.getElementById('channelAdminSlug').value;
     if (!slug || !confirm('Удалить этот канал навсегда?')) return;
     try {
-      const { error } = await supabase.from('channels').delete().eq('slug', slug);
+      const { error } = await supabase.from('channels').delete().eq('slug', slug).eq('server_id', currentServerId);
       if (error) throw error;
       notify('Канал удален', 'success');
       closeChannelAdmin();
@@ -1478,7 +1503,7 @@ async function sendMediaMessage(url) {
   
   try {
     const { error } = await supabase.from('messages').insert([{
-      channel: currentChannel,
+      channel: getScopedChannelKey(),
       content: '',
       image_url: url,
       author: currentUser,

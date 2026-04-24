@@ -72,6 +72,25 @@ let CHANNEL_DESCS = {}; // Map of slug -> description
 let serversList = [];
 let currentServerId = null;
 
+function getScopedChannelKey(channelId = currentChannel, serverId = currentServerId) {
+  if (!channelId) return '';
+  if (typeof isDMChannel === 'function' && isDMChannel(channelId)) return channelId;
+  return serverId ? `${serverId}:${channelId}` : channelId;
+}
+
+function getScopedStoragePath(channelId = currentChannel, serverId = currentServerId) {
+  if (!channelId) return '';
+  if (typeof isDMChannel === 'function' && isDMChannel(channelId)) return channelId;
+  return serverId ? `${serverId}/${channelId}` : channelId;
+}
+
+function unwrapScopedChannelKey(channelKey, serverId = currentServerId) {
+  if (!channelKey) return '';
+  if (typeof isDMChannel === 'function' && isDMChannel(channelKey)) return channelKey;
+  const prefix = serverId ? `${serverId}:` : '';
+  return prefix && channelKey.startsWith(prefix) ? channelKey.slice(prefix.length) : channelKey;
+}
+
 /** Счётчики непрочитанных по каналу (в памяти; «прочитано» — в localStorage). */
 let unreadCounts = {};
 

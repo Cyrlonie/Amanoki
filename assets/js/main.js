@@ -1205,32 +1205,60 @@ document.addEventListener('click', async (e) => {
   }
 });
 // ===================== MEDIA PICKER (GIFs / Stickers) =====================
-const MEDIA_PRESETS = {
-  gif: [
-    'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif',
-    'https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif',
-    'https://media.giphy.com/media/l41lFptE0ls3KnjyG/giphy.gif',
-    'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
-    'https://media.giphy.com/media/5wWf7GMbT1ZUGlBViQw/giphy.gif',
-    'https://media.giphy.com/media/VbnUQpnihPSIgIXuZv/giphy.gif',
-  ],
-  sticker: [
-    'https://media.giphy.com/media/j45X4Jq8I1H7BvFf1p/giphy.gif',
-    'https://media.giphy.com/media/IdaNInM2s356P7Z1Z9/giphy.gif',
-    'https://media.giphy.com/media/ZdgZc3h5T6E2jZfB9I/giphy.gif',
-    'https://media.giphy.com/media/lMls8iYq5hYlYQfXzD/giphy.gif',
-    'https://media.giphy.com/media/Q8OQx9YgW4wY52I9XG/giphy.gif',
-    'https://media.giphy.com/media/S6Z8Rz1XFf56zQxOey/giphy.gif',
-  ]
-};
-
 let currentMediaType = 'gif';
+let mediaSearchTimeout = null;
+
+async function fetchMedia(query = '') {
+  const container = document.querySelector('.media-grid');
+  if (container) {
+    container.innerHTML = '<div class="search-no-results">Загрузка...</div>';
+  }
+
+  try {
+    const url = new URL('/api/giphy', window.location.origin);
+    if (query) url.searchParams.set('q', query);
+    url.searchParams.set('type', currentMediaType);
+
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.error) throw new Error(data.error);
+    renderMediaResults(data.results || []);
+  } catch (err) {
+    console.error('Media fetch error:', err);
+    if (container) {
+      container.innerHTML = `<div class="search-no-results">Ошибка: ${err.message === 'Giphy API key not configured' ? 'API ключ Giphy не настроен' : 'Не удалось загрузить'}</div>`;
+    }
+  }
+}
+
+function renderMediaResults(results) {
+  const container = document.querySelector('.media-grid');
+  if (!container) return;
+
+  if (results.length === 0) {
+    container.innerHTML = '<div class="search-no-results">Ничего не найдено</div>';
+    return;
+  }
+
+  container.innerHTML = results.map(item => 
+    `<img src="${item.preview}" class="media-item" data-media-url="${item.url}" alt="${escHtml(item.title)}" loading="lazy">`
+  ).join('');
+
+  container.querySelectorAll('.media-item').forEach(img => {
+    img.addEventListener('click', async (e) => {
+      const url = e.target.dataset.mediaUrl;
+      if (url) {
+        await sendMediaMessage(url);
+        closeMediaPicker();
+      }
+    });
+  });
+}
 
 function buildMediaPickerContent() {
   const panel = document.getElementById('mediaPickerPanel');
   if (!panel) return;
-  
-  const items = MEDIA_PRESETS[currentMediaType] || [];
   
   const html = `
     <div class="emoji-picker-search media-picker-search">
@@ -1242,7 +1270,7 @@ function buildMediaPickerContent() {
     </div>
     <div class="emoji-picker-body">
       <div class="media-grid">
-        ${items.map(url => `<img src="${url}" class="media-item" data-media-url="${url}" alt="media" loading="lazy">`).join('')}
+        <div class="search-no-results">Загрузка...</div>
       </div>
     </div>
   `;
@@ -1254,18 +1282,19 @@ function buildMediaPickerContent() {
     btn.addEventListener('click', (e) => {
       currentMediaType = e.target.dataset.mediaTab;
       buildMediaPickerContent();
+      fetchMedia();
     });
   });
-  
-  panel.querySelectorAll('.media-item').forEach(img => {
-    img.addEventListener('click', async (e) => {
-      const url = e.target.dataset.mediaUrl;
-      if (url) {
-        await sendMediaMessage(url);
-        closeMediaPicker();
-      }
-    });
+
+  const searchInput = document.getElementById('mediaSearchInput');
+  searchInput?.addEventListener('input', (e) => {
+    clearTimeout(mediaSearchTimeout);
+    const q = e.target.value.trim();
+    mediaSearchTimeout = setTimeout(() => fetchMedia(q), 500);
   });
+
+  // Initial fetch
+  fetchMedia();
 }
 
 async function sendMediaMessage(url) {

@@ -48,6 +48,28 @@
       min-width: 0 !important;
       position: relative !important;
     }
+
+    /* FIX FOR MOBILE: Override the hotfix on small screens */
+    @media (max-width: 768px) {
+      body {
+        padding: 0 !important;
+        gap: 0 !important;
+      }
+      .chat-area {
+        border-radius: 0 !important;
+        border: none !important;
+      }
+      .chat-header {
+        padding: 0 8px !important;
+        gap: 6px !important;
+      }
+      .header-actions {
+        gap: 2px !important;
+      }
+      .message-group .content-area {
+        padding-left: 50px !important;
+      }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>

@@ -189,6 +189,14 @@ function setupDomEventHandlers() {
       case 'open-server-admin':
         openServerAdmin();
         break;
+      case 'create-text-channel':
+        closeChannelContextMenu();
+        openChannelAdmin('', 'Текстовые каналы', 'text');
+        break;
+      case 'create-voice-channel':
+        closeChannelContextMenu();
+        openChannelAdmin('', 'Голосовые каналы', 'voice');
+        break;
       case 'close-server-admin':
         closeServerAdmin();
         break;
@@ -316,6 +324,31 @@ function setupDomEventHandlers() {
     event.preventDefault();
     await switchServer(serverEl.dataset.serverId);
     openChannelAdmin('', 'Текстовые каналы');
+  });
+
+  document.addEventListener('click', (event) => {
+    const targetEl = event.target instanceof Element ? event.target : null;
+    if (!targetEl?.closest('#channelContextMenu')) {
+      closeChannelContextMenu();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeChannelContextMenu();
+    }
+  });
+
+  document.getElementById('channelsContainer')?.addEventListener('contextmenu', (event) => {
+    if (!isAdmin || !currentServerId) return;
+
+    const targetEl = event.target instanceof Element ? event.target : null;
+    if (targetEl?.closest('.channel-item, .channel-section-title, .ch-edit-btn, .add-btn, .voice-channel-users')) {
+      return;
+    }
+
+    event.preventDefault();
+    openChannelContextMenu(event.clientX, event.clientY);
   });
 
   document.addEventListener('submit', async (event) => {
@@ -1303,8 +1336,32 @@ function renderSidebarChannels() {
   }
 }
 
-function openChannelAdmin(slug, category) {
+function openChannelContextMenu(x, y) {
+  const menu = document.getElementById('channelContextMenu');
+  if (!menu) return;
+
+  menu.classList.add('show');
+  menu.setAttribute('aria-hidden', 'false');
+
+  const menuWidth = menu.offsetWidth || 220;
+  const menuHeight = menu.offsetHeight || 100;
+  const left = Math.min(x, window.innerWidth - menuWidth - 12);
+  const top = Math.min(y, window.innerHeight - menuHeight - 12);
+
+  menu.style.left = `${Math.max(12, left)}px`;
+  menu.style.top = `${Math.max(12, top)}px`;
+}
+
+function closeChannelContextMenu() {
+  const menu = document.getElementById('channelContextMenu');
+  if (!menu) return;
+  menu.classList.remove('show');
+  menu.setAttribute('aria-hidden', 'true');
+}
+
+function openChannelAdmin(slug, category, preferredType = 'text') {
   if (!isAdmin) return;
+  closeChannelContextMenu();
   const modal = document.getElementById('channelAdminModal');
   const form = document.getElementById('channelAdminForm');
   const slugInput = document.getElementById('channelAdminSlug');
@@ -1331,7 +1388,7 @@ function openChannelAdmin(slug, category) {
     form.reset();
     slugInput.value = '';
     catInput.value = category || 'Текстовые каналы';
-    typeInput.value = 'text';
+    typeInput.value = preferredType;
     deleteBtn.style.display = 'none';
   }
 

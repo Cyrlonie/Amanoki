@@ -467,6 +467,16 @@
 
   <div class="emoji-picker-panel" id="emojiPickerPanel" aria-hidden="true"></div>
   <div class="emoji-picker-panel media-picker-panel" id="mediaPickerPanel" aria-hidden="true"></div>
+  <div id="channelContextMenu" class="channel-context-menu" aria-hidden="true">
+    <button type="button" class="channel-context-menu-item" data-action="create-text-channel">
+      <span class="material-icons-round">chat</span>
+      <span>Создать текстовый канал</span>
+    </button>
+    <button type="button" class="channel-context-menu-item" data-action="create-voice-channel">
+      <span class="material-icons-round">volume_up</span>
+      <span>Создать голосовой канал</span>
+    </button>
+  </div>
 
   <!-- CHANNEL ADMIN MODAL -->
   <div id="channelAdminModal" class="profile-panel-overlay" aria-hidden="true" role="dialog" aria-modal="true" style="z-index: 3000;">

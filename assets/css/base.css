@@ -52,6 +52,8 @@ body {
   overflow: hidden;
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
+  padding: 12px;
+  gap: 12px;
 }
 
 ::-webkit-scrollbar {

@@ -1872,6 +1872,8 @@
 .media-picker-panel {
   width: 320px;
   height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 .media-grid {
   display: grid;
@@ -1879,7 +1881,7 @@
   gap: 8px;
   padding: 8px;
   overflow-y: auto;
-  height: calc(100% - 100px);
+  flex: 1;
 }
 .media-item {
   width: 100%;

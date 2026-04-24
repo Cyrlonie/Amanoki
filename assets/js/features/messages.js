@@ -95,6 +95,29 @@ function updateChannelUnreadUI() {
 }
 
 // ===================== SUPABASE REALTIME =====================
+async function fetchMessagesForActiveChannel(options = {}) {
+  const { pinnedOnly = false, ascending = true, limit = null } = options;
+  const scopedChannel = getScopedChannelKey();
+  const legacyChannel =
+    currentServerId && (!isDMChannel || !isDMChannel(currentChannel)) ? currentChannel : null;
+
+  const runQuery = async (channelValue) => {
+    let query = supabase.from('messages').select('*').eq('channel', channelValue);
+    if (pinnedOnly) query = query.eq('is_pinned', true);
+    query = query.order('created_at', { ascending });
+    if (limit) query = query.limit(limit);
+    return await query;
+  };
+
+  const scopedResult = await runQuery(scopedChannel);
+  if (scopedResult.error) return scopedResult;
+  if (scopedResult.data?.length || !legacyChannel || legacyChannel === scopedChannel) {
+    return scopedResult;
+  }
+
+  return await runQuery(legacyChannel);
+}
+
 async function subscribeToMessages() {
   if (!supabase && !isDemoMode) return;
   if (isDemoMode) return;
@@ -116,12 +139,7 @@ async function subscribeToMessages() {
     }
 
     // Load previous messages
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('channel', getScopedChannelKey())
-      .order('created_at', { ascending: true })
-      .limit(50);
+    const { data, error } = await fetchMessagesForActiveChannel({ ascending: true, limit: 50 });
 
     if (generation !== messageSubscriptionGeneration) return;
 
@@ -1166,12 +1184,7 @@ async function loadPinnedMessages() {
   container.innerHTML = '<div class="search-no-results">Загрузка...</div>';
   
   try {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('channel', getScopedChannelKey())
-      .eq('is_pinned', true)
-      .order('created_at', { ascending: false });
+    const { data, error } = await fetchMessagesForActiveChannel({ pinnedOnly: true, ascending: false });
       
     if (error) throw error;
     

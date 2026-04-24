@@ -10,7 +10,7 @@ const VAD_THRESHOLD = 0.03;
 let voiceConnectionGeneration = 0;
 
 function getVoiceChannelName(channelId) {
-  const channel = VOICE_CHANNELS.find((item) => item.id === channelId);
+  const channel = channelsList.find((item) => item.slug === channelId);
   return channel ? channel.name : channelId;
 }
 

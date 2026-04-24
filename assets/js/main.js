@@ -1028,6 +1028,13 @@ async function loadChannels() {
     channelsList.forEach(c => CHANNEL_DESCS[c.slug] = c.description);
     
     renderSidebarChannels();
+
+    if (typeof updateChannelUnreadUI === 'function') {
+      updateChannelUnreadUI();
+    }
+    if (typeof refreshUnreadCountsFromServer === 'function') {
+      refreshUnreadCountsFromServer();
+    }
   } catch (err) {
     console.error('Ошибка загрузки каналов:', err);
   }

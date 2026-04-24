@@ -125,6 +125,7 @@
   cursor: pointer;
   font-size: 15px;
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   color: var(--text-secondary);
   transition: all 0.2s ease;
@@ -213,6 +214,7 @@
   position: fixed;
   z-index: 1400;
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 8px;
@@ -403,6 +405,7 @@
   height: 44px;
   border-radius: 50%;
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   color: var(--text-primary);
   display: flex;
@@ -623,6 +626,7 @@
   }
   .setup-card {
     background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
     border-radius: 8px;
     padding: 32px;
     width: 440px;
@@ -683,6 +687,7 @@
   }
   .auth-card {
     background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
     border-radius: 12px;
     padding: 40px;
     width: 420px;
@@ -809,6 +814,7 @@
 
   .admin-section {
     background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
     border-radius: 8px;
     padding: 16px;
   }
@@ -914,6 +920,7 @@
     bottom: 24px;
     right: 24px;
     background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 12px 16px;
@@ -937,6 +944,7 @@
   bottom: 16px;
   width: min(380px, calc(100vw - 32px));
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-3);
@@ -1324,6 +1332,7 @@
   width: min(600px, calc(100vw - 32px));
   max-height: 80vh;
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-3);
@@ -1488,6 +1497,7 @@
   transform: translate(-50%, -50%);
   width: min(500px, calc(100vw - 32px));
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-3);
@@ -1608,6 +1618,7 @@
   width: 352px;
   max-height: 420px;
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--elevation-3);
@@ -1736,6 +1747,7 @@
   right: 100px;
   max-height: 200px;
   background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--elevation-3);

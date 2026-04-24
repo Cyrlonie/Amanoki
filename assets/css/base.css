@@ -12,8 +12,8 @@
   --glass-blur: blur(20px);
   
   --bg-tertiary: transparent;
-  --bg-secondary: rgba(13, 13, 15, 0.6);
-  --bg-primary: rgba(20, 20, 23, 0.7);
+  --bg-secondary: rgba(18, 18, 22, 0.55);
+  --bg-primary: rgba(25, 25, 30, 0.65);
   --bg-channel: rgba(255, 255, 255, 0.03);
   --bg-hover: rgba(255, 255, 255, 0.08);
   --bg-active: rgba(124, 58, 237, 0.2);

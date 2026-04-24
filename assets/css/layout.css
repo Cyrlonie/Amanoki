@@ -252,7 +252,6 @@
   width: 240px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
-  margin: 12px 12px 12px 0;
   border-radius: var(--radius-lg);
   border: 1px solid var(--glass-border);
   padding: 20px 12px;
@@ -1176,10 +1175,12 @@
 
   .setup-card,
   .auth-card {
-    width: calc(100vw - 24px);
-    max-width: none;
-    padding: 20px 16px;
-    border-radius: 10px;
+    width: 100%;
+    max-width: 440px;
+    padding: 32px 24px;
+    border-radius: 16px;
+    margin: 0 16px;
+    box-sizing: border-box;
   }
 
   .auth-header {

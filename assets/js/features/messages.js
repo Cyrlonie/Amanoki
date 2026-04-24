@@ -962,6 +962,11 @@ function handleKey(e) {
 function switchChannel(ch) {
   currentChannel = ch;
 
+  // Immediately mark channel as read
+  if (typeof markChannelReadTimestamp === 'function') {
+    markChannelReadTimestamp(ch, new Date().toISOString());
+  }
+
   // Clear DM state when switching to a regular channel
   if (typeof currentDMTarget !== 'undefined') currentDMTarget = null;
   document.querySelectorAll('.dm-item').forEach(el => el.classList.remove('active'));

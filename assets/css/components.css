@@ -40,27 +40,38 @@
   background: var(--bg-channel);
 }
 
-.message-group { padding: 2px 16px; position: relative; }
-.message-group:hover { background: rgba(0,0,0,0.06); }
-.message-group.with-header { padding-top: 16px; margin-top: 4px; }
-.message-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 0; }
+.message-group { 
+  padding: 8px 16px; 
+  position: relative; 
+  margin: 4px 12px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.message-group:hover { 
+  background: var(--bg-hover); 
+  transform: translateX(4px);
+}
+.message-group.with-header { padding-top: 16px; margin-top: 12px; }
+.message-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
 .msg-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: 700;
+  font-size: 15px;
   color: #fff;
   flex-shrink: 0;
   position: absolute;
   left: 16px;
   top: 16px;
   cursor: pointer;
-  box-shadow: var(--elevation-1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
 }
+.msg-avatar:hover { transform: scale(1.1) rotate(-5deg); }
 .msg-avatar.compact { top: 2px; }
 .message-group .content-area {
   padding-left: 56px;
@@ -416,17 +427,19 @@
 
 /* === INPUT === */
 .chat-input-area {
-  padding: 0 16px 24px;
+  padding: 0 24px 24px;
   flex-shrink: 0;
 }
 .input-wrapper {
   background: var(--bg-input);
+  backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   gap: 0;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--elevation-hud);
 }
 .input-side-btn {
   width: 48px;
@@ -440,23 +453,19 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
-.input-side-btn:hover { color: var(--text-primary); }
+.input-side-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
 #message-input {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
   color: var(--text-primary);
-  font-size: 15px;
-  line-height: 1.375;
-  padding: 11px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 14px 0;
   font-family: inherit;
   resize: none;
   max-height: 50vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 #message-input::placeholder { 
   color: var(--text-muted);

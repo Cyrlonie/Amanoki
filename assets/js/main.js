@@ -1148,17 +1148,29 @@ document.getElementById('channelAdminForm')?.addEventListener('submit', async (e
   const type = document.getElementById('channelAdminType').value;
   const description = document.getElementById('channelAdminDesc').value.trim();
   
-  const slug = slugInput || name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const slugBase = slugInput || name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  let slug = slugBase;
 
   try {
-    const payload = { slug, name, category, type, description };
     let error;
     if (slugInput) {
-      ({ error } = await supabase.from('channels').update(payload).eq('slug', slug));
+      const payload = { name, category, type, description };
+      ({ error } = await supabase.from('channels').update(payload).eq('slug', slugInput));
     } else {
+      // Generate unique slug for new channel
+      let counter = 1;
+      while (channelsList.some(c => c.slug === slug)) {
+        slug = `${slugBase}-${counter++}`;
+      }
+      const payload = { slug, name, category, type, description };
       ({ error } = await supabase.from('channels').insert([payload]));
     }
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('Канал с таким идентификатором уже существует');
+      }
+      throw error;
+    }
     notify('Канал сохранен', 'success');
     closeChannelAdmin();
     loadChannels();

@@ -149,21 +149,8 @@
 
 
   <!-- MAIN APP -->
-  <nav class="server-list" role="navigation" aria-label="Server navigation">
-    <div class="server-icon home active" title="DevChat" role="button" tabindex="0" aria-current="page"><span
-        class="material-icons-round">chat</span></div>
-    <div class="server-divider"></div>
-    <div class="server-icon server-s1" title="Проект Alpha" data-action="notify"
-      data-message="Переключение серверов в альфа-версии недоступно">A</div>
-    <div class="server-icon server-s2" title="Backend Team" data-action="notify"
-      data-message="Переключение серверов в альфа-версии недоступно">B</div>
-    <div class="server-icon server-s3" title="Design" data-action="notify"
-      data-message="Переключение серверов в альфа-версии недоступно">D</div>
-    <div style="margin-top:auto;">
-      <div class="server-icon" style="background:var(--bg-secondary);" title="Добавить сервер" data-action="notify"
-        data-message="Создание серверов в альфа-версии недоступно" role="button" tabindex="0"
-        aria-label="Добавить сервер"><span class="material-icons-round">add</span></div>
-    </div>
+  <nav class="server-list" id="serversContainer" role="navigation" aria-label="Server navigation">
+    <!-- Сервера загружаются из БД -->
   </nav>
 
   <nav class="sidebar" id="channelSidebar" role="navigation" aria-label="Channel navigation">
@@ -514,6 +501,27 @@
           <button type="button" class="profile-btn profile-btn-secondary" id="channelAdminDeleteBtn" style="color: var(--red); display: none;" data-action="delete-channel">Удалить</button>
           <button type="button" class="profile-btn profile-btn-secondary" data-action="close-channel-admin">Отмена</button>
           <button type="submit" class="profile-btn profile-btn-primary" id="channelAdminSaveBtn">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SERVER ADMIN MODAL -->
+  <div id="serverAdminModal" class="profile-panel-overlay" aria-hidden="true" role="dialog" aria-modal="true" style="z-index: 3100;">
+    <div class="profile-panel-backdrop" data-action="close-server-admin"></div>
+    <div class="profile-panel-card" style="width: 400px;">
+      <div class="profile-panel-header">
+        <h2 id="serverAdminTitle">Создать сервер</h2>
+        <button type="button" class="profile-panel-close" data-action="close-server-admin" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      </div>
+      <form id="serverAdminForm" class="profile-panel-body">
+        <div class="profile-field">
+          <label class="profile-label" for="serverAdminName">Название сервера</label>
+          <input class="profile-input" id="serverAdminName" type="text" required placeholder="Мой крутой сервер" />
+        </div>
+        <div class="profile-actions">
+          <button type="button" class="profile-btn profile-btn-secondary" data-action="close-server-admin">Отмена</button>
+          <button type="submit" class="profile-btn profile-btn-primary" id="serverAdminSaveBtn">Создать</button>
         </div>
       </form>
     </div>

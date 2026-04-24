@@ -183,6 +183,15 @@ function setupDomEventHandlers() {
       case 'toggle-sidebar':
         toggleSidebar();
         break;
+      case 'switch-server':
+        await switchServer(actionEl.dataset.serverId);
+        break;
+      case 'open-server-admin':
+        openServerAdmin();
+        break;
+      case 'close-server-admin':
+        closeServerAdmin();
+        break;
       case 'toggle-members':
         toggleMemberList();
         break;
@@ -434,8 +443,7 @@ window.onload = async () => {
       document.getElementById('authOverlay').style.display = 'none';
 
       initApp();
-      await loadChannels();
-      subscribeToMessages();
+      await loadServers();
       if (typeof loadDMConversations === 'function') loadDMConversations();
     } else {
       // Если сессии нет, сразу показываем авторизацию
@@ -999,6 +1007,162 @@ function notify(msg, type = 'info') {
   notifTimeout = setTimeout(() => n.remove(), 3000);
 }
 
+// ===================== SERVER MANAGEMENT =====================
+async function loadServers() {
+  if (isDemoMode || !supabase || !authUser) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('servers')
+      .select(`
+        id,
+        name,
+        icon_url,
+        server_members!inner (user_id)
+      `)
+      .eq('server_members.user_id', authUser.id)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    
+    serversList = data || [];
+    renderServers();
+
+    if (serversList.length > 0) {
+      if (!currentServerId || !serversList.find(s => s.id === currentServerId)) {
+        currentServerId = serversList[0].id;
+      }
+      await loadChannels();
+      subscribeToMessages();
+    } else {
+      currentServerId = null;
+      document.getElementById('channelsContainer').innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:13px;text-align:center;">У вас нет серверов.<br>Создайте новый!</div>';
+      document.getElementById('serverName').textContent = 'Amanoki';
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки серверов:', err);
+    notify('Не удалось загрузить сервера', 'error');
+  }
+}
+
+function renderServers() {
+  const container = document.getElementById('serversContainer');
+  if (!container) return;
+
+  let html = `
+    <div class="server-icon home" title="Личные сообщения" data-action="open-dm-home" role="button" tabindex="0">
+      <span class="material-icons-round">chat</span>
+    </div>
+    <div class="server-divider"></div>
+  `;
+
+  serversList.forEach(server => {
+    const isActive = server.id === currentServerId ? ' active' : '';
+    const initial = server.name.charAt(0).toUpperCase();
+    
+    // For now, generate a deterministic color based on server name
+    let hash = 0;
+    for (let i = 0; i < server.name.length; i++) hash = server.name.charCodeAt(i) + ((hash << 5) - hash);
+    const color = COLORS[Math.abs(hash) % COLORS.length];
+
+    html += `
+      <div class="server-icon${isActive}" style="background: ${color};" title="${escHtml(server.name)}" data-action="switch-server" data-server-id="${server.id}" role="button" tabindex="0">
+        ${initial}
+      </div>
+    `;
+  });
+
+  html += `
+    <div style="margin-top:auto;">
+      <div class="server-icon" style="background:var(--bg-secondary);" title="Добавить сервер" data-action="open-server-admin" role="button" tabindex="0" aria-label="Добавить сервер">
+        <span class="material-icons-round">add</span>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+
+  // Update Server Name in sidebar
+  const currentServer = serversList.find(s => s.id === currentServerId);
+  const serverNameEl = document.getElementById('serverName');
+  if (serverNameEl) {
+    serverNameEl.textContent = currentServer ? currentServer.name : 'Amanoki';
+  }
+}
+
+async function switchServer(serverId) {
+  if (currentServerId === serverId) return;
+  currentServerId = serverId;
+  
+  // Clear channel state
+  currentChannel = null;
+  channelsList = [];
+  TEXT_CHANNELS = [];
+  CHANNEL_DESCS = {};
+  
+  renderServers();
+  await loadChannels();
+}
+
+function openServerAdmin() {
+  const modal = document.getElementById('serverAdminModal');
+  if (modal) modal.classList.add('show');
+}
+
+function closeServerAdmin() {
+  const modal = document.getElementById('serverAdminModal');
+  if (modal) {
+    modal.classList.remove('show');
+    document.getElementById('serverAdminForm').reset();
+  }
+}
+
+document.getElementById('serverAdminForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!supabase || !authUser) return;
+
+  const name = document.getElementById('serverAdminName').value.trim();
+  if (!name) return;
+
+  try {
+    // 1. Create server
+    const { data: server, error: serverError } = await supabase
+      .from('servers')
+      .insert([{ name: name, owner_id: authUser.id }])
+      .select()
+      .single();
+
+    if (serverError) throw serverError;
+
+    // 2. Add creator as owner member
+    const { error: memberError } = await supabase
+      .from('server_members')
+      .insert([{ server_id: server.id, user_id: authUser.id, role: 'owner' }]);
+
+    if (memberError) throw memberError;
+
+    // 3. Create default general channel
+    await supabase.from('channels').insert([{
+      slug: 'general',
+      name: 'general',
+      type: 'text',
+      category: 'Текстовые каналы',
+      description: 'Общий чат сервера',
+      server_id: server.id
+    }]);
+
+    notify('Сервер успешно создан!', 'success');
+    closeServerAdmin();
+    
+    await loadServers();
+    switchServer(server.id);
+
+  } catch (err) {
+    notify('Ошибка создания сервера: ' + err.message, 'error');
+  }
+});
+
+
 // ===================== CHANNEL MANAGEMENT =====================
 async function loadChannels() {
   if (isDemoMode) {
@@ -1012,12 +1176,13 @@ async function loadChannels() {
     return;
   }
 
-  if (!supabase) return;
+  if (!supabase || !currentServerId) return;
 
   try {
     const { data, error } = await supabase
       .from('channels')
       .select('*')
+      .eq('server_id', currentServerId)
       .order('order_index', { ascending: true })
       .order('name', { ascending: true });
 
@@ -1026,6 +1191,11 @@ async function loadChannels() {
     channelsList = data || [];
     TEXT_CHANNELS = channelsList.filter(c => c.type === 'text').map(c => c.slug);
     channelsList.forEach(c => CHANNEL_DESCS[c.slug] = c.description);
+    
+    // Auto-select first text channel if none selected
+    if (!currentChannel && TEXT_CHANNELS.length > 0) {
+      currentChannel = TEXT_CHANNELS[0];
+    }
     
     renderSidebarChannels();
 
@@ -1271,10 +1441,6 @@ function buildMediaPickerContent() {
     <div class="emoji-picker-search media-picker-search">
       <input type="text" placeholder="Поиск ${currentMediaType === 'gif' ? 'GIF' : 'Стикеров'}..." id="mediaSearchInput">
     </div>
-    <div class="emoji-picker-tabs">
-      <button class="emoji-tab ${currentMediaType === 'gif' ? 'active' : ''}" type="button" data-media-tab="gif">GIF</button>
-      <button class="emoji-tab ${currentMediaType === 'sticker' ? 'active' : ''}" type="button" data-media-tab="sticker">Стикеры</button>
-    </div>
     <div class="emoji-picker-body">
       <div class="media-grid">
         <div class="search-no-results">Загрузка...</div>
@@ -1283,15 +1449,6 @@ function buildMediaPickerContent() {
   `;
   
   panel.innerHTML = html;
-  
-  // Add listeners
-  panel.querySelectorAll('[data-media-tab]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      currentMediaType = e.target.dataset.mediaTab;
-      buildMediaPickerContent();
-      fetchMedia();
-    });
-  });
 
   const searchInput = document.getElementById('mediaSearchInput');
   searchInput?.addEventListener('input', (e) => {

@@ -68,6 +68,10 @@ let channelsList = []; // Array of channel objects from DB
 let TEXT_CHANNELS = []; // Array of text channel slugs
 let CHANNEL_DESCS = {}; // Map of slug -> description
 
+// Multi-server state
+let serversList = [];
+let currentServerId = null;
+
 /** Счётчики непрочитанных по каналу (в памяти; «прочитано» — в localStorage). */
 let unreadCounts = {};
 

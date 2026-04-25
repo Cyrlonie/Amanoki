@@ -183,7 +183,11 @@ function setupDomEventHandlers() {
       case 'toggle-sidebar':
         toggleSidebar();
         break;
+      case 'open-dm-home':
+        switchToDMHome();
+        break;
       case 'switch-server':
+        switchToServerMode();
         await switchServer(actionEl.dataset.serverId);
         break;
       case 'open-server-admin':
@@ -1137,6 +1141,105 @@ function renderServers() {
   if (serverNameEl) {
     serverNameEl.textContent = currentServer ? currentServer.name : 'Amanoki';
   }
+}
+
+let isDMHomeMode = false;
+
+function switchToDMHome() {
+  isDMHomeMode = true;
+  currentDMTarget = null;
+
+  // Toggle sidebar views
+  const channelsContainer = document.getElementById('channelsContainer');
+  const dmContainer = document.getElementById('dmContainer');
+  const sidebarHeader = document.querySelector('.sidebar-header');
+  const dropdown = document.getElementById('sidebarDropdown');
+
+  if (channelsContainer) channelsContainer.style.display = 'none';
+  if (dmContainer) dmContainer.style.display = '';
+  if (dropdown) dropdown.classList.remove('show');
+
+  // Update sidebar header
+  const serverNameEl = document.getElementById('serverName');
+  if (serverNameEl) serverNameEl.textContent = 'Личные сообщения';
+  if (sidebarHeader) sidebarHeader.removeAttribute('data-action');
+
+  const chevron = document.querySelector('.sidebar-header .chevron');
+  if (chevron) chevron.style.display = 'none';
+
+  // Deactivate all server icons, activate home
+  document.querySelectorAll('.server-icon').forEach(el => el.classList.remove('active'));
+  document.querySelector('.server-icon.home')?.classList.add('active');
+
+  // Update chat area
+  const area = document.getElementById('messagesArea');
+  if (area) {
+    area.innerHTML = `
+      <div class="channel-welcome">
+        <div class="welcome-icon"><span class="material-icons-round">chat</span></div>
+        <div class="welcome-title">Личные сообщения</div>
+        <div class="welcome-desc">Выберите беседу или начните новую</div>
+      </div>
+    `;
+  }
+  document.getElementById('channelTitle').textContent = 'Личные сообщения';
+  document.getElementById('channelDesc').textContent = 'Выберите беседу слева';
+
+  // Load DM conversations and users list
+  if (typeof loadDMConversations === 'function') loadDMConversations();
+  renderDMUsersList();
+
+  if (isMobileLayout()) closeMobilePanels();
+}
+
+function switchToServerMode() {
+  if (!isDMHomeMode) return;
+  isDMHomeMode = false;
+
+  const channelsContainer = document.getElementById('channelsContainer');
+  const dmContainer = document.getElementById('dmContainer');
+  const sidebarHeader = document.querySelector('.sidebar-header');
+
+  if (channelsContainer) channelsContainer.style.display = '';
+  if (dmContainer) dmContainer.style.display = 'none';
+  if (sidebarHeader) sidebarHeader.setAttribute('data-action', 'toggle-server-dropdown');
+
+  const chevron = document.querySelector('.sidebar-header .chevron');
+  if (chevron) chevron.style.display = '';
+
+  // Restore server name
+  const currentServer = serversList.find(s => s.id === currentServerId);
+  const serverNameEl = document.getElementById('serverName');
+  if (serverNameEl) serverNameEl.textContent = currentServer ? currentServer.name : 'Amanoki';
+}
+
+function renderDMUsersList() {
+  const container = document.getElementById('dmUsersList');
+  if (!container) return;
+
+  const users = Object.entries(memberDirectory);
+  if (!users.length) {
+    container.innerHTML = '<div class="dm-empty">Нет пользователей</div>';
+    return;
+  }
+
+  container.innerHTML = users
+    .filter(([id]) => id !== authUser?.id)
+    .map(([id, name]) => {
+      const color = getUserColor(name);
+      const avatarUrl = userAvatars[name];
+      const avatarStyle = avatarUrl
+        ? `background-image:url('${escapeJsString(avatarUrl)}')`
+        : `background:${color}`;
+      const avatarContent = avatarUrl ? '' : (name[0] || '?').toUpperCase();
+
+      return `<div class="dm-item" data-action="open-dm" data-dm-user-id="${escHtml(id)}" data-dm-username="${escHtml(name)}" role="button" tabindex="0">
+        <div class="dm-avatar" style="${avatarStyle}">${avatarContent}</div>
+        <div class="dm-info">
+          <div class="dm-name">${escHtml(name)}</div>
+        </div>
+      </div>`;
+    }).join('');
 }
 
 async function switchServer(serverId) {

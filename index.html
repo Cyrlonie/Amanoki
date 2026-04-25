@@ -184,12 +184,21 @@
       <!-- Каналы будут загружаться сюда из БД -->
     </div>
 
-    <div class="channel-section">
-      <div class="channel-section-title">
-        <span>Личные сообщения</span>
+    <!-- DM Home view (hidden by default) -->
+    <div id="dmContainer" style="display:none;flex:1;overflow-y:auto;min-height:0;">
+      <div class="channel-section">
+        <div class="channel-section-title">
+          <span>Личные сообщения</span>
+        </div>
+        <div id="dmList">
+          <div class="dm-empty">Нет сообщений</div>
+        </div>
       </div>
-      <div id="dmList">
-        <div class="dm-empty">Нет сообщений</div>
+      <div class="channel-section">
+        <div class="channel-section-title">
+          <span>Все пользователи</span>
+        </div>
+        <div id="dmUsersList"></div>
       </div>
     </div>
     <footer class="sidebar-footer">

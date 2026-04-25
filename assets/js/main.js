@@ -1146,6 +1146,9 @@ function renderServers() {
 
   html += `
     <div style="margin-top:auto;">
+      <div class="server-icon" style="background:var(--green); margin-bottom: 8px;" title="Присоединиться к серверу" data-action="open-join-server" role="button" tabindex="0" aria-label="Присоединиться к серверу">
+        <span class="material-icons-round">explore</span>
+      </div>
       <div class="server-icon" style="background:var(--bg-secondary);" title="Добавить сервер" data-action="open-server-admin" role="button" tabindex="0" aria-label="Добавить сервер">
         <span class="material-icons-round">add</span>
       </div>
@@ -1308,6 +1311,45 @@ function closeServerAdmin() {
     document.getElementById('serverAdminForm').reset();
   }
 }
+
+function openJoinServer() {
+  const modal = document.getElementById('joinServerModal');
+  if (modal) modal.classList.add('show');
+}
+
+function closeJoinServer() {
+  const modal = document.getElementById('joinServerModal');
+  if (modal) {
+    modal.classList.remove('show');
+    document.getElementById('joinServerForm').reset();
+  }
+}
+
+document.getElementById('joinServerForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!supabase || !authUser) return;
+
+  const codeInput = document.getElementById('joinServerCode');
+  const code = codeInput.value.trim();
+  if (!code) return;
+
+  try {
+    const { data, error } = await supabase.rpc('use_invite', { invite_code: code });
+
+    if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
+
+    notify('Успешное присоединение к серверу!', 'success');
+    closeJoinServer();
+    
+    await loadServers();
+    if (data && data.server_id) {
+      await switchServer(data.server_id);
+    }
+  } catch (err) {
+    notify('Ошибка присоединения: ' + err.message, 'error');
+  }
+});
 
 document.getElementById('serverAdminForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -1769,36 +1811,6 @@ function toggleMediaPicker(type, anchorEl) {
   panel.setAttribute('aria-hidden', 'false');
   
   document.getElementById('emojiPickerPanel')?.classList.remove('show');
-  document.getElementById('reactionPicker')?.classList.remove('show');
-}
-
-function closeMediaPicker() {
-  const panel = document.getElementById('mediaPickerPanel');
-  if (panel) {
-    panel.classList.remove('show');
-    panel.setAttribute('aria-hidden', 'true');
-  }
-}
-
-// Global click to close media picker
-document.addEventListener('click', (event) => {
-  const target = event.target;
-  const panel = document.getElementById('mediaPickerPanel');
-  if (!panel || !panel.classList.contains('show')) return;
-  
-  if (!panel.contains(target) && !target.closest('[data-action="toggle-media-picker"]')) {
-    closeMediaPicker();
-  }
-});
-
-// Добавляем обработчик в общий делегат click (найти action)
-document.addEventListener('click', (e) => {
-  const target = e.target.closest('[data-action="toggle-media-picker"]');
-  if (target) {
-    toggleMediaPicker(target.dataset.mediaType, target);
-  }
-});
-iPickerPanel')?.classList.remove('show');
   document.getElementById('reactionPicker')?.classList.remove('show');
 }
 

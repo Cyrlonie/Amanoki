@@ -1061,6 +1061,9 @@ async function loadServers() {
         id,
         name,
         icon_url,
+        icon_color,
+        description,
+        owner_id,
         server_members!inner (user_id)
       `)
       .eq('server_members.user_id', authUser.id)
@@ -1103,10 +1106,15 @@ function renderServers() {
     const isActive = server.id === currentServerId ? ' active' : '';
     const initial = server.name.charAt(0).toUpperCase();
     
-    // For now, generate a deterministic color based on server name
-    let hash = 0;
-    for (let i = 0; i < server.name.length; i++) hash = server.name.charCodeAt(i) + ((hash << 5) - hash);
-    const color = COLORS[Math.abs(hash) % COLORS.length];
+    // Use custom icon_color if set, otherwise generate deterministic color
+    let color;
+    if (server.icon_color) {
+      color = server.icon_color;
+    } else {
+      let hash = 0;
+      for (let i = 0; i < server.name.length; i++) hash = server.name.charCodeAt(i) + ((hash << 5) - hash);
+      color = COLORS[Math.abs(hash) % COLORS.length];
+    }
 
     html += `
       <div class="server-icon${isActive}" style="background: ${color};" title="${escHtml(server.name)}" data-action="switch-server" data-server-id="${server.id}" role="button" tabindex="0">

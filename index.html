@@ -153,11 +153,32 @@
     <!-- Сервера загружаются из БД -->
   </nav>
 
-  <nav class="sidebar" id="channelSidebar" role="navigation" aria-label="Channel navigation">
-    <header class="sidebar-header">
+  <nav class="sidebar" id="channelSidebar" role="navigation" aria-label="Channel navigation" style="position:relative;">
+    <header class="sidebar-header" data-action="toggle-server-dropdown">
       <span id="serverName">WhyBaby</span>
       <span class="chevron"><span class="material-icons-round">expand_more</span></span>
     </header>
+
+    <!-- Server Dropdown Menu -->
+    <div id="sidebarDropdown" class="sidebar-dropdown">
+      <button type="button" class="sidebar-dropdown-item" data-action="open-server-settings" data-tab="overview">
+        <span class="material-icons-round">settings</span>
+        <span>Настройки сервера</span>
+      </button>
+      <button type="button" class="sidebar-dropdown-item" data-action="open-server-settings" data-tab="members">
+        <span class="material-icons-round">people</span>
+        <span>Участники</span>
+      </button>
+      <button type="button" class="sidebar-dropdown-item" data-action="open-server-settings" data-tab="invites">
+        <span class="material-icons-round">person_add</span>
+        <span>Пригласить людей</span>
+      </button>
+      <div class="sidebar-dropdown-divider"></div>
+      <button type="button" class="sidebar-dropdown-item danger" data-action="leave-server-btn">
+        <span class="material-icons-round">logout</span>
+        <span>Покинуть сервер</span>
+      </button>
+    </div>
 
     <div id="channelsContainer">
       <!-- Каналы будут загружаться сюда из БД -->
@@ -537,12 +558,118 @@
     </div>
   </div>
 
+  <!-- SERVER SETTINGS MODAL -->
+  <div id="serverSettingsOverlay" class="server-settings-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="server-settings-backdrop" data-action="close-server-settings"></div>
+    <div class="server-settings-card">
+      <nav class="server-settings-sidebar">
+        <div class="server-settings-sidebar-label">Настройки</div>
+        <button type="button" class="server-settings-tab active" data-ss-tab="overview">
+          <span class="material-icons-round">info</span> Обзор
+        </button>
+        <button type="button" class="server-settings-tab" data-ss-tab="members">
+          <span class="material-icons-round">people</span> Участники
+        </button>
+        <button type="button" class="server-settings-tab" data-ss-tab="invites">
+          <span class="material-icons-round">person_add</span> Приглашения
+        </button>
+        <div class="server-settings-tab-divider"></div>
+        <button type="button" class="server-settings-tab danger" data-ss-tab="danger">
+          <span class="material-icons-round">warning</span> Опасная зона
+        </button>
+      </nav>
+      <div class="server-settings-main">
+        <div class="server-settings-header">
+          <h2 id="ssTitle">Настройки сервера</h2>
+          <button type="button" class="server-settings-close" data-action="close-server-settings" aria-label="Закрыть">
+            <span class="material-icons-round">close</span>
+          </button>
+        </div>
+        <div class="server-settings-body">
+          <!-- OVERVIEW TAB -->
+          <div class="server-settings-section active" data-ss-section="overview">
+            <div class="ss-field">
+              <label class="ss-label">Иконка сервера</label>
+              <div class="ss-icon-preview">
+                <div class="ss-icon-circle" id="ssIconPreview">A</div>
+                <div>
+                  <div class="ss-label" style="margin-bottom:8px">Цвет иконки</div>
+                  <div class="ss-color-grid" id="ssColorGrid"></div>
+                </div>
+              </div>
+            </div>
+            <div class="ss-field">
+              <label class="ss-label" for="ssServerName">Название сервера</label>
+              <input class="ss-input" id="ssServerName" type="text" maxlength="64" required />
+            </div>
+            <div class="ss-field">
+              <label class="ss-label" for="ssServerDesc">Описание сервера</label>
+              <textarea class="ss-input ss-textarea" id="ssServerDesc" maxlength="256" placeholder="Расскажите о чём ваш сервер..."></textarea>
+              <div class="ss-hint">Видно всем участникам сервера.</div>
+            </div>
+            <div class="ss-save-bar">
+              <button type="button" class="profile-btn profile-btn-secondary" data-action="close-server-settings">Отмена</button>
+              <button type="button" class="profile-btn profile-btn-primary" data-action="save-server-settings">Сохранить</button>
+            </div>
+          </div>
+
+          <!-- MEMBERS TAB -->
+          <div class="server-settings-section" data-ss-section="members">
+            <div class="ss-field">
+              <label class="ss-label">Участники сервера</label>
+              <div class="ss-hint">Управление участниками. Владелец может назначать роли и исключать пользователей.</div>
+            </div>
+            <div class="ss-members-list" id="ssMembersList">
+              <div class="ss-hint" style="text-align:center;padding:24px 0;">Загрузка...</div>
+            </div>
+          </div>
+
+          <!-- INVITES TAB -->
+          <div class="server-settings-section" data-ss-section="invites">
+            <div class="ss-field">
+              <label class="ss-label">Пригласить по email</label>
+              <div class="ss-hint">Введите email пользователя, зарегистрированного на платформе, чтобы добавить его на сервер.</div>
+              <div class="ss-invite-box">
+                <input class="ss-invite-input" id="ssInviteEmail" type="email" placeholder="user@example.com" />
+                <button type="button" class="ss-invite-btn" data-action="send-server-invite">Пригласить</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- DANGER ZONE TAB -->
+          <div class="server-settings-section" data-ss-section="danger">
+            <div class="ss-danger-zone">
+              <div class="ss-danger-title">
+                <span class="material-icons-round">warning</span> Опасная зона
+              </div>
+              <div class="ss-danger-item">
+                <div class="ss-danger-text">
+                  <strong>Покинуть сервер</strong>
+                  <span>Вы перестанете видеть этот сервер. Можно будет вернуться по приглашению.</span>
+                </div>
+                <button type="button" class="ss-danger-btn" data-action="leave-server">Покинуть</button>
+              </div>
+              <div class="ss-danger-item" id="ssDeleteServerItem" style="display:none;">
+                <div class="ss-danger-text">
+                  <strong>Удалить сервер</strong>
+                  <span>Это действие необратимо. Все каналы и сообщения будут удалены навсегда.</span>
+                </div>
+                <button type="button" class="ss-danger-btn" data-action="delete-server">Удалить</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="assets/js/features/auth.js"></script>
   <script src="assets/js/features/presence.js"></script>
   <script src="assets/js/features/messages.js"></script>
   <script src="assets/js/features/voice.js"></script>
   <script src="assets/js/features/profile.js"></script>
   <script src="assets/js/features/dm.js"></script>
+  <script src="assets/js/features/server-settings.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
 

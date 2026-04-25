@@ -576,6 +576,27 @@
     </div>
   </div>
 
+  <!-- JOIN SERVER MODAL -->
+  <div id="joinServerModal" class="profile-panel-overlay" aria-hidden="true" role="dialog" aria-modal="true" style="z-index: 3100;">
+    <div class="profile-panel-backdrop" data-action="close-join-server"></div>
+    <div class="profile-panel-card" style="width: 400px;">
+      <div class="profile-panel-header">
+        <h2 id="joinServerTitle">Присоединиться к серверу</h2>
+        <button type="button" class="profile-panel-close" data-action="close-join-server" aria-label="Закрыть"><span class="material-icons-round">close</span></button>
+      </div>
+      <form id="joinServerForm" class="profile-panel-body">
+        <div class="profile-field">
+          <label class="profile-label" for="joinServerCode">Код приглашения</label>
+          <input class="profile-input" id="joinServerCode" type="text" required placeholder="Например: abc123xyz" />
+        </div>
+        <div class="profile-actions">
+          <button type="button" class="profile-btn profile-btn-secondary" data-action="close-join-server">Отмена</button>
+          <button type="submit" class="profile-btn profile-btn-primary" id="joinServerSubmitBtn">Присоединиться</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- SERVER SETTINGS MODAL -->
   <div id="serverSettingsOverlay" class="server-settings-overlay" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="server-settings-backdrop" data-action="close-server-settings"></div>

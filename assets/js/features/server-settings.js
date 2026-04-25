@@ -428,6 +428,79 @@ document.addEventListener('click', async (e) => {
     case 'save-server-settings':
       await saveServerSettings();
       break;
+    case 'generate-invite':
+      await generateInvite();
+      break;
+    case 'delete-invite':
+      await deleteInvite(actionEl.dataset.inviteId);
+      break;
+    case 'ss-kick-member':
+      await kickMember(actionEl.dataset.userId, actionEl.dataset.username);
+      break;
+    case 'leave-server':
+    case 'leave-server-btn':
+      closeServerDropdown();
+      await leaveServer();
+      break;
+    case 'delete-server':
+      await deleteServer();
+      break;
+  }
+});
+
+// Tab switching
+document.querySelectorAll('[data-ss-tab]').forEach(tab => {
+  tab.addEventListener('click', () => switchSSTab(tab.dataset.ssTab));
+});
+
+// ESC to close
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('serverSettingsOverlay');
+    if (overlay?.classList.contains('show')) {
+      closeServerSettings();
+      return;
+    }
+    closeServerDropdown();
+  }
+});
+rrentServerId);
+    // Delete server
+    const { error } = await supabase.from('servers').delete().eq('id', currentServerId);
+
+    if (error) throw error;
+
+    notify('Сервер удалён', 'success');
+    closeServerSettings();
+    currentServerId = null;
+    await loadServers();
+  } catch (err) {
+    notify('Ошибка удаления: ' + err.message, 'error');
+  }
+}
+
+// ===================== EVENT DELEGATION =====================
+document.addEventListener('click', async (e) => {
+  const target = e.target instanceof Element ? e.target : null;
+  if (!target) return;
+  const actionEl = target.closest('[data-action]');
+  if (!actionEl) return;
+
+  const action = actionEl.dataset.action;
+
+  switch (action) {
+    case 'toggle-server-dropdown':
+      toggleServerDropdown();
+      break;
+    case 'open-server-settings':
+      openServerSettings(actionEl.dataset.tab || 'overview');
+      break;
+    case 'close-server-settings':
+      closeServerSettings();
+      break;
+    case 'save-server-settings':
+      await saveServerSettings();
+      break;
     case 'send-server-invite':
       await sendServerInvite();
       break;

@@ -205,6 +205,12 @@ function setupDomEventHandlers() {
       case 'open-server-admin':
         openServerAdmin();
         break;
+      case 'open-join-server':
+        openJoinServer();
+        break;
+      case 'close-join-server':
+        closeJoinServer();
+        break;
       case 'create-text-channel':
         closeChannelContextMenu();
         openChannelAdmin('', 'Текстовые каналы', 'text');
@@ -1763,6 +1769,36 @@ function toggleMediaPicker(type, anchorEl) {
   panel.setAttribute('aria-hidden', 'false');
   
   document.getElementById('emojiPickerPanel')?.classList.remove('show');
+  document.getElementById('reactionPicker')?.classList.remove('show');
+}
+
+function closeMediaPicker() {
+  const panel = document.getElementById('mediaPickerPanel');
+  if (panel) {
+    panel.classList.remove('show');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Global click to close media picker
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  const panel = document.getElementById('mediaPickerPanel');
+  if (!panel || !panel.classList.contains('show')) return;
+  
+  if (!panel.contains(target) && !target.closest('[data-action="toggle-media-picker"]')) {
+    closeMediaPicker();
+  }
+});
+
+// Добавляем обработчик в общий делегат click (найти action)
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('[data-action="toggle-media-picker"]');
+  if (target) {
+    toggleMediaPicker(target.dataset.mediaType, target);
+  }
+});
+iPickerPanel')?.classList.remove('show');
   document.getElementById('reactionPicker')?.classList.remove('show');
 }
 

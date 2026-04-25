@@ -995,10 +995,10 @@
 
 @media (max-width: 768px) {
   body {
-    display: block !important;
+    display: flex !important;
     padding: 0 !important;
     gap: 0 !important;
-    overflow-x: hidden;
+    overflow: hidden; /* Prevent body scrolling */
   }
 
   .server-list {
@@ -1008,11 +1008,12 @@
     bottom: 0;
     width: 72px;
     z-index: 1301;
-    transform: translateX(-110%); /* Ensure it's fully off-screen */
+    transform: translateX(-110%);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 0;
     border: none;
     border-right: 1px solid var(--border);
+    background: var(--bg-main);
   }
 
   .server-list.mobile-open {
@@ -1022,7 +1023,7 @@
   .sidebar {
     position: fixed;
     top: 0;
-    left: 0; /* Changed from 72px to 0 for better logic */
+    left: 0;
     bottom: 0;
     width: min(85vw, 320px);
     z-index: 1300;
@@ -1030,36 +1031,41 @@
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 0;
     border: none;
-    padding-left: 72px; /* Make room for server list inside sidebar or overlapping */
+    padding-left: 72px; /* Space for server list */
+    background: var(--bg-main);
   }
 
-  /* Adjust sidebar to show server list inside if needed, 
-     but based on main.js logic, let's just make them both move */
   .sidebar.mobile-open {
     transform: translateX(0);
   }
 
   .chat-area {
-    position: absolute;
-    inset: 0;
-    width: 100%;
+    flex: 1;
+    width: 100vw;
     height: 100dvh;
     border-radius: 0;
     border: none;
-    z-index: 1;
+    position: relative; /* Normal flow */
+    display: flex;
+    flex-direction: column;
   }
 
   .chat-header {
     height: 56px;
     min-height: 56px;
-    padding: 0 8px;
+    padding: 0 12px;
     gap: 8px;
     display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .chat-header .ch-title {
-    max-width: 40vw;
-    font-size: 15px;
+    max-width: 45vw;
+    font-size: 16px;
   }
 
   .chat-header .ch-desc,
@@ -1068,6 +1074,8 @@
   }
 
   .header-actions {
+    margin-left: auto;
+    display: flex;
     gap: 4px;
   }
 
@@ -1083,7 +1091,9 @@
   }
 
   .messages-area {
+    flex: 1;
     padding: 8px 0;
+    overflow-y: auto;
   }
 
   .message-group {
@@ -1094,28 +1104,30 @@
   .msg-avatar {
     left: 10px;
     top: 10px;
-    width: 34px !important;
-    height: 34px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
   }
 
   .message-group .content-area {
-    padding-left: 44px !important;
+    padding-left: 48px !important;
   }
 
-  /* Fix the trash icons overlapping avatars */
   .msg-aside {
-    top: 4px !important;
-    right: 8px !important;
+    top: 0 !important;
+    right: 4px !important;
   }
   
   .msg-quick-actions .hover-btn {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 14px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
   }
 
   .chat-input-area {
     padding: 0 8px 8px;
+    flex-shrink: 0;
   }
 
   .input-wrapper {
@@ -1137,6 +1149,7 @@
     transform: translateX(110%);
     transition: transform 0.25s ease;
     border-radius: 0;
+    background: var(--bg-main);
   }
 
   .member-list.mobile-open {

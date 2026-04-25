@@ -342,13 +342,11 @@ function setupDomEventHandlers() {
   document.getElementById('channelsContainer')?.addEventListener('contextmenu', (event) => {
     if (!isAdmin || !currentServerId) return;
 
-    const targetEl = event.target instanceof Element ? event.target : null;
-    if (targetEl?.closest('.channel-item, .channel-section-title, .ch-edit-btn, .add-btn, .voice-channel-users')) {
-      return;
-    }
-
     event.preventDefault();
-    openChannelContextMenu(event.clientX, event.clientY);
+    const targetEl = event.target instanceof Element ? event.target : null;
+    const channelItem = targetEl?.closest('.channel-item');
+    const channelSlug = channelItem?.dataset?.channel || channelItem?.dataset?.voiceChannel || '';
+    openChannelContextMenu(event.clientX, event.clientY, channelSlug);
   });
 
   document.addEventListener('submit', async (event) => {
@@ -1302,19 +1300,16 @@ function renderSidebarChannels() {
 
     categories[cat].forEach(ch => {
       const isVoice = ch.type === 'voice';
-      const icon = isVoice ? 'volume_up' : 'tag'; // using # for text, but material icon tag is also good. We use # text for general
+      const icon = isVoice ? 'volume_up' : 'tag';
       const iconHtml = isVoice ? `<span class="material-icons-round">${icon}</span>` : '#';
       const activeClass = (ch.slug === currentChannel && !isVoice) ? ' active' : '';
       const voiceClass = isVoice ? ' voice-channel-item' : '';
       const action = isVoice ? `data-action="join-voice" data-voice-channel="${ch.slug}"` : `data-action="switch-channel" data-channel="${ch.slug}"`;
-      
-      const adminEditBtn = isAdmin ? `<button class="ch-edit-btn" data-action="open-channel-admin" data-slug="${ch.slug}">✏️</button>` : '';
 
       html += `
         <div class="channel-item${activeClass}${voiceClass}" ${action} role="button" tabindex="0">
           <span class="ch-icon">${iconHtml}</span>
           <span class="ch-name">${escHtml(ch.name)}</span>
-          ${adminEditBtn}
         </div>
       `;
       
@@ -1330,8 +1325,7 @@ function renderSidebarChannels() {
   
   // Добавляем обработчики кликов
   container.querySelectorAll('[data-action="switch-channel"]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      if (e.target.closest('.ch-edit-btn')) return;
+    el.addEventListener('click', () => {
       switchChannel(el.dataset.channel);
     });
   });
@@ -1344,9 +1338,21 @@ function renderSidebarChannels() {
   }
 }
 
-function openChannelContextMenu(x, y) {
+let contextMenuChannelSlug = '';
+
+function openChannelContextMenu(x, y, channelSlug = '') {
   const menu = document.getElementById('channelContextMenu');
   if (!menu) return;
+
+  contextMenuChannelSlug = channelSlug;
+
+  // Show/hide channel-specific items
+  const editItem = menu.querySelector('[data-action="edit-channel-ctx"]');
+  const deleteItem = menu.querySelector('[data-action="delete-channel-ctx"]');
+  const divider = menu.querySelector('.channel-context-menu-divider');
+  if (editItem) editItem.style.display = channelSlug ? 'flex' : 'none';
+  if (deleteItem) deleteItem.style.display = channelSlug ? 'flex' : 'none';
+  if (divider) divider.style.display = channelSlug ? 'block' : 'none';
 
   menu.classList.add('show');
   menu.setAttribute('aria-hidden', 'false');
@@ -1365,6 +1371,7 @@ function closeChannelContextMenu() {
   if (!menu) return;
   menu.classList.remove('show');
   menu.setAttribute('aria-hidden', 'true');
+  contextMenuChannelSlug = '';
 }
 
 function openChannelAdmin(slug, category, preferredType = 'text') {
@@ -1457,6 +1464,22 @@ document.addEventListener('click', async (e) => {
     openChannelAdmin(target.dataset.slug, target.dataset.category);
   } else if (action === 'close-channel-admin') {
     closeChannelAdmin();
+  } else if (action === 'edit-channel-ctx') {
+    const slug = contextMenuChannelSlug;
+    closeChannelContextMenu();
+    if (slug) openChannelAdmin(slug);
+  } else if (action === 'delete-channel-ctx') {
+    const slug = contextMenuChannelSlug;
+    closeChannelContextMenu();
+    if (!slug || !confirm('Удалить этот канал навсегда?')) return;
+    try {
+      const { error } = await supabase.from('channels').delete().eq('slug', slug).eq('server_id', currentServerId);
+      if (error) throw error;
+      notify('Канал удален', 'success');
+      loadChannels();
+    } catch (err) {
+      notify('Ошибка удаления: ' + err.message, 'error');
+    }
   } else if (action === 'delete-channel') {
     const slug = document.getElementById('channelAdminSlug').value;
     if (!slug || !confirm('Удалить этот канал навсегда?')) return;

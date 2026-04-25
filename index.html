@@ -489,6 +489,15 @@
   <div class="emoji-picker-panel" id="emojiPickerPanel" aria-hidden="true"></div>
   <div class="emoji-picker-panel media-picker-panel" id="mediaPickerPanel" aria-hidden="true"></div>
   <div id="channelContextMenu" class="channel-context-menu" aria-hidden="true">
+    <button type="button" class="channel-context-menu-item" data-action="edit-channel-ctx" style="display:none;">
+      <span class="material-icons-round">edit</span>
+      <span>Настроить канал</span>
+    </button>
+    <button type="button" class="channel-context-menu-item" data-action="delete-channel-ctx" style="display:none;color:var(--red);">
+      <span class="material-icons-round">delete</span>
+      <span>Удалить канал</span>
+    </button>
+    <div class="channel-context-menu-divider" style="display:none;height:1px;background:var(--border);margin:4px 8px;"></div>
     <button type="button" class="channel-context-menu-item" data-action="create-text-channel">
       <span class="material-icons-round">chat</span>
       <span>Создать текстовый канал</span>

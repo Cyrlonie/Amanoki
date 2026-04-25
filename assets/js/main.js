@@ -50,6 +50,18 @@ function closeImagePreview() {
   document.body.style.overflow = '';
 }
 
+// Close lightbox by clicking outside the image
+document.addEventListener('click', (e) => {
+  const lightbox = document.getElementById('imageLightbox');
+  if (!lightbox || !lightbox.classList.contains('show')) return;
+  const content = lightbox.querySelector('.image-lightbox-content');
+  if (!content) return;
+  // If clicked on the content wrapper but NOT on the image or close button
+  if (content.contains(e.target) && !e.target.closest('.image-lightbox-preview') && !e.target.closest('.image-lightbox-close')) {
+    closeImagePreview();
+  }
+});
+
 function openSearchPanel() {
   const panel = document.getElementById('searchPanel');
   if (!panel) return;

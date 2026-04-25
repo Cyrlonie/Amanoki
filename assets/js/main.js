@@ -1463,7 +1463,11 @@ function renderSidebarChannels() {
   const container = document.getElementById('channelsContainer');
   if (!container) return;
 
-  console.log('Rendering sidebar, isAdmin:', isAdmin);
+  const currentServer = serversList.find(s => s.id === currentServerId);
+  const isServerOwner = currentServer?.owner_id === authUser?.id;
+  const canEdit = isAdmin || isServerOwner;
+
+  console.log('Rendering sidebar, canEdit:', canEdit);
 
   // Группировка по категориями
   const categories = {};
@@ -1479,7 +1483,7 @@ function renderSidebarChannels() {
       <div class="channel-section">
         <div class="channel-section-title">
           <span>${escHtml(cat)}</span>
-          ${isAdmin ? `<span class="add-btn" data-action="open-channel-admin" data-category="${escHtml(cat)}">+</span>` : ''}
+          ${canEdit ? `<span class="add-btn" data-action="open-channel-admin" data-category="${escHtml(cat)}">+</span>` : ''}
         </div>
     `;
 

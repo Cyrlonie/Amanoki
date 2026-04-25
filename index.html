@@ -666,11 +666,14 @@
           <!-- INVITES TAB -->
           <div class="server-settings-section" data-ss-section="invites">
             <div class="ss-field">
-              <label class="ss-label">Пригласить по email</label>
-              <div class="ss-hint">Введите email пользователя, зарегистрированного на платформе, чтобы добавить его на сервер.</div>
-              <div class="ss-invite-box">
-                <input class="ss-invite-input" id="ssInviteEmail" type="email" placeholder="user@example.com" />
-                <button type="button" class="ss-invite-btn" data-action="send-server-invite">Пригласить</button>
+              <label class="ss-label">Создать приглашение</label>
+              <div class="ss-hint">Сгенерируйте код-приглашение, чтобы другие могли присоединиться к вашему серверу.</div>
+              <button type="button" class="profile-btn profile-btn-primary" data-action="generate-invite" style="width:fit-content;">Сгенерировать код</button>
+            </div>
+            <div class="ss-field" style="margin-top:16px;">
+              <label class="ss-label">Активные приглашения</label>
+              <div class="ss-members-list" id="ssInvitesList">
+                <div class="ss-hint" style="text-align:center;padding:24px 0;">Нет активных приглашений</div>
               </div>
             </div>
           </div>

@@ -71,6 +71,7 @@ let CHANNEL_DESCS = {}; // Map of slug -> description
 // Multi-server state
 let serversList = [];
 let currentServerId = null;
+let currentServerMemberIds = new Set(); // IDs of members on the current server
 
 function getScopedChannelKey(channelId = currentChannel, serverId = currentServerId) {
   if (!channelId) return '';

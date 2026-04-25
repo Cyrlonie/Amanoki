@@ -1080,6 +1080,7 @@ async function loadServers() {
       if (!currentServerId || !serversList.find(s => s.id === currentServerId)) {
         currentServerId = serversList[0].id;
       }
+      await loadServerMemberIds(currentServerId);
       await loadChannels();
       subscribeToMessages();
     } else {
@@ -1242,6 +1243,26 @@ function renderDMUsersList() {
     }).join('');
 }
 
+async function loadServerMemberIds(serverId) {
+  if (!supabase || !serverId) {
+    currentServerMemberIds = new Set();
+    return;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('server_members')
+      .select('user_id')
+      .eq('server_id', serverId);
+    if (error) throw error;
+    currentServerMemberIds = new Set((data || []).map(m => m.user_id));
+  } catch (err) {
+    console.error('Error loading server member IDs:', err);
+    currentServerMemberIds = new Set();
+  }
+  // Refresh member list with new filter
+  if (typeof applyPresenceFromChannel === 'function') applyPresenceFromChannel();
+}
+
 async function switchServer(serverId) {
   if (currentServerId === serverId) return;
   currentServerId = serverId;
@@ -1253,6 +1274,7 @@ async function switchServer(serverId) {
   CHANNEL_DESCS = {};
   
   renderServers();
+  await loadServerMemberIds(serverId);
   await loadChannels();
 }
 

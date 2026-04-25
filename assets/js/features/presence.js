@@ -9,8 +9,25 @@ function applyPresenceFromChannel() {
   const byUserId = {};
   const statusRank = { offline: 0, online: 1, typing: 2 };
 
-  // База списка участников: все профили как offline
+  // Determine which user IDs to show based on context
+  let visibleUserIds;
+  if (typeof isDMHomeMode !== 'undefined' && isDMHomeMode && typeof currentDMTarget !== 'undefined' && currentDMTarget) {
+    // DM mode: only show self + DM partner
+    visibleUserIds = new Set([authUser.id, currentDMTarget.userId]);
+  } else if (typeof isDMHomeMode !== 'undefined' && isDMHomeMode) {
+    // DM home with no active conversation: show only self
+    visibleUserIds = new Set([authUser.id]);
+  } else if (currentServerMemberIds && currentServerMemberIds.size > 0) {
+    // Server mode: show only this server's members
+    visibleUserIds = currentServerMemberIds;
+  } else {
+    // Fallback: show all
+    visibleUserIds = null;
+  }
+
+  // База списка участников: профили как offline (filtered by context)
   Object.entries(memberDirectory).forEach(([id, name]) => {
+    if (visibleUserIds && !visibleUserIds.has(id)) return;
     byUserId[id] = { name, status: 'offline' };
   });
 
@@ -19,7 +36,6 @@ function applyPresenceFromChannel() {
   const voiceUsersByChannel = {};
   
   let presenceUsersCount = 0;
-  console.log('[Presence] Полное состояние:', state);
   Object.keys(state).forEach((key) => {
     const presences = state[key];
     if (!presences || !presences.length) return;

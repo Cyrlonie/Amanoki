@@ -995,33 +995,63 @@
 
 @media (max-width: 768px) {
   body {
+    padding: 0;
+    gap: 0;
     font-size: 13px;
     overflow-x: hidden;
   }
 
   .server-list {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 72px;
+    z-index: 1301;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    border-radius: 0;
+    border-right: 1px solid var(--glass-border);
+    display: flex; /* Override display: none if it was there */
+  }
+
+  .server-list.mobile-open {
+    transform: translateX(0);
   }
 
   .sidebar {
     position: fixed;
     top: 0;
-    left: 0;
+    left: 72px;
     bottom: 0;
-    width: min(85vw, 320px);
+    width: calc(min(85vw, 320px) - 72px);
     z-index: 1300;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
+    border-radius: 0;
+    border-left: none;
   }
 
+  /* When mobile-open is on the sidebar, it also shifts to be visible */
   .sidebar.mobile-open {
     transform: translateX(0);
   }
 
+  .chat-area {
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
   .chat-header {
-    padding: 0 8px;
-    gap: 6px;
-    overflow: hidden;
+    height: 56px;
+    min-height: 56px;
+    padding: 0 12px;
+    gap: 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
   }
 
   .chat-header .ch-hash {
@@ -1029,29 +1059,28 @@
   }
 
   .chat-header .ch-title {
-    max-width: 22vw;
+    max-width: 35vw;
+    font-size: 15px;
   }
 
   .chat-header .ch-desc {
     display: none;
   }
 
-  .mobile-only {
-    display: flex;
-  }
-
   .header-actions {
-    gap: 2px;
+    gap: 4px;
+    margin-left: auto;
   }
 
   .header-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
   }
 
-  .header-actions .header-btn:nth-child(1),
-  .header-actions .header-btn:nth-child(3) {
+  /* Hide less important buttons on mobile header */
+  .header-actions .header-btn:nth-child(4), /* Notifications */
+  .header-actions .header-btn:nth-child(2) { /* Pinned */
     display: none;
   }
 
@@ -1059,155 +1088,43 @@
     padding: 8px 0;
   }
 
-  .channel-welcome {
-    padding: 12px 12px 6px;
-  }
-
-  .welcome-icon {
-    width: 54px;
-    height: 54px;
-    font-size: 30px;
-    margin-bottom: 12px;
-  }
-
-  .welcome-title {
-    font-size: 22px;
-  }
-
-  .welcome-desc {
-    font-size: 13px;
-  }
-
   .message-group {
-    padding: 2px 10px;
+    padding: 4px 12px;
+    margin: 2px 4px;
   }
 
   .msg-avatar {
-    left: 10px;
+    left: 12px;
+    top: 12px;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
   }
 
   .message-group .content-area {
-    padding-left: 50px;
-    min-width: 0;
-    display: block;
-    position: relative;
+    padding-left: 48px !important;
   }
 
-  .message-group .content-area .msg-stack {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .message-group .content-area .msg-aside {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: auto;
-    margin-top: 0;
-  }
-
-  .msg-media {
-    max-width: 100%;
-  }
-
-  .msg-image {
-    width: 100%;
-    max-width: 100%;
-    max-height: 220px;
-    height: auto;
-    object-fit: contain;
-    margin-top: 0;
-  }
-
-  .msg-video {
-    width: 100%;
-    max-width: 100%;
-    max-height: 220px;
-    height: auto;
-    margin-top: 0;
-  }
-
-  .msg-quick-actions {
-    gap: 4px;
-    justify-content: flex-end;
-    width: 100%;
-  }
-
-  .msg-quick-actions .msg-quick-btn,
-  .msg-quick-actions .hover-btn {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
+  .msg-text {
     font-size: 14px;
-    border-radius: var(--radius-sm);
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .msg-reaction-chips {
-    gap: 4px;
-    margin-top: 4px;
-    flex-wrap: wrap;
-  }
-
-  .reaction {
-    padding: 3px 6px;
-    font-size: 12px;
-    border-radius: var(--radius-sm);
-    gap: 4px;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .reaction .count {
-    font-size: 11px;
-  }
-
-  .typing-indicator {
-    padding: 3px 10px;
   }
 
   .chat-input-area {
-    padding: 0 8px 10px;
-    overflow: hidden;
-  }
-
-  .reply-banner {
-    margin: 6px 0 6px;
-    padding: 7px 8px;
-  }
-
-  .input-side-btn {
-    width: 38px;
-    min-height: 40px;
-    font-size: 18px;
+    padding: 0 8px 12px;
   }
 
   .input-wrapper {
-    overflow: hidden;
+    border-radius: 16px;
   }
 
   #message-input {
-    font-size: 16px;
-    padding: 9px 0;
-    max-height: 30vh;
-    overflow-x: hidden;
-    max-width: 100%;
-    width: 100%;
+    font-size: 15px;
+    padding: 12px 0;
   }
 
-  .input-icon,
-  .send-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 16px;
-  }
-
-  .input-right-btns .input-icon:first-child {
-    display: none;
+  .input-side-btn {
+    width: 42px;
   }
 
   .member-list {
@@ -1215,87 +1132,15 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: min(82vw, 280px);
+    width: min(80vw, 280px);
     z-index: 1300;
     transform: translateX(100%);
     transition: transform 0.2s ease;
-    padding-top: 12px;
+    border-radius: 0;
   }
 
   .member-list.mobile-open {
     transform: translateX(0);
-  }
-
-  #adminPanel {
-    width: 100vw;
-    padding: 12px;
-  }
-
-  .setup-card,
-  .auth-card {
-    width: 100%;
-    max-width: 440px;
-    padding: 32px 24px;
-    border-radius: 16px;
-    margin: 0 16px;
-    box-sizing: border-box;
-  }
-
-  .auth-header {
-    margin-bottom: 22px;
-  }
-
-  .auth-logo {
-    font-size: 40px;
-    margin-bottom: 10px;
-  }
-
-  .auth-title {
-    font-size: 20px;
-  }
-
-  .notification {
-    right: 10px;
-    left: 10px;
-    bottom: 10px;
-    max-width: none;
-  }
-
-  .voice-panel {
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    width: auto;
-    padding: 10px;
-  }
-
-  .voice-panel-header {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .voice-panel-actions {
-    width: 100%;
-  }
-
-  .voice-btn {
-    flex: 1;
-    text-align: center;
-    font-size: 12px;
-    padding: 7px 8px;
-  }
-
-  .voice-participants {
-    max-height: 140px;
-  }
-
-  .emoji-picker-panel {
-    bottom: 60px;
-    right: 10px;
-    left: 10px;
-    width: auto;
-    max-width: none;
-    max-height: 50vh;
   }
 }
 
@@ -1550,7 +1395,7 @@
 }
 .ss-member-actions { display: flex; gap: 6px; }
 .ss-member-btn {
-  padding: 50px 10px;
+  padding: 6px 12px;
   border: none;
   border-radius: 6px;
   font-size: 12px;

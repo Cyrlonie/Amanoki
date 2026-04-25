@@ -138,15 +138,20 @@ async function saveEditedMessage() {
 function toggleSidebar() {
   if (!isMobileLayout()) return;
   const sidebar = document.getElementById('channelSidebar');
-  if (!sidebar) return;
+  const servers = document.getElementById('serversContainer');
+  if (!sidebar || !servers) return;
 
-  sidebar.classList.toggle('mobile-open');
+  const isOpen = sidebar.classList.contains('mobile-open');
+  sidebar.classList.toggle('mobile-open', !isOpen);
+  servers.classList.toggle('mobile-open', !isOpen);
+  
   document.getElementById('memberList')?.classList.remove('mobile-open');
   syncMobileBackdrop();
 }
 
 function closeMobilePanels() {
   document.getElementById('channelSidebar')?.classList.remove('mobile-open');
+  document.getElementById('serversContainer')?.classList.remove('mobile-open');
   document.getElementById('memberList')?.classList.remove('mobile-open');
   syncMobileBackdrop();
 }

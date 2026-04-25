@@ -274,53 +274,98 @@ async function loadSSMembers() {
   }
 }
 
-// ===================== INVITE =====================
-async function sendServerInvite() {
-  const emailInput = document.getElementById('ssInviteEmail');
-  const email = emailInput?.value.trim();
-  if (!email || !supabase || !currentServerId) return;
+// ===================== INVITES =====================
+function generateRandomCode(length = 8) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+async function loadSSInvites() {
+  const list = document.getElementById('ssInvitesList');
+  if (!list || !supabase || !currentServerId) return;
+
+  list.innerHTML = '<div class="ss-hint" style="text-align:center;padding:24px 0;">Загрузка...</div>';
 
   try {
-    // Find user by email
-    const { data: profiles, error: searchError } = await supabase
-      .from('profiles')
-      .select('id, username')
-      .eq('email', email)
-      .limit(1);
-
-    if (searchError) throw searchError;
-    if (!profiles || profiles.length === 0) {
-      notify('Пользователь с таким email не найден', 'error');
-      return;
-    }
-
-    const targetUser = profiles[0];
-
-    // Check if already a member
-    const { data: existing } = await supabase
-      .from('server_members')
-      .select('id')
+    const { data, error } = await supabase
+      .from('server_invites')
+      .select('id, code, uses, max_uses, expires_at, created_at, profiles(username)')
       .eq('server_id', currentServerId)
-      .eq('user_id', targetUser.id)
-      .limit(1);
+      .order('created_at', { ascending: false });
 
-    if (existing && existing.length > 0) {
-      notify(`${targetUser.username} уже состоит на этом сервере`, 'error');
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="ss-hint" style="text-align:center;padding:24px 0;">Нет активных приглашений</div>';
       return;
     }
 
-    // Add as member
-    const { error: insertError } = await supabase
-      .from('server_members')
-      .insert([{ server_id: currentServerId, user_id: targetUser.id, role: 'member' }]);
-
-    if (insertError) throw insertError;
-
-    notify(`✅ ${targetUser.username} приглашён на сервер!`, 'success');
-    emailInput.value = '';
-    loadSSMembers();
+    list.innerHTML = data.map(inv => {
+      const creatorName = inv.profiles?.username || 'Неизвестный';
+      const usesText = inv.max_uses > 0 ? `${inv.uses}/${inv.max_uses}` : `${inv.uses}/∞`;
+      const expiresText = inv.expires_at ? new Date(inv.expires_at).toLocaleString() : 'Никогда';
+      
+      return `
+        <div class="ss-member-row" style="flex-wrap: wrap;">
+          <div class="ss-member-info">
+            <div class="ss-member-name" style="font-family: monospace; font-size: 16px; color: var(--accent); user-select: all;">${escHtml(inv.code)}</div>
+            <div class="ss-member-role">Создал: ${escHtml(creatorName)} • Использований: ${usesText} • Истекает: ${expiresText}</div>
+          </div>
+          <div class="ss-member-actions">
+            <button type="button" class="ss-member-btn role" onclick="navigator.clipboard.writeText('${escapeJsString(inv.code)}'); notify('Код скопирован', 'success')">Копировать</button>
+            ${ssIsOwner ? `<button type="button" class="ss-member-btn kick" data-action="delete-invite" data-invite-id="${inv.id}">Удалить</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
   } catch (err) {
-    notify('Ошибка приглашения: ' + err.message, 'error');
+    list.innerHTML = `<div class="ss-hint" style="text-align:center;padding:24px 0;color:var(--red);">Ошибка: ${err.message}</div>`;
+  }
+}
+
+async function generateInvite() {
+  if (!supabase || !currentServerId || !authUser) return;
+
+  const code = generateRandomCode();
+
+  try {
+    const { error } = await supabase
+      .from('server_invites')
+      .insert([{ 
+        server_id: currentServerId, 
+        creator_id: authUser.id, 
+        code: code,
+        max_uses: 0 // 0 = unlimited
+      }]);
+
+    if (error) throw error;
+
+    notify(`✅ Код приглашения создан!`, 'success');
+    loadSSInvites();
+  } catch (err) {
+    notify('Ошибка создания: ' + err.message, 'error');
+  }
+}
+
+async function deleteInvite(inviteId) {
+  if (!supabase || !currentServerId) return;
+  if (!confirm('Удалить это приглашение?')) return;
+
+  try {
+    const { error } = await supabase
+      .from('server_invites')
+      .delete()
+      .eq('id', inviteId);
+
+    if (error) throw error;
+    notify('Приглашение удалено', 'success');
+    loadSSInvites();
+  } catch (err) {
+    notify('Ошибка удаления: ' + err.message, 'error');
   }
 }
 

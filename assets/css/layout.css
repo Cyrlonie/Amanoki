@@ -995,9 +995,9 @@
 
 @media (max-width: 768px) {
   body {
-    padding: 0;
-    gap: 0;
-    font-size: 13px;
+    display: block !important;
+    padding: 0 !important;
+    gap: 0 !important;
     overflow-x: hidden;
   }
 
@@ -1008,11 +1008,11 @@
     bottom: 0;
     width: 72px;
     z-index: 1301;
-    transform: translateX(-100%);
-    transition: transform 0.2s ease;
+    transform: translateX(-110%); /* Ensure it's fully off-screen */
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 0;
-    border-right: 1px solid var(--glass-border);
-    display: flex; /* Override display: none if it was there */
+    border: none;
+    border-right: 1px solid var(--border);
   }
 
   .server-list.mobile-open {
@@ -1022,65 +1022,63 @@
   .sidebar {
     position: fixed;
     top: 0;
-    left: 72px;
+    left: 0; /* Changed from 72px to 0 for better logic */
     bottom: 0;
-    width: calc(min(85vw, 320px) - 72px);
+    width: min(85vw, 320px);
     z-index: 1300;
-    transform: translateX(-100%);
-    transition: transform 0.2s ease;
+    transform: translateX(-110%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 0;
-    border-left: none;
+    border: none;
+    padding-left: 72px; /* Make room for server list inside sidebar or overlapping */
   }
 
-  /* When mobile-open is on the sidebar, it also shifts to be visible */
+  /* Adjust sidebar to show server list inside if needed, 
+     but based on main.js logic, let's just make them both move */
   .sidebar.mobile-open {
     transform: translateX(0);
   }
 
   .chat-area {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100dvh;
     border-radius: 0;
     border: none;
+    z-index: 1;
   }
 
   .chat-header {
     height: 56px;
     min-height: 56px;
-    padding: 0 12px;
+    padding: 0 8px;
     gap: 8px;
     display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-  }
-
-  .chat-header .ch-hash {
-    font-size: 18px;
   }
 
   .chat-header .ch-title {
-    max-width: 35vw;
+    max-width: 40vw;
     font-size: 15px;
   }
 
-  .chat-header .ch-desc {
+  .chat-header .ch-desc,
+  .chat-header .ch-hash {
     display: none;
   }
 
   .header-actions {
     gap: 4px;
-    margin-left: auto;
   }
 
   .header-btn {
     width: 36px;
     height: 36px;
-    font-size: 18px;
   }
 
-  /* Hide less important buttons on mobile header */
-  .header-actions .header-btn:nth-child(4), /* Notifications */
-  .header-actions .header-btn:nth-child(2) { /* Pinned */
+  /* Hide less critical actions on mobile */
+  .header-actions .header-btn:nth-child(2), /* search/pins */
+  .header-actions .header-btn:nth-child(4) {
     display: none;
   }
 
@@ -1089,42 +1087,44 @@
   }
 
   .message-group {
-    padding: 4px 12px;
-    margin: 2px 4px;
+    padding: 4px 10px;
+    margin: 2px 0;
   }
 
   .msg-avatar {
-    left: 12px;
-    top: 12px;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
+    left: 10px;
+    top: 10px;
+    width: 34px !important;
+    height: 34px !important;
   }
 
   .message-group .content-area {
-    padding-left: 48px !important;
+    padding-left: 44px !important;
   }
 
-  .msg-text {
-    font-size: 14px;
+  /* Fix the trash icons overlapping avatars */
+  .msg-aside {
+    top: 4px !important;
+    right: 8px !important;
+  }
+  
+  .msg-quick-actions .hover-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
   }
 
   .chat-input-area {
-    padding: 0 8px 12px;
+    padding: 0 8px 8px;
   }
 
   .input-wrapper {
-    border-radius: 16px;
+    border-radius: 12px;
   }
 
   #message-input {
+    padding: 10px 0;
     font-size: 15px;
-    padding: 12px 0;
-  }
-
-  .input-side-btn {
-    width: 42px;
   }
 
   .member-list {
@@ -1134,8 +1134,8 @@
     bottom: 0;
     width: min(80vw, 280px);
     z-index: 1300;
-    transform: translateX(100%);
-    transition: transform 0.2s ease;
+    transform: translateX(110%);
+    transition: transform 0.25s ease;
     border-radius: 0;
   }
 

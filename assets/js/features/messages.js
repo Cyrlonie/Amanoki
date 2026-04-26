@@ -124,6 +124,9 @@ async function subscribeToMessages() {
 
   const generation = ++messageSubscriptionGeneration;
 
+  // Show skeleton loading while fetching messages
+  if (typeof showSkeletonMessages === 'function') showSkeletonMessages();
+
   try {
     if (messageSubscription) {
       await supabase.removeChannel(messageSubscription);
@@ -224,11 +227,25 @@ async function subscribeToMessages() {
 
           if (!windowHasFocus && !isOwnMessage) {
             playNotificationSound();
+            if (typeof sendBrowserNotification === 'function') {
+              sendBrowserNotification(
+                `${row.author} в #${currentChannel}`,
+                row.content || 'Новое сообщение',
+                userAvatars[row.author]
+              );
+            }
           }
         } else if (row.user_id !== authUser.id) {
           if (!isDM) bumpUnread(ch);
           if (!windowHasFocus) {
             playNotificationSound();
+            if (typeof sendBrowserNotification === 'function') {
+              sendBrowserNotification(
+                `${row.author} в #${ch}`,
+                row.content || 'Новое сообщение',
+                userAvatars[row.author]
+              );
+            }
           }
         }
       })

@@ -115,7 +115,7 @@ function applyPresenceFromChannel() {
 async function loadMembersDirectory() {
   if (isDemoMode || !supabase) return;
   try {
-    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url');
+    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url, custom_status');
     if (error) throw error;
 
     const previousNames = new Set(Object.values(memberDirectory));
@@ -133,6 +133,14 @@ async function loadMembersDirectory() {
         userAvatars[row.username] = row.avatar_url;
       } else {
         delete userAvatars[row.username];
+      }
+      // Store custom status
+      if (typeof userCustomStatuses !== 'undefined') {
+        if (row.custom_status) {
+          userCustomStatuses[row.username] = row.custom_status;
+        } else {
+          delete userCustomStatuses[row.username];
+        }
       }
     });
     previousNames.forEach((name) => delete userAvatars[name]);
@@ -337,6 +345,12 @@ function updateMemberList() {
     // Find userId for this member
     const userId = Object.entries(memberDirectory).find(([, n]) => n === name)?.[0] || '';
     const showDmBtn = userId && authUser && userId !== authUser.id;
+    const customStatus = typeof userCustomStatuses !== 'undefined' ? userCustomStatuses[name] || '' : '';
+    const statusLine = status === 'typing' ? '<div class="mstatus">Печатает...</div>'
+      : status === 'idle' ? '<div class="mstatus">Не активен</div>'
+      : status === 'dnd' ? '<div class="mstatus">Не беспокоить</div>'
+      : customStatus ? `<div class="member-custom-status">${escHtml(customStatus)}</div>`
+      : '';
 
     el.innerHTML = `
         <div class="member-avatar" style="${avatarStyle}">
@@ -345,9 +359,7 @@ function updateMemberList() {
         </div>
         <div class="member-info">
           <div class="mname">${escHtml(name)}</div>
-          ${status === 'typing' ? '<div class="mstatus">Печатает...</div>' : ''}
-          ${status === 'idle' ? '<div class="mstatus">Не активен</div>' : ''}
-          ${status === 'dnd' ? '<div class="mstatus">Не беспокоить</div>' : ''}
+          ${statusLine}
         </div>
         ${showDmBtn ? `<button class="member-dm-btn" type="button" data-action="open-dm" data-dm-user-id="${escHtml(userId)}" data-dm-username="${escHtml(name)}" title="Написать"><span class="material-icons-round" style="font-size:16px;">chat</span></button>` : ''}
       `;

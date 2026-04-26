@@ -144,6 +144,12 @@ function openProfilePanel() {
   buildProfileColorSwatches();
   updateProfilePreview();
 
+  // Load custom status
+  const statusInput = document.getElementById('profileCustomStatus');
+  if (statusInput) {
+    statusInput.value = currentUserProfile?.custom_status || '';
+  }
+
   panel.classList.add('show');
   panel.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
@@ -243,6 +249,7 @@ async function saveProfileSettings(e) {
         username,
         avatar_color: selectedProfileColor,
         avatar_url: avatarUrl,
+        custom_status: document.getElementById('profileCustomStatus')?.value.trim() || null,
       })
       .eq('id', authUser.id);
 
@@ -279,6 +286,7 @@ async function saveProfileSettings(e) {
     }
 
     refreshSidebarUserChip();
+    if (typeof updateSidebarStatus === 'function') updateSidebarStatus();
     notify('Профиль сохранён', 'success');
     closeProfilePanel();
   } catch (e2) {
@@ -347,5 +355,15 @@ function initProfileFormEvents() {
 
   profileForm.dataset.profileEventsInit = '1';
 }
+
+// Status preset click handlers
+document.addEventListener('click', (e) => {
+  const preset = e.target.closest('.status-preset');
+  if (!preset) return;
+  const statusInput = document.getElementById('profileCustomStatus');
+  if (statusInput) {
+    statusInput.value = preset.dataset.status || '';
+  }
+});
 
 initProfileFormEvents();

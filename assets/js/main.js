@@ -580,6 +580,12 @@ function initApp() {
   if (typeof updateChannelUnreadUI === 'function') {
     updateChannelUnreadUI();
   }
+
+  // Show notification permission prompt
+  showNotificationPermissionBar();
+
+  // Update sidebar custom status display
+  updateSidebarStatus();
 }
 
 // ===================== ADMIN FUNCTIONS =====================
@@ -814,6 +820,105 @@ function playNotificationSound() {
   if (!windowHasFocus) {
     createNotificationSound();
   }
+}
+
+// ===================== BROWSER NOTIFICATIONS =====================
+function sendBrowserNotification(title, body, icon) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  if (windowHasFocus) return;
+
+  try {
+    const notif = new Notification(title, {
+      body: body.length > 100 ? body.slice(0, 100) + '…' : body,
+      icon: icon || undefined,
+      badge: icon || undefined,
+      tag: 'amanoki-msg',
+      renotify: true,
+    });
+    notif.onclick = () => {
+      window.focus();
+      notif.close();
+    };
+    setTimeout(() => notif.close(), 5000);
+  } catch (_) {}
+}
+
+function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  Notification.requestPermission().then(perm => {
+    if (perm === 'granted') {
+      notify('🔔 Уведомления включены!', 'success');
+    }
+    // Remove the permission bar regardless
+    document.querySelector('.notif-permission-bar')?.remove();
+  });
+}
+
+function showNotificationPermissionBar() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'default') return;
+  if (localStorage.getItem('amanoki_notif_dismissed')) return;
+
+  const existing = document.querySelector('.notif-permission-bar');
+  if (existing) return;
+
+  const bar = document.createElement('div');
+  bar.className = 'notif-permission-bar';
+  bar.innerHTML = `
+    <span class="material-icons-round">notifications</span>
+    <span>Включить уведомления?</span>
+    <button type="button" class="notif-permission-btn" onclick="requestNotificationPermission()">Включить</button>
+    <button type="button" class="notif-permission-dismiss" onclick="this.parentElement.remove(); localStorage.setItem('amanoki_notif_dismissed','1')" aria-label="Закрыть">
+      <span class="material-icons-round" style="font-size:16px">close</span>
+    </button>
+  `;
+  const chatArea = document.querySelector('.chat-area');
+  const header = chatArea?.querySelector('.chat-header');
+  if (header) {
+    header.insertAdjacentElement('afterend', bar);
+  }
+}
+
+// ===================== SKELETON LOADING =====================
+function showSkeletonMessages() {
+  const area = document.getElementById('messagesArea');
+  if (!area) return;
+  let html = '';
+  for (let i = 0; i < 6; i++) {
+    const widths = ['long', 'medium', 'short'];
+    const w = widths[i % 3];
+    html += `
+      <div class="skeleton-message">
+        <div class="skeleton skeleton-avatar"></div>
+        <div class="skeleton-content">
+          <div class="skeleton skeleton-line short"></div>
+          <div class="skeleton skeleton-line ${w}"></div>
+        </div>
+      </div>`;
+  }
+  area.innerHTML = html;
+}
+
+function showSkeletonChannels() {
+  const container = document.getElementById('channelsContainer');
+  if (!container) return;
+  let html = '<div class="channel-section" style="padding-top:16px">';
+  for (let i = 0; i < 5; i++) {
+    html += '<div class="skeleton skeleton-channel"></div>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function showSkeletonServers() {
+  const container = document.getElementById('serversContainer');
+  if (!container) return;
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    html += '<div class="skeleton skeleton-server"></div>';
+  }
+  container.innerHTML = html;
 }
 
 // ===================== UTILS =====================
@@ -1079,6 +1184,9 @@ function notify(msg, type = 'info') {
 async function loadServers() {
   if (isDemoMode || !supabase || !authUser) return;
 
+  showSkeletonServers();
+  showSkeletonChannels();
+
   try {
     const { data, error } = await supabase
       .from('servers')
@@ -1167,6 +1275,73 @@ function renderServers() {
   const serverNameEl = document.getElementById('serverName');
   if (serverNameEl) {
     serverNameEl.textContent = currentServer ? currentServer.name : 'Amanoki';
+  }
+
+  // Update unread dots on server icons
+  updateServerUnreadDots();
+}
+
+function updateServerUnreadDots() {
+  // Add unread indicator dots to server icons
+  document.querySelectorAll('.server-icon[data-server-id]').forEach(icon => {
+    const existingDot = icon.querySelector('.server-unread-dot');
+    if (existingDot) existingDot.remove();
+
+    const serverId = icon.dataset.serverId;
+    if (serverId === currentServerId) return; // Don't show dot on active server
+
+    // Check if any channels on this server have unreads
+    const hasUnread = Object.entries(unreadCounts).some(([ch, count]) => count > 0);
+    // For now, we can't know other servers' unreads without loading them
+    // We track unread per-server via a simple localStorage map
+    const serverUnreads = getServerUnreadCount(serverId);
+    if (serverUnreads > 0) {
+      const dot = document.createElement('div');
+      dot.className = 'server-unread-dot';
+      icon.appendChild(dot);
+    }
+  });
+}
+
+function getServerUnreadCount(serverId) {
+  try {
+    const raw = localStorage.getItem('amanoki_server_unreads');
+    const map = raw ? JSON.parse(raw) : {};
+    return map[serverId] || 0;
+  } catch (_) { return 0; }
+}
+
+function bumpServerUnread(serverId) {
+  if (serverId === currentServerId) return;
+  try {
+    const raw = localStorage.getItem('amanoki_server_unreads');
+    const map = raw ? JSON.parse(raw) : {};
+    map[serverId] = (map[serverId] || 0) + 1;
+    localStorage.setItem('amanoki_server_unreads', JSON.stringify(map));
+    updateServerUnreadDots();
+  } catch (_) {}
+}
+
+function clearServerUnread(serverId) {
+  try {
+    const raw = localStorage.getItem('amanoki_server_unreads');
+    const map = raw ? JSON.parse(raw) : {};
+    delete map[serverId];
+    localStorage.setItem('amanoki_server_unreads', JSON.stringify(map));
+    updateServerUnreadDots();
+  } catch (_) {}
+}
+
+function updateSidebarStatus() {
+  const statusEl = document.querySelector('.sidebar-footer .ustatus');
+  if (!statusEl) return;
+  const customStatus = currentUserProfile?.custom_status;
+  if (customStatus) {
+    statusEl.textContent = customStatus;
+    statusEl.classList.add('user-custom-status');
+  } else {
+    statusEl.textContent = 'В сети';
+    statusEl.classList.remove('user-custom-status');
   }
 }
 
@@ -1298,6 +1473,12 @@ async function switchServer(serverId) {
   channelsList = [];
   TEXT_CHANNELS = [];
   CHANNEL_DESCS = {};
+
+  // Clear unread badge for this server
+  clearServerUnread(serverId);
+  
+  showSkeletonChannels();
+  showSkeletonMessages();
   
   renderServers();
   await loadServerMemberIds(serverId);

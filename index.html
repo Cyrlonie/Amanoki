@@ -415,6 +415,18 @@
           </div>
         </div>
         <div class="profile-field">
+          <label class="profile-label" for="profileCustomStatus">Статус</label>
+          <input class="profile-status-input" id="profileCustomStatus" type="text" maxlength="64"
+            placeholder="🎮 Играю в osu!" />
+          <div class="status-presets">
+            <button type="button" class="status-preset" data-status="🎮 Играю">🎮 Играю</button>
+            <button type="button" class="status-preset" data-status="🎧 Слушаю музыку">🎧 Музыка</button>
+            <button type="button" class="status-preset" data-status="💻 Кодю">💻 Кодю</button>
+            <button type="button" class="status-preset" data-status="😴 Сплю">😴 Сплю</button>
+            <button type="button" class="status-preset" data-status="">❌ Убрать</button>
+          </div>
+        </div>
+        <div class="profile-field">
           <label class="profile-label" for="profileAvatarFile">Загрузить аватар</label>
           <input class="profile-input" id="profileAvatarFile" type="file" accept="image/*" />
         </div>

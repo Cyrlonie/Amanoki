@@ -394,6 +394,7 @@ function toggleMemberList() {
   if (isMobileLayout()) {
     ml.classList.toggle('mobile-open');
     document.getElementById('channelSidebar')?.classList.remove('mobile-open');
+    document.getElementById('serversContainer')?.classList.remove('mobile-open');
     syncMobileBackdrop();
     return;
   }

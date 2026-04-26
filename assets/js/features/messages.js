@@ -151,6 +151,21 @@ async function subscribeToMessages() {
       return;
     }
 
+    // Clear skeletons and show channel welcome before rendering messages
+    const area = document.getElementById('messagesArea');
+    const chObj = typeof channelsList !== 'undefined' ? channelsList.find(c => c.slug === currentChannel) : null;
+    const chName = chObj ? chObj.name : currentChannel;
+    area.innerHTML = `
+      <div class="channel-welcome">
+        <div class="welcome-icon">💬</div>
+        <div class="welcome-title"># ${escHtml(chName)}</div>
+        <div class="welcome-desc">${escHtml(CHANNEL_DESCS[currentChannel] || 'Начало канала #' + chName)}</div>
+      </div>
+    `;
+    lastMessageAuthor = null;
+    lastMessageTime = null;
+    lastMessageDate = null;
+
     if (data) {
       data.forEach((r) =>
         renderMessage({

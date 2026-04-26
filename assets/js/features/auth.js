@@ -179,12 +179,13 @@ async function handleRegister(e) {
     currentUser = username;
     document.getElementById('registerBtnText').textContent = 'Успешно!';
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      await loadMembersDirectory();
       document.getElementById('authOverlay').style.display = 'none';
 
       initApp();
-      loadMembersDirectory();
-      subscribeToMessages();
+      await loadServers();
+      if (typeof loadDMConversations === 'function') loadDMConversations();
     }, 800);
   } catch (e2) {
     showError('registerPanel', e2.message);
@@ -224,12 +225,13 @@ async function handleLogin(e) {
     }
     document.getElementById('loginBtnText').textContent = 'Добро пожаловать!';
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      await loadMembersDirectory();
       document.getElementById('authOverlay').style.display = 'none';
 
       initApp();
-      loadMembersDirectory();
-      subscribeToMessages();
+      await loadServers();
+      if (typeof loadDMConversations === 'function') loadDMConversations();
     }, 800);
   } catch (e2) {
     showError('loginPanel', e2.message);

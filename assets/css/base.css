@@ -43,6 +43,13 @@
 
   --scrollbar: rgba(255, 255, 255, 0.06);
   --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+
+  /* Жёсткие «тёмные» поверхности → переводим на переменные для светлой темы */
+  --surface-overlay: rgba(10, 15, 31, 0.96);
+  --surface-dropdown: rgba(10, 15, 31, 0.96);
+  --auth-bg: radial-gradient(120% 80% at 50% 0%, #2a1a42 0%, #0d0d12 45%, #050308 100%);
+  --auth-card-bg: rgba(255, 255, 255, 0.02);
+  --auth-input-bg: rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] {
@@ -63,6 +70,12 @@
   --border: rgba(15, 23, 42, 0.12);
   --scrollbar: rgba(15, 23, 42, 0.06);
   --scrollbar-thumb: rgba(15, 23, 42, 0.22);
+
+  --surface-overlay: rgba(255, 255, 255, 0.97);
+  --surface-dropdown: rgba(248, 250, 252, 0.98);
+  --auth-bg: radial-gradient(120% 80% at 50% 0%, #f1f5f9 0%, #e2e8f0 45%, #cbd5e1 100%);
+  --auth-card-bg: rgba(255, 255, 255, 0.92);
+  --auth-input-bg: rgba(255, 255, 255, 0.85);
 }
 
 body {

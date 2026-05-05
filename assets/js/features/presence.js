@@ -1,8 +1,28 @@
 // Presence / members / typing (classic script).
 const typingBroadcastState = {};
 const TYPING_BROADCAST_TTL_MS = 4500;
-const LAST_SEEN_ONLINE_TTL_MS = 5 * 60 * 1000; // 5 минут
+const LAST_SEEN_ONLINE_TTL_MS = 5 * 60 * 1000; // 5 минут (активность по сообщениям / broadcast)
+const LAST_SEEN_DB_TTL_MS = 3 * 60 * 1000; // 3 мин по полю profiles.last_seen
 const memberLastSeen = {}; // id -> timestamp (ms)
+
+/**
+ * Уникальный ключ presence на вкладку (Supabase: ключ должен быть уникален между клиентами).
+ * Один только authUser.id даёт коллизии вкладок и нестабильный sync.
+ */
+function getPresenceClientKey() {
+  const STORAGE_KEY = 'amanoki_presence_sid';
+  try {
+    if (!authUser?.id) return 'anon';
+    let sid = sessionStorage.getItem(STORAGE_KEY);
+    if (!sid) {
+      sid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random();
+      sessionStorage.setItem(STORAGE_KEY, sid);
+    }
+    return `${authUser.id}:${sid}`;
+  } catch (_) {
+    return String(authUser?.id || 'anon');
+  }
+}
 
 function applyPresenceFromChannel() {
   if (isDemoMode || !authUser) return;
@@ -63,17 +83,21 @@ function applyPresenceFromChannel() {
     });
   });
 
-  // Fallback: если presence не работает, используем активность по сообщениям
-  if (presenceUsersCount === 0) {
-    const now = Date.now();
-    Object.entries(memberDirectory).forEach(([id, name]) => {
-      if (byUserId[id]?.status !== 'offline') return;
-      const lastSeen = memberLastSeen[id];
-      if (lastSeen && (now - lastSeen) < LAST_SEEN_ONLINE_TTL_MS) {
-        byUserId[id] = { name, status: 'online' };
-      }
-    });
-  }
+  // Резерв: активность по сообщениям в этой сессии + last_seen из БД (если Realtime отстаёт)
+  const now = Date.now();
+  Object.entries(memberDirectory).forEach(([id, name]) => {
+    if (visibleUserIds && !visibleUserIds.has(id)) return;
+    if (byUserId[id]?.status === 'typing') return;
+    const msgSeen = memberLastSeen[id];
+    const dbSeen = memberLastSeenDb[id];
+    const freshMsg = msgSeen && now - msgSeen < LAST_SEEN_ONLINE_TTL_MS;
+    const freshDb = dbSeen && now - dbSeen < LAST_SEEN_DB_TTL_MS;
+    if (!freshMsg && !freshDb) return;
+    const prev = byUserId[id]?.status || 'offline';
+    if (prev === 'offline') {
+      byUserId[id] = { name, status: 'online' };
+    }
+  });
 
   // Текущий пользователь всегда online
   const selfId = String(authUser.id);
@@ -115,15 +139,31 @@ function applyPresenceFromChannel() {
 async function loadMembersDirectory() {
   if (isDemoMode || !supabase) return;
   try {
-    const { data, error } = await supabase.from('profiles').select('id, username, is_banned, avatar_color, avatar_url, custom_status');
+    let res = await supabase
+      .from('profiles')
+      .select('id, username, is_banned, avatar_color, avatar_url, custom_status, last_seen');
+    if (res.error) {
+      console.warn('[profiles] select with last_seen failed, retry without:', res.error.message || res.error);
+      res = await supabase
+        .from('profiles')
+        .select('id, username, is_banned, avatar_color, avatar_url, custom_status');
+    }
+    const { data, error } = res;
     if (error) throw error;
 
     const previousNames = new Set(Object.values(memberDirectory));
     memberDirectory = {};
+    memberLastSeenDb = {};
     (data || []).forEach((row) => {
       if (row.is_banned) return;
       if (!row.username) return;
       memberDirectory[row.id] = row.username;
+
+      if (row.last_seen) {
+        try {
+          memberLastSeenDb[row.id] = new Date(row.last_seen).getTime();
+        } catch (_) {}
+      }
 
       previousNames.delete(row.username);
       if (row.avatar_color) {

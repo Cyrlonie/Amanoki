@@ -303,12 +303,12 @@ async function subscribeToMessages() {
       .subscribe();
 
     presenceChannel = supabase.channel('presence:global', {
-  config: {
-    presence: {
-      key: authUser.id,
-    },
-  },
-});
+      config: {
+        presence: {
+          key: typeof getPresenceClientKey === 'function' ? getPresenceClientKey() : String(authUser.id),
+        },
+      },
+    });
 
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
@@ -331,7 +331,8 @@ async function subscribeToMessages() {
       })
       .subscribe(async (status) => {
         if (generation !== messageSubscriptionGeneration) return;
-        if (status === 'SUBSCRIBED' && presenceChannel) {
+        const subscribed = String(status || '').toUpperCase() === 'SUBSCRIBED';
+        if (subscribed && presenceChannel) {
           try {
             // Показываем себя онлайн сразу, не дожидаясь sync
             if (currentUser) {

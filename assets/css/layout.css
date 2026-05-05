@@ -87,7 +87,7 @@
   gap: 4px;
   padding: 8px;
   border-radius: var(--radius-md);
-  background: rgba(10, 15, 31, 0.96);
+  background: var(--surface-dropdown);
   border: 1px solid var(--glass-border);
   box-shadow: var(--elevation-hud);
   z-index: 3200;
@@ -417,7 +417,7 @@
 .auth-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(120% 80% at 50% 0%, #2a1a42 0%, #0d0d12 45%, #050308 100%);
+  background: var(--auth-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -431,7 +431,7 @@
   justify-content: center;
 }
 .auth-card {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--auth-card-bg);
   backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid var(--glass-border);
   border-radius: 32px;
@@ -479,7 +479,7 @@
 }
 .auth-input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--auth-input-bg);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   padding: 16px;
@@ -537,7 +537,7 @@
   margin-top: 24px;
 }
 .auth-toggle a {
-  color: #fff;
+  color: var(--accent-hover);
   cursor: pointer;
   text-decoration: none;
   font-weight: 700;
@@ -1929,7 +1929,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px;
-  background: rgba(10, 15, 31, 0.96);
+  background: var(--surface-dropdown);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--glass-border);
   border-radius: 0 0 var(--radius-md) var(--radius-md);

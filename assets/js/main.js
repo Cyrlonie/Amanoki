@@ -690,6 +690,24 @@ function initApp() {
 
   // Update sidebar custom status display
   updateSidebarStatus();
+
+  // Heartbeat presence + last_seen, чтобы Realtime не «терял» онлайн и список не залипал в offline
+  if (!window._amanokiPresenceHeartbeat) {
+    window._amanokiPresenceHeartbeat = true;
+    setInterval(() => {
+      if (isDemoMode || !authUser || document.visibilityState !== 'visible') return;
+      if (typeof updateMyPresence === 'function') void updateMyPresence(false);
+    }, 32000);
+    setInterval(() => {
+      if (isDemoMode || !authUser || document.visibilityState !== 'visible') return;
+      if (typeof updateLastSeen === 'function') void updateLastSeen();
+    }, 90000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || isDemoMode || !authUser) return;
+      if (typeof updateMyPresence === 'function') void updateMyPresence(false);
+      if (typeof applyPresenceFromChannel === 'function') applyPresenceFromChannel();
+    });
+  }
 }
 
 // ===================== ADMIN FUNCTIONS =====================

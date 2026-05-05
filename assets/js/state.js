@@ -109,3 +109,6 @@ const userColors = {};
 let userAvatars = {};
 let userCustomStatuses = {};
 
+/** server-side last_seen (ms) by user id — резервный онлайн, если Realtime presence отстаёт */
+let memberLastSeenDb = {};
+

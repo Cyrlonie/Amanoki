@@ -2,6 +2,8 @@
 
 let livekitSdkPromise = null;
 let isVoiceDeafened = false;
+/** Панель свёрнута крестиком, соединение остаётся — снова открыть: клик по тому же голосовому каналу. */
+let voicePanelCollapsed = false;
 const voiceAudioTrackData = new Map();
 const voiceParticipantTrackMap = new Map();
 const voiceSpeakingTimers = {};
@@ -127,7 +129,7 @@ function updateVoiceUiState() {
   const muteBtn = document.getElementById('voiceMuteBtn');
   const channelLabel = document.getElementById('voiceCurrentChannel');
 
-  if (panel) panel.classList.toggle('show', !!currentVoiceChannel);
+  if (panel) panel.classList.toggle('show', !!currentVoiceChannel && !voicePanelCollapsed);
   const deafenBtn = document.getElementById('voiceDeafenBtn');
   if (leaveBtn) leaveBtn.disabled = !currentVoiceChannel;
   if (muteBtn) muteBtn.disabled = !currentVoiceChannel;
@@ -544,7 +546,14 @@ function handleVoiceVolumeInput(event) {
 
 document.addEventListener('input', handleVoiceVolumeInput);
 
+function collapseVoicePanelUi() {
+  if (!currentVoiceChannel) return;
+  voicePanelCollapsed = true;
+  document.getElementById('voicePanel')?.classList.remove('show');
+}
+
 function resetVoiceState() {
+  voicePanelCollapsed = false;
   cleanupVoiceAudioTracks();
   currentVoiceChannel = null;
   voiceRoom = null;
@@ -570,7 +579,11 @@ async function joinVoiceChannel(channelId) {
   }
 
   if (!channelId) return;
-  if (currentVoiceChannel === channelId && voiceRoom) return;
+  if (currentVoiceChannel === channelId && voiceRoom) {
+    voicePanelCollapsed = false;
+    updateVoiceUiState();
+    return;
+  }
 
   let generation = 0;
 
@@ -602,6 +615,7 @@ async function joinVoiceChannel(channelId) {
     }
 
     currentVoiceChannel = channelId;
+    voicePanelCollapsed = false;
     voiceRoom = room;
     isVoiceMuted = false;
     isVoiceDeafened = false;

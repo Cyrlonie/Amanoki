@@ -22,8 +22,8 @@
       <div class="auth-card">
         <div class="auth-header">
           <div class="auth-logo"><span class="material-icons-round" style="font-size: 48px;">chat_bubble</span></div>
-          <h1 class="auth-title" id="authTitle">WhyBaby</h1>
-          <p class="auth-subtitle">Oral cumshot chat</p>
+          <h1 class="auth-title" id="authTitle">Amanoki</h1>
+          <p class="auth-subtitle">Каналы, голос и личные сообщения</p>
         </div>
 
         <!-- Окно Логина -->
@@ -31,7 +31,7 @@
           <div class="auth-error" id="loginError"></div>
           <form class="auth-form" id="loginForm">
             <div class="auth-field">
-              <label class="auth-label" for="loginEmail">Электронная почта</label>
+              <label class="auth-label" for="loginEmail">Email</label>
               <input class="auth-input" id="loginEmail" type="email" placeholder="Введите email" required
                 autocomplete="email">
             </div>
@@ -93,7 +93,7 @@
 
   <nav class="sidebar" id="channelSidebar" role="navigation" aria-label="Channel navigation">
     <header class="sidebar-header" data-action="toggle-server-dropdown">
-      <span id="serverName">WhyBaby</span>
+      <span id="serverName">Amanoki</span>
       <span class="chevron"><span class="material-icons-round">expand_more</span></span>
     </header>
 
@@ -181,8 +181,20 @@
         </div>
         <div class="header-btn" title="Участники" data-action="toggle-members" role="button" tabindex="0"
           aria-label="Показать участников"><span class="material-icons-round">people</span></div>
-        <div class="header-btn" title="Уведомления" role="button" tabindex="0" aria-label="Уведомления"><span
-            class="material-icons-round">notifications</span></div>
+        <div class="header-notifications-wrap">
+          <button type="button" class="header-btn" id="notificationsHeaderBtn" title="Уведомления браузера"
+            data-action="toggle-notifications-popover" aria-label="Уведомления" aria-expanded="false"
+            aria-haspopup="true" aria-controls="notificationsPopover">
+            <span class="material-icons-round">notifications</span>
+          </button>
+          <div id="notificationsPopover" class="notifications-popover" role="dialog" aria-hidden="true"
+            aria-labelledby="notificationsPopoverTitle">
+            <div class="notifications-popover-title" id="notificationsPopoverTitle">Уведомления</div>
+            <p class="notifications-popover-status" id="notificationsPopoverStatus"></p>
+            <button type="button" class="profile-btn profile-btn-primary notifications-popover-btn" id="notificationsPopoverEnableBtn" data-action="request-notification-permission">Запросить доступ</button>
+            <p class="notifications-popover-hint">Появляются, когда вкладка в фоне. Звук новых сообщений — если разрешено в браузере.</p>
+          </div>
+        </div>
         <div class="header-btn" id="adminBtn" title="Админ панель" data-action="toggle-admin"
           style="display:none;color:var(--red);" role="button" tabindex="0" aria-label="Админ панель"><span
             class="material-icons-round">admin_panel_settings</span></div>
@@ -229,7 +241,31 @@
     </div>
   </main>
 
-  <!-- Floating Action Button for quick actions -->
+  <div class="fab-root" id="fabRoot">
+    <div class="fab-menu" id="fabMenu" role="menu" aria-hidden="true">
+      <button type="button" class="fab-menu-item" data-action="open-search" role="menuitem">
+        <span class="material-icons-round">search</span>
+        <span>Поиск</span>
+      </button>
+      <button type="button" class="fab-menu-item" data-action="open-pinned" role="menuitem">
+        <span class="material-icons-round">push_pin</span>
+        <span>Закреплённые</span>
+      </button>
+      <button type="button" class="fab-menu-item" data-action="toggle-members" role="menuitem">
+        <span class="material-icons-round">people</span>
+        <span>Участники</span>
+      </button>
+      <button type="button" class="fab-menu-item" data-action="open-profile" role="menuitem">
+        <span class="material-icons-round">person</span>
+        <span>Профиль</span>
+      </button>
+    </div>
+    <button type="button" class="fab" id="fabToggleBtn" data-action="toggle-fab"
+      aria-label="Быстрые действия" aria-expanded="false" aria-controls="fabMenu">
+      <span class="material-icons-round fab-icon-open">add</span>
+      <span class="material-icons-round fab-icon-close" hidden>close</span>
+    </button>
+  </div>
 
   <aside class="member-list" id="memberList" role="complementary" aria-label="Member list">
     <div class="member-section-title">Онлайн — <span id="onlineCount">1</span></div>
@@ -434,6 +470,13 @@
         <div class="profile-field">
           <label class="profile-label">Цвет аватара</label>
           <div id="profileColorSwatches" class="profile-color-swatches"></div>
+        </div>
+        <div class="profile-field profile-theme-field">
+          <span class="profile-label">Тема оформления</span>
+          <label class="theme-switch-label">
+            <input type="checkbox" id="themeToggle" data-action="toggle-theme" />
+            <span>Светлая тема</span>
+          </label>
         </div>
         <div class="profile-actions">
           <button id="profileLogoutBtn" type="button" class="profile-btn profile-btn-secondary"

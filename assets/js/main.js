@@ -81,6 +81,85 @@ function closeSearchPanel() {
   document.getElementById('searchResults').innerHTML = '';
 }
 
+function syncNotificationsPopoverUi() {
+  const statusEl = document.getElementById('notificationsPopoverStatus');
+  const btn = document.getElementById('notificationsPopoverEnableBtn');
+  if (!statusEl || !btn) return;
+  if (!('Notification' in window)) {
+    statusEl.textContent = 'Этот браузер не поддерживает Web Notifications.';
+    btn.hidden = true;
+    return;
+  }
+  btn.hidden = false;
+  if (Notification.permission === 'granted') {
+    statusEl.textContent = 'Включено: уведомления приходят, когда вкладка в фоне.';
+    btn.textContent = 'Готово';
+    btn.disabled = true;
+  } else if (Notification.permission === 'denied') {
+    statusEl.textContent = 'Доступ запрещён. Разрешите уведомления в настройках сайта в браузере.';
+    btn.hidden = true;
+  } else {
+    statusEl.textContent = 'Чтобы получать уведомления вне вкладки, разрешите доступ.';
+    btn.textContent = 'Запросить доступ';
+    btn.disabled = false;
+  }
+}
+
+function toggleNotificationsPopover() {
+  const pop = document.getElementById('notificationsPopover');
+  const btn = document.getElementById('notificationsHeaderBtn');
+  if (!pop || !btn) return;
+  const open = !pop.classList.contains('show');
+  pop.classList.toggle('show', open);
+  pop.setAttribute('aria-hidden', open ? 'false' : 'true');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) syncNotificationsPopoverUi();
+}
+
+function closeNotificationsPopover() {
+  const pop = document.getElementById('notificationsPopover');
+  const btn = document.getElementById('notificationsHeaderBtn');
+  if (!pop?.classList.contains('show')) return;
+  pop.classList.remove('show');
+  pop.setAttribute('aria-hidden', 'true');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+function toggleFabMenu() {
+  const root = document.getElementById('fabRoot');
+  const menu = document.getElementById('fabMenu');
+  const fabBtn = document.getElementById('fabToggleBtn');
+  const iconOpen = fabBtn?.querySelector('.fab-icon-open');
+  const iconClose = fabBtn?.querySelector('.fab-icon-close');
+  if (!menu || !fabBtn) return;
+  const open = !menu.classList.contains('show');
+  menu.classList.toggle('show', open);
+  menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+  fabBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  root?.classList.toggle('fab-open', open);
+  if (iconOpen && iconClose) {
+    iconOpen.hidden = open;
+    iconClose.hidden = !open;
+  }
+}
+
+function closeFabMenu() {
+  const menu = document.getElementById('fabMenu');
+  const fabBtn = document.getElementById('fabToggleBtn');
+  const root = document.getElementById('fabRoot');
+  if (!menu?.classList.contains('show')) return;
+  menu.classList.remove('show');
+  menu.setAttribute('aria-hidden', 'true');
+  fabBtn?.setAttribute('aria-expanded', 'false');
+  root?.classList.remove('fab-open');
+  const iconOpen = fabBtn?.querySelector('.fab-icon-open');
+  const iconClose = fabBtn?.querySelector('.fab-icon-close');
+  if (iconOpen && iconClose) {
+    iconOpen.hidden = false;
+    iconClose.hidden = true;
+  }
+}
+
 let currentEditingMessageId = null;
 
 function openEditMessagePanel(messageId) {
@@ -305,15 +384,32 @@ function setupDomEventHandlers() {
       case 'toggle-reaction':
         await toggleReaction(actionEl.dataset.messageId, actionEl.dataset.emoji);
         break;
-      case 'toggle-theme':
-        const isLight = document.getElementById('themeToggle').checked;
-        if (isLight) {
+      case 'toggle-theme': {
+        const themeToggle = document.getElementById('themeToggle');
+        if (!themeToggle) break;
+        if (themeToggle.checked) {
           document.documentElement.setAttribute('data-theme', 'light');
           localStorage.setItem('amanoki_theme', 'light');
         } else {
           document.documentElement.removeAttribute('data-theme');
           localStorage.setItem('amanoki_theme', 'dark');
         }
+        break;
+      }
+      case 'toggle-notifications-popover':
+        event.stopPropagation();
+        toggleNotificationsPopover();
+        break;
+      case 'toggle-fab':
+        event.stopPropagation();
+        toggleFabMenu();
+        break;
+      case 'request-notification-permission':
+        event.stopPropagation();
+        requestNotificationPermission();
+        break;
+      case 'close-voice-panel':
+        if (typeof collapseVoicePanelUi === 'function') collapseVoicePanelUi();
         break;
       case 'open-reaction-picker':
         event.stopPropagation();
@@ -341,6 +437,9 @@ function setupDomEventHandlers() {
       default:
         break;
     }
+    if (actionEl.closest('#fabMenu')) {
+      closeFabMenu();
+    }
   });
 
   document.getElementById('serversContainer')?.addEventListener('contextmenu', async (event) => {
@@ -360,11 +459,7 @@ function setupDomEventHandlers() {
     }
   });
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeChannelContextMenu();
-    }
-  });
+  document.addEventListener('keydown', handleGlobalEscape);
 
   document.getElementById('channelsContainer')?.addEventListener('contextmenu', (event) => {
     if (!isAdmin || !currentServerId) return;
@@ -460,12 +555,6 @@ function setupDomEventHandlers() {
     el.addEventListener('click', () => switchChannel(el.dataset.channel));
   });
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeImagePreview();
-    }
-  });
-
   // Direct click listener for image lightbox backdrop
   const imageLightboxBackdrop = document.querySelector('.image-lightbox-backdrop');
   imageLightboxBackdrop?.addEventListener('click', closeImagePreview);
@@ -481,6 +570,21 @@ function setupDomEventHandlers() {
 }
 
 setupDomEventHandlers();
+
+document.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'k') return;
+  const auth = document.getElementById('authOverlay');
+  if (auth && auth.style.display !== 'none') return;
+  e.preventDefault();
+  openSearchPanel();
+});
+
+document.addEventListener('click', (e) => {
+  const t = e.target instanceof Element ? e.target : null;
+  if (!t) return;
+  if (!t.closest('#fabRoot')) closeFabMenu();
+  if (!t.closest('.header-notifications-wrap')) closeNotificationsPopover();
+});
 
 // ===================== ADMIN PANEL =====================
 function getUserColor(name) {
@@ -850,8 +954,8 @@ function requestNotificationPermission() {
     if (perm === 'granted') {
       notify('🔔 Уведомления включены!', 'success');
     }
-    // Remove the permission bar regardless
     document.querySelector('.notif-permission-bar')?.remove();
+    syncNotificationsPopoverUi();
   });
 }
 
@@ -2030,3 +2134,128 @@ document.addEventListener('click', (e) => {
     toggleMediaPicker(target.dataset.mediaType, target);
   }
 });
+
+function handleGlobalEscape(event) {
+  if (event.key !== 'Escape') return;
+
+  const lb = document.getElementById('imageLightbox');
+  if (lb?.classList.contains('show')) {
+    closeImagePreview();
+    event.preventDefault();
+    return;
+  }
+
+  const rp = document.getElementById('reactionPicker');
+  if (rp?.classList.contains('show')) {
+    if (typeof closeReactionPicker === 'function') closeReactionPicker();
+    event.preventDefault();
+    return;
+  }
+
+  const ep = document.getElementById('emojiPickerPanel');
+  if (ep?.classList.contains('show')) {
+    closeEmojiPicker();
+    event.preventDefault();
+    return;
+  }
+
+  const mp = document.getElementById('mediaPickerPanel');
+  if (mp?.classList.contains('show')) {
+    closeMediaPicker();
+    event.preventDefault();
+    return;
+  }
+
+  if (typeof mentionActive !== 'undefined' && mentionActive) {
+    closeMentionAutocomplete();
+    event.preventDefault();
+    return;
+  }
+
+  const npop = document.getElementById('notificationsPopover');
+  if (npop?.classList.contains('show')) {
+    closeNotificationsPopover();
+    event.preventDefault();
+    return;
+  }
+
+  const fm = document.getElementById('fabMenu');
+  if (fm?.classList.contains('show')) {
+    closeFabMenu();
+    event.preventDefault();
+    return;
+  }
+
+  closeChannelContextMenu();
+
+  const sp = document.getElementById('searchPanel');
+  if (sp?.classList.contains('show')) {
+    closeSearchPanel();
+    event.preventDefault();
+    return;
+  }
+
+  const pp = document.getElementById('pinnedPanel');
+  if (pp?.classList.contains('show') && typeof closePinnedPanel === 'function') {
+    closePinnedPanel();
+    event.preventDefault();
+    return;
+  }
+
+  const emp = document.getElementById('editMessagePanel');
+  if (emp?.classList.contains('show')) {
+    closeEditMessagePanel();
+    event.preventDefault();
+    return;
+  }
+
+  const profile = document.getElementById('profilePanel');
+  if (profile?.classList.contains('show')) {
+    if (typeof closeProfilePanel === 'function') closeProfilePanel();
+    event.preventDefault();
+    return;
+  }
+
+  const ss = document.getElementById('serverSettingsOverlay');
+  if (ss?.classList.contains('show') && typeof closeServerSettings === 'function') {
+    closeServerSettings();
+    event.preventDefault();
+    return;
+  }
+
+  const cam = document.getElementById('channelAdminModal');
+  if (cam?.classList.contains('show') && typeof closeChannelAdmin === 'function') {
+    closeChannelAdmin();
+    event.preventDefault();
+    return;
+  }
+
+  const sam = document.getElementById('serverAdminModal');
+  if (sam?.classList.contains('show') && typeof closeServerAdmin === 'function') {
+    closeServerAdmin();
+    event.preventDefault();
+    return;
+  }
+
+  const jsm = document.getElementById('joinServerModal');
+  if (jsm?.classList.contains('show') && typeof closeJoinServer === 'function') {
+    closeJoinServer();
+    event.preventDefault();
+    return;
+  }
+
+  const ap = document.getElementById('adminPanel');
+  if (ap?.classList.contains('show')) {
+    ap.classList.remove('show');
+    event.preventDefault();
+    return;
+  }
+
+  if (typeof collapseVoicePanelUi === 'function') {
+    const vp = document.getElementById('voicePanel');
+    if (vp?.classList.contains('show')) {
+      collapseVoicePanelUi();
+      event.preventDefault();
+    }
+  }
+}

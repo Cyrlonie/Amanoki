@@ -332,6 +332,14 @@
   border: 2px solid var(--bg-secondary);
 }
 .user-info { flex: 1; min-width: 0; overflow: hidden; }
+.sidebar-footer .user-info[data-action='open-profile'] {
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius-sm);
+}
+.sidebar-footer .user-info[data-action='open-profile']:hover {
+  background: var(--bg-hover);
+}
 .user-info .uname { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-info .ustatus { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .footer-icons { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 4px; flex-shrink: 0; }

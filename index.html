@@ -140,10 +140,11 @@
       </div>
     </div>
     <footer class="sidebar-footer">
-      <div class="user-avatar" id="myAvatar" style="background:var(--accent)">?
+      <div class="user-avatar" id="myAvatar" style="background:var(--accent)" data-action="open-profile" role="button"
+        tabindex="0" aria-label="Профиль">?
         <div class="status-dot"></div>
       </div>
-      <div class="user-info">
+      <div class="user-info" data-action="open-profile" role="button" tabindex="0" aria-label="Открыть профиль">
         <div class="uname" id="myName">Гость</div>
         <div class="ustatus">В сети</div>
       </div>
@@ -152,8 +153,8 @@
           aria-label="Переключить микрофон"><span class="material-icons-round">mic</span></div>
         <div class="footer-icon" title="Выйти из войса" data-action="leave-voice" role="button" tabindex="0"
           aria-label="Выйти из голосового канала"><span class="material-icons-round">call_end</span></div>
-        <div class="footer-icon" title="Профиль" data-action="open-profile" role="button" tabindex="0"
-          aria-label="Открыть профиль"><span class="material-icons-round">settings</span></div>
+        <div class="footer-icon" title="Оформление и тема" data-action="open-app-settings" role="button" tabindex="0"
+          aria-label="Оформление и тема"><span class="material-icons-round">palette</span></div>
       </div>
     </footer>
   </nav>
@@ -445,13 +446,6 @@
           <label class="profile-label">Цвет аватара</label>
           <div id="profileColorSwatches" class="profile-color-swatches"></div>
         </div>
-        <div class="profile-field profile-theme-field">
-          <span class="profile-label">Тема оформления</span>
-          <label class="theme-switch-label">
-            <input type="checkbox" id="themeToggle" data-action="toggle-theme" />
-            <span>Светлая тема</span>
-          </label>
-        </div>
         <div class="profile-actions">
           <button id="profileLogoutBtn" type="button" class="profile-btn profile-btn-secondary"
             data-action="logout">Выйти из аккаунта</button>
@@ -459,6 +453,31 @@
           <button type="submit" class="profile-btn profile-btn-primary" id="profileSaveBtn">Сохранить</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Оформление / тема (отдельно от профиля) -->
+  <div id="appSettingsPanel" class="profile-panel-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="profile-panel-backdrop" data-action="close-app-settings"></div>
+    <div class="profile-panel-card">
+      <div class="profile-panel-header">
+        <h2 id="appSettingsTitle">Оформление</h2>
+        <button type="button" class="profile-panel-close" data-action="close-app-settings" aria-label="Закрыть"><span
+            class="material-icons-round">close</span></button>
+      </div>
+      <div class="profile-panel-body">
+        <p class="profile-hint">Тема применяется сразу и сохраняется в этом браузере.</p>
+        <div class="profile-field">
+          <span class="profile-label">Тема интерфейса</span>
+          <label class="theme-switch-label" for="settingsThemeToggle">
+            <input type="checkbox" id="settingsThemeToggle" />
+            <span>Светлая тема</span>
+          </label>
+        </div>
+        <div class="profile-actions">
+          <button type="button" class="profile-btn profile-btn-primary" data-action="close-app-settings">Готово</button>
+        </div>
+      </div>
     </div>
   </div>
 

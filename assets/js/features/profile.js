@@ -106,6 +106,7 @@ function handleProfileAvatarFileSelect(event) {
 
 function openProfilePanel() {
   closeMobilePanels();
+  if (typeof closeAppSettingsPanel === 'function') closeAppSettingsPanel();
   const panel = document.getElementById('profilePanel');
   if (!panel) return;
 
@@ -134,11 +135,6 @@ function openProfilePanel() {
     emailHint.textContent = `Аккаунт: ${authUser.email}`;
   } else {
     emailHint.textContent = '';
-  }
-
-  const themeToggle = document.getElementById('themeToggle');
-  if (themeToggle) {
-    themeToggle.checked = document.documentElement.getAttribute('data-theme') === 'light';
   }
 
   buildProfileColorSwatches();

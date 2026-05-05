@@ -125,6 +125,45 @@ function closeNotificationsPopover() {
   if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
+function syncSettingsThemeCheckbox() {
+  const el = document.getElementById('settingsThemeToggle');
+  if (!el) return;
+  el.checked = document.documentElement.getAttribute('data-theme') === 'light';
+}
+
+function applyThemeFromSettingsCheckbox(sourceEl) {
+  const toggle = sourceEl || document.getElementById('settingsThemeToggle');
+  if (!toggle) return;
+  if (toggle.checked) {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('amanoki_theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('amanoki_theme', 'dark');
+  }
+}
+
+function openAppSettingsPanel() {
+  closeMobilePanels();
+  if (typeof closeProfilePanel === 'function') closeProfilePanel();
+  const panel = document.getElementById('appSettingsPanel');
+  if (!panel) return;
+  syncSettingsThemeCheckbox();
+  panel.classList.add('show');
+  panel.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('settingsThemeToggle')?.focus();
+}
+
+function closeAppSettingsPanel() {
+  const panel = document.getElementById('appSettingsPanel');
+  if (panel) {
+    panel.classList.remove('show');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+  document.body.style.overflow = '';
+}
+
 let currentEditingMessageId = null;
 
 function openEditMessagePanel(messageId) {
@@ -349,18 +388,12 @@ function setupDomEventHandlers() {
       case 'toggle-reaction':
         await toggleReaction(actionEl.dataset.messageId, actionEl.dataset.emoji);
         break;
-      case 'toggle-theme': {
-        const themeToggle = document.getElementById('themeToggle');
-        if (!themeToggle) break;
-        if (themeToggle.checked) {
-          document.documentElement.setAttribute('data-theme', 'light');
-          localStorage.setItem('amanoki_theme', 'light');
-        } else {
-          document.documentElement.removeAttribute('data-theme');
-          localStorage.setItem('amanoki_theme', 'dark');
-        }
+      case 'open-app-settings':
+        openAppSettingsPanel();
         break;
-      }
+      case 'close-app-settings':
+        closeAppSettingsPanel();
+        break;
       case 'toggle-notifications-popover':
         event.stopPropagation();
         toggleNotificationsPopover();
@@ -524,6 +557,10 @@ function setupDomEventHandlers() {
     if (event.key === 'Escape') {
       closeSearchPanel();
     }
+  });
+
+  document.getElementById('settingsThemeToggle')?.addEventListener('change', function onSettingsThemeChange() {
+    applyThemeFromSettingsCheckbox(this);
   });
 }
 
@@ -2173,6 +2210,13 @@ function handleGlobalEscape(event) {
   const emp = document.getElementById('editMessagePanel');
   if (emp?.classList.contains('show')) {
     closeEditMessagePanel();
+    event.preventDefault();
+    return;
+  }
+
+  const asp = document.getElementById('appSettingsPanel');
+  if (asp?.classList.contains('show')) {
+    closeAppSettingsPanel();
     event.preventDefault();
     return;
   }

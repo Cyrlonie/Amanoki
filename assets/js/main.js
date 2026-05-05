@@ -125,41 +125,6 @@ function closeNotificationsPopover() {
   if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
-function toggleFabMenu() {
-  const root = document.getElementById('fabRoot');
-  const menu = document.getElementById('fabMenu');
-  const fabBtn = document.getElementById('fabToggleBtn');
-  const iconOpen = fabBtn?.querySelector('.fab-icon-open');
-  const iconClose = fabBtn?.querySelector('.fab-icon-close');
-  if (!menu || !fabBtn) return;
-  const open = !menu.classList.contains('show');
-  menu.classList.toggle('show', open);
-  menu.setAttribute('aria-hidden', open ? 'false' : 'true');
-  fabBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  root?.classList.toggle('fab-open', open);
-  if (iconOpen && iconClose) {
-    iconOpen.hidden = open;
-    iconClose.hidden = !open;
-  }
-}
-
-function closeFabMenu() {
-  const menu = document.getElementById('fabMenu');
-  const fabBtn = document.getElementById('fabToggleBtn');
-  const root = document.getElementById('fabRoot');
-  if (!menu?.classList.contains('show')) return;
-  menu.classList.remove('show');
-  menu.setAttribute('aria-hidden', 'true');
-  fabBtn?.setAttribute('aria-expanded', 'false');
-  root?.classList.remove('fab-open');
-  const iconOpen = fabBtn?.querySelector('.fab-icon-open');
-  const iconClose = fabBtn?.querySelector('.fab-icon-close');
-  if (iconOpen && iconClose) {
-    iconOpen.hidden = false;
-    iconClose.hidden = true;
-  }
-}
-
 let currentEditingMessageId = null;
 
 function openEditMessagePanel(messageId) {
@@ -400,10 +365,6 @@ function setupDomEventHandlers() {
         event.stopPropagation();
         toggleNotificationsPopover();
         break;
-      case 'toggle-fab':
-        event.stopPropagation();
-        toggleFabMenu();
-        break;
       case 'request-notification-permission':
         event.stopPropagation();
         requestNotificationPermission();
@@ -436,9 +397,6 @@ function setupDomEventHandlers() {
         break;
       default:
         break;
-    }
-    if (actionEl.closest('#fabMenu')) {
-      closeFabMenu();
     }
   });
 
@@ -582,7 +540,6 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('click', (e) => {
   const t = e.target instanceof Element ? e.target : null;
   if (!t) return;
-  if (!t.closest('#fabRoot')) closeFabMenu();
   if (!t.closest('.header-notifications-wrap')) closeNotificationsPopover();
 });
 
@@ -2193,13 +2150,6 @@ function handleGlobalEscape(event) {
   const npop = document.getElementById('notificationsPopover');
   if (npop?.classList.contains('show')) {
     closeNotificationsPopover();
-    event.preventDefault();
-    return;
-  }
-
-  const fm = document.getElementById('fabMenu');
-  if (fm?.classList.contains('show')) {
-    closeFabMenu();
     event.preventDefault();
     return;
   }

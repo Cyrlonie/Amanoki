@@ -135,12 +135,30 @@
   color: var(--text-primary);
 }
 .msg-quick-actions .msg-quick-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  background: var(--bg-secondary);
+  backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0;
+  min-width: 32px;
   opacity: 0.55;
-  transition: opacity 0.12s ease, background 0.1s;
+  transition: opacity 0.12s ease, background 0.1s, color 0.2s ease;
 }
 .message-group:hover .msg-quick-actions .msg-quick-btn,
 .msg-quick-actions .msg-quick-btn:focus-visible {
   opacity: 1;
+}
+.msg-quick-actions .msg-quick-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 @media (hover: none) {
   .msg-quick-actions {

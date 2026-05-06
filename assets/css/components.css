@@ -116,6 +116,9 @@
   pointer-events: auto;
 }
 .msg-quick-actions .hover-btn {
+  --quick-btn-hover-bg: var(--bg-hover);
+  --quick-btn-hover-color: var(--text-primary);
+  --quick-btn-active-bg: var(--bg-active);
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
@@ -131,10 +134,17 @@
   transition: all 0.2s ease;
 }
 .msg-quick-actions .hover-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--quick-btn-hover-bg);
+  color: var(--quick-btn-hover-color);
+}
+.msg-quick-actions .hover-btn:active {
+  background: var(--quick-btn-active-bg);
+  transform: scale(0.96);
 }
 .msg-quick-actions .msg-quick-btn {
+  --quick-btn-hover-bg: var(--bg-hover);
+  --quick-btn-hover-color: var(--text-primary);
+  --quick-btn-active-bg: var(--bg-active);
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
@@ -157,8 +167,24 @@
   opacity: 1;
 }
 .msg-quick-actions .msg-quick-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: var(--quick-btn-hover-bg);
+  color: var(--quick-btn-hover-color);
+}
+.msg-quick-actions .msg-quick-btn:active {
+  background: var(--quick-btn-active-bg);
+  transform: scale(0.96);
+}
+
+/* Per-action accents while preserving unified interaction model */
+.msg-quick-actions [data-action='delete-message'] {
+  --quick-btn-hover-bg: rgba(239, 68, 68, 0.16);
+  --quick-btn-hover-color: var(--red);
+  --quick-btn-active-bg: rgba(239, 68, 68, 0.24);
+}
+.msg-quick-actions [data-action='toggle-pin'] {
+  --quick-btn-hover-bg: rgba(124, 58, 237, 0.16);
+  --quick-btn-hover-color: var(--accent);
+  --quick-btn-active-bg: rgba(124, 58, 237, 0.24);
 }
 @media (hover: none) {
   .msg-quick-actions {

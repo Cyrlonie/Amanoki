@@ -403,7 +403,9 @@ function renderReactionBar(messageId) {
   chipsEl.innerHTML = chips;
 
   const messageData = messageStore[messageId];
-  const canDelete = isAdmin || (messageData && messageData.user_id === (authUser?.id || 'demo-user'));
+  const canDelete =
+    canModerateCurrentChannel() ||
+    (messageData && messageData.user_id === (authUser?.id || 'demo-user'));
   const deleteBtn = canDelete
     ? `<button class="hover-btn" type="button" title="Удалить" data-action="delete-message" data-message-id="${escapeJsString(
         messageId
@@ -417,7 +419,9 @@ function renderReactionBar(messageId) {
       )}">✏️</button>`
     : '';
 
-  const canPin = isAdmin || (messageData && messageData.user_id === (authUser?.id || 'demo-user'));
+  const canPin =
+    canModerateCurrentChannel() ||
+    (messageData && messageData.user_id === (authUser?.id || 'demo-user'));
   const isPinned = messageData?.is_pinned;
   const pinBtn = canPin
     ? `<button class="hover-btn" type="button" title="${isPinned ? 'Открепить' : 'Закрепить'}" data-action="toggle-pin" data-message-id="${escapeJsString(
@@ -1228,7 +1232,7 @@ async function loadPinnedMessages() {
     
     container.innerHTML = data.map(msg => {
       const cleanHtml = DOMPurify.sanitize(marked.parse(msg.content));
-      const canPin = isAdmin || (msg.user_id === authUser?.id);
+      const canPin = canModerateCurrentChannel() || (msg.user_id === authUser?.id);
       const unpinHtml = canPin 
         ? `<button type="button" class="pinned-btn pinned-btn-unpin" data-action="unpin-message" data-message-id="${msg.id}">Открепить</button>`
         : '';

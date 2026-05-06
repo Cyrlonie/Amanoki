@@ -31,14 +31,26 @@ async function fetchVoiceToken(roomName) {
   if (!authUser || !currentUser) {
     throw new Error('Требуется авторизация для голосового чата');
   }
+  if (!supabase?.auth) {
+    throw new Error('Авторизация недоступна');
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
+  if (!accessToken) {
+    throw new Error('Сессия истекла, войдите снова');
+  }
 
   const response = await fetch('./api/voice-token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify({
       roomName,
-      userId: authUser.id,
-      username: currentUser,
     }),
   });
 

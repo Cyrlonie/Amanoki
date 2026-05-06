@@ -72,6 +72,43 @@ let CHANNEL_DESCS = {}; // Map of slug -> description
 let serversList = [];
 let currentServerId = null;
 let currentServerMemberIds = new Set(); // IDs of members on the current server
+let currentServerRole = 'member'; // owner | mod | member
+
+function normalizeServerRole(role) {
+  const value = String(role || '').toLowerCase();
+  if (value === 'owner') return 'owner';
+  if (value === 'mod' || value === 'admin') return 'mod';
+  return 'member';
+}
+
+function setCurrentServerRole(role) {
+  currentServerRole = normalizeServerRole(role);
+}
+
+function hasServerRole(minRole) {
+  if (isAdmin) return true;
+  const levels = { member: 1, mod: 2, owner: 3 };
+  const need = levels[normalizeServerRole(minRole)] || levels.member;
+  const have = levels[normalizeServerRole(currentServerRole)] || levels.member;
+  return have >= need;
+}
+
+function canManageServerSettings() {
+  return hasServerRole('owner');
+}
+
+function canManageMembers() {
+  return hasServerRole('mod');
+}
+
+function canManageChannels() {
+  return hasServerRole('mod');
+}
+
+function canModerateCurrentChannel() {
+  if (typeof isDMChannel === 'function' && isDMChannel(currentChannel)) return false;
+  return hasServerRole('mod');
+}
 
 function getScopedChannelKey(channelId = currentChannel, serverId = currentServerId) {
   if (!channelId) return '';

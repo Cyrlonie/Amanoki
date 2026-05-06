@@ -436,7 +436,9 @@ function setupDomEventHandlers() {
   document.getElementById('serversContainer')?.addEventListener('contextmenu', async (event) => {
     const targetEl = event.target instanceof Element ? event.target : null;
     const serverEl = targetEl?.closest('[data-action="switch-server"]');
-    if (!serverEl || !isAdmin) return;
+    if (!serverEl) return;
+    await loadCurrentServerRole(serverEl.dataset.serverId);
+    if (!canManageChannels()) return;
 
     event.preventDefault();
     await switchServer(serverEl.dataset.serverId);
@@ -453,7 +455,7 @@ function setupDomEventHandlers() {
   document.addEventListener('keydown', handleGlobalEscape);
 
   document.getElementById('channelsContainer')?.addEventListener('contextmenu', (event) => {
-    if (!isAdmin || !currentServerId) return;
+    if (!canManageChannels() || !currentServerId) return;
 
     event.preventDefault();
     const targetEl = event.target instanceof Element ? event.target : null;
@@ -721,7 +723,7 @@ async function deleteMessage(messageId) {
   }
 
   const isAuthor = message.user_id === authUser?.id;
-  if (!isAdmin && !isAuthor) {
+  if (!canModerateCurrentChannel() && !isAuthor) {
     notify('❌ Нет прав на удаление этого сообщения', 'error');
     return;
   }
@@ -1313,7 +1315,7 @@ async function loadServers() {
         icon_color,
         description,
         owner_id,
-        server_members!inner (user_id)
+        server_members!inner (user_id, role)
       `)
       .eq('server_members.user_id', authUser.id)
       .order('created_at', { ascending: true });
@@ -1327,6 +1329,9 @@ async function loadServers() {
       if (!currentServerId || !serversList.find(s => s.id === currentServerId)) {
         currentServerId = serversList[0].id;
       }
+      const currentServer = serversList.find((s) => s.id === currentServerId);
+      const membership = (currentServer?.server_members || []).find((m) => m.user_id === authUser.id);
+      setCurrentServerRole(membership?.role || (currentServer?.owner_id === authUser?.id ? 'owner' : 'member'));
       await loadServerMemberIds(currentServerId);
       await loadChannels();
       subscribeToMessages();
@@ -1589,6 +1594,7 @@ async function switchServer(serverId) {
   channelsList = [];
   TEXT_CHANNELS = [];
   CHANNEL_DESCS = {};
+  setCurrentServerRole('member');
 
   // Clear unread badge for this server
   clearServerUnread(serverId);
@@ -1597,8 +1603,30 @@ async function switchServer(serverId) {
   showSkeletonMessages();
   
   renderServers();
+  await loadCurrentServerRole(serverId);
   await loadServerMemberIds(serverId);
   await loadChannels();
+}
+
+async function loadCurrentServerRole(serverId = currentServerId) {
+  if (!supabase || !authUser || !serverId) {
+    setCurrentServerRole('member');
+    return;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('server_members')
+      .select('role')
+      .eq('server_id', serverId)
+      .eq('user_id', authUser.id)
+      .maybeSingle();
+    if (error) throw error;
+    const currentServer = serversList.find((s) => s.id === serverId);
+    setCurrentServerRole(data?.role || (currentServer?.owner_id === authUser.id ? 'owner' : 'member'));
+  } catch (err) {
+    console.warn('Cannot load server role:', err);
+    setCurrentServerRole('member');
+  }
 }
 
 function openServerAdmin() {
@@ -1765,9 +1793,7 @@ function renderSidebarChannels() {
   const container = document.getElementById('channelsContainer');
   if (!container) return;
 
-  const currentServer = serversList.find(s => s.id === currentServerId);
-  const isServerOwner = currentServer?.owner_id === authUser?.id;
-  const canEdit = isAdmin || isServerOwner;
+  const canEdit = canManageChannels();
 
   console.log('Rendering sidebar, canEdit:', canEdit);
 
@@ -1866,7 +1892,7 @@ function closeChannelContextMenu() {
 }
 
 function openChannelAdmin(slug, category, preferredType = 'text') {
-  if (!isAdmin) return;
+  if (!canManageChannels()) return;
   closeChannelContextMenu();
   const modal = document.getElementById('channelAdminModal');
   const form = document.getElementById('channelAdminForm');
@@ -1907,7 +1933,7 @@ function closeChannelAdmin() {
 
 document.getElementById('channelAdminForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!isAdmin || !supabase) return;
+  if (!canManageChannels() || !supabase) return;
 
   const slugInput = document.getElementById('channelAdminSlug').value;
   const name = document.getElementById('channelAdminName').value.trim();
@@ -1952,14 +1978,17 @@ document.addEventListener('click', async (e) => {
   const action = target.dataset.action;
 
   if (action === 'open-channel-admin') {
+    if (!canManageChannels()) return;
     openChannelAdmin(target.dataset.slug, target.dataset.category);
   } else if (action === 'close-channel-admin') {
     closeChannelAdmin();
   } else if (action === 'edit-channel-ctx') {
+    if (!canManageChannels()) return;
     const slug = contextMenuChannelSlug;
     closeChannelContextMenu();
     if (slug) openChannelAdmin(slug);
   } else if (action === 'delete-channel-ctx') {
+    if (!canManageChannels()) return;
     const slug = contextMenuChannelSlug;
     closeChannelContextMenu();
     if (!slug || !confirm('Удалить этот канал навсегда?')) return;
@@ -1972,6 +2001,7 @@ document.addEventListener('click', async (e) => {
       notify('Ошибка удаления: ' + err.message, 'error');
     }
   } else if (action === 'delete-channel') {
+    if (!canManageChannels()) return;
     const slug = document.getElementById('channelAdminSlug').value;
     if (!slug || !confirm('Удалить этот канал навсегда?')) return;
     try {

@@ -10,6 +10,7 @@ const SS_COLORS = [
 let ssSelectedColor = '';
 let ssCurrentServerData = null;
 let ssIsOwner = false;
+let ssCurrentUserRole = 'member';
 
 // ===================== SIDEBAR DROPDOWN =====================
 function toggleServerDropdown() {
@@ -68,7 +69,9 @@ async function openServerSettings(tabName = 'overview') {
     return;
   }
 
-  ssIsOwner = ssCurrentServerData.owner_id === authUser?.id;
+  await loadCurrentServerRole(currentServerId);
+  ssCurrentUserRole = normalizeServerRole(currentServerRole);
+  ssIsOwner = ssCurrentUserRole === 'owner';
 
   // Populate overview fields
   document.getElementById('ssServerName').value = ssCurrentServerData.name || '';
@@ -95,7 +98,7 @@ async function openServerSettings(tabName = 'overview') {
 
   // Show/hide settings tab for non-owners (they can still view but not save)
   const saveBar = overlay.querySelector('.ss-save-bar');
-  if (saveBar) saveBar.style.display = ssIsOwner ? 'flex' : 'none';
+  if (saveBar) saveBar.style.display = canManageServerSettings() ? 'flex' : 'none';
 
   // Switch to requested tab
   switchSSTab(tabName);
@@ -242,17 +245,26 @@ async function loadSSMembers() {
 
       const roleBadge = member.role === 'owner'
         ? '<span class="ss-role-badge owner">👑 Владелец</span>'
-        : member.role === 'admin'
-          ? '<span class="ss-role-badge admin">🛡️ Админ</span>'
+        : normalizeServerRole(member.role) === 'mod'
+          ? '<span class="ss-role-badge admin">🛡️ Модератор</span>'
           : '<span class="ss-role-badge member">Участник</span>';
 
       const isSelf = profile.id === authUser?.id;
-      const isTargetOwner = member.role === 'owner';
+      const targetRole = normalizeServerRole(member.role);
+      const isTargetOwner = targetRole === 'owner';
+      const isTargetMod = targetRole === 'mod';
 
       let actionsHtml = '';
-      if (ssIsOwner && !isSelf && !isTargetOwner) {
+      if (canManageMembers() && !isSelf && !isTargetOwner) {
+        const roleButtons = ssIsOwner
+          ? `
+            <button type="button" class="ss-member-btn role" data-action="ss-promote-member" data-user-id="${profile.id}" data-role="mod" ${isTargetMod ? 'disabled' : ''}>Сделать модератором</button>
+            <button type="button" class="ss-member-btn role" data-action="ss-promote-member" data-user-id="${profile.id}" data-role="member" ${!isTargetMod ? 'disabled' : ''}>Сделать участником</button>
+          `
+          : '';
         actionsHtml = `
           <div class="ss-member-actions">
+            ${roleButtons}
             <button type="button" class="ss-member-btn kick" data-action="ss-kick-member" data-user-id="${profile.id}" data-username="${escHtml(name)}">Кик</button>
           </div>
         `;
@@ -317,7 +329,7 @@ async function loadSSInvites() {
           </div>
           <div class="ss-member-actions">
             <button type="button" class="ss-member-btn role" onclick="navigator.clipboard.writeText('${escapeJsString(inv.code)}'); notify('Код скопирован', 'success')">Копировать</button>
-            ${ssIsOwner ? `<button type="button" class="ss-member-btn kick" data-action="delete-invite" data-invite-id="${inv.id}">Удалить</button>` : ''}
+            ${canManageMembers() ? `<button type="button" class="ss-member-btn kick" data-action="delete-invite" data-invite-id="${inv.id}">Удалить</button>` : ''}
           </div>
         </div>
       `;
@@ -329,6 +341,10 @@ async function loadSSInvites() {
 
 async function generateInvite() {
   if (!supabase || !currentServerId || !authUser) return;
+  if (!canManageMembers()) {
+    notify('Недостаточно прав для создания приглашений', 'error');
+    return;
+  }
 
   const code = generateRandomCode();
 
@@ -353,6 +369,10 @@ async function generateInvite() {
 
 async function deleteInvite(inviteId) {
   if (!supabase || !currentServerId) return;
+  if (!canManageMembers()) {
+    notify('Недостаточно прав для удаления приглашений', 'error');
+    return;
+  }
   if (!confirm('Удалить это приглашение?')) return;
 
   try {
@@ -371,7 +391,7 @@ async function deleteInvite(inviteId) {
 
 // ===================== KICK MEMBER =====================
 async function kickMember(userId, username) {
-  if (!ssIsOwner || !supabase || !currentServerId) return;
+  if (!canManageMembers() || !supabase || !currentServerId) return;
   if (!confirm(`Исключить ${username} с сервера?`)) return;
 
   try {
@@ -386,6 +406,32 @@ async function kickMember(userId, username) {
     loadSSMembers();
   } catch (err) {
     notify('Ошибка исключения: ' + err.message, 'error');
+  }
+}
+
+async function updateMemberRole(userId, role) {
+  if (!ssIsOwner || !supabase || !currentServerId) {
+    notify('Только владелец может менять роли', 'error');
+    return;
+  }
+  const normalizedRole = normalizeServerRole(role);
+  if (!['member', 'mod'].includes(normalizedRole)) {
+    notify('Некорректная роль', 'error');
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from('server_members')
+      .update({ role: normalizedRole })
+      .eq('server_id', currentServerId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    notify('Роль участника обновлена', 'success');
+    await loadSSMembers();
+  } catch (err) {
+    notify('Ошибка смены роли: ' + err.message, 'error');
   }
 }
 
@@ -481,6 +527,9 @@ document.addEventListener('click', async (e) => {
       break;
     case 'ss-kick-member':
       await kickMember(actionEl.dataset.userId, actionEl.dataset.username);
+      break;
+    case 'ss-promote-member':
+      await updateMemberRole(actionEl.dataset.userId, actionEl.dataset.role);
       break;
     case 'leave-server':
     case 'leave-server-btn':

@@ -18,7 +18,28 @@ function signJwtHS256(payload, secret) {
   return `${signingInput}.${base64UrlEncode(signature)}`;
 }
 
-export default function handler(req, res) {
+async function fetchSupabaseUser(accessToken, supabaseUrl, supabaseAnonKey) {
+  const url = new URL('/auth/v1/user', supabaseUrl);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  try {
+    return await response.json();
+  } catch (_) {
+    return null;
+  }
+}
+
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -34,14 +55,39 @@ export default function handler(req, res) {
     });
   }
 
+  const authHeader = req.headers.authorization || '';
+  const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+  const accessToken = tokenMatch ? tokenMatch[1] : '';
+  if (!accessToken) {
+    return res.status(401).json({ error: 'Missing Authorization bearer token' });
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return res.status(500).json({
+      error: 'Missing Supabase env vars',
+      required: ['SUPABASE_URL', 'SUPABASE_ANON_KEY'],
+    });
+  }
+
+  const supabaseUser = await fetchSupabaseUser(accessToken, supabaseUrl, supabaseAnonKey);
+  if (!supabaseUser?.id) {
+    return res.status(401).json({ error: 'Invalid or expired Supabase session' });
+  }
+
   const body = req.body || {};
   const roomName = String(body.roomName || '').trim();
-  const userId = String(body.userId || '').trim();
-  const username = String(body.username || '').trim();
+  const userId = String(supabaseUser.id || '').trim();
+  const username =
+    String((supabaseUser.user_metadata && supabaseUser.user_metadata.username) || '').trim() ||
+    String((supabaseUser.user_metadata && supabaseUser.user_metadata.full_name) || '').trim() ||
+    String(supabaseUser.email || '').trim() ||
+    `user-${userId.slice(0, 8)}`;
 
-  if (!roomName || !userId || !username) {
+  if (!roomName || !userId) {
     return res.status(400).json({
-      error: 'roomName, userId and username are required',
+      error: 'roomName is required',
     });
   }
 
